@@ -39,12 +39,12 @@ const GA = { brzuch: ['var(--red)', 'var(--amber)'], gastro: ['var(--amber)', '#
 const gOf = id => GROUPS[modById[id].g];
 
 /* ---------- magazyn postępu ---------- */
-const KEY = 'pediatria-hub.v1';
-let persist = true;
-try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); } catch (e) { persist = false; }
+const KEY = 'pediatria-hub.v1:';
+const persist = false; // podgląd w piaskownicy nie zapewnia trwałego magazynu; pełna kopia przez kod w widoku Postęp
 let S = { visited: {}, last: null, done: {}, ans: {}, bm: {} };
-if (persist) { try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* pusty */ } }
-const save = () => { if (persist) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* brak miejsca */ } } };
+// przetrwanie odświeżenia karty: window.name (bez dostępu do magazynów przeglądarki)
+try { if (window.name.indexOf(KEY) === 0) Object.assign(S, JSON.parse(window.name.slice(KEY.length))); } catch (e) { /* pusty */ }
+const save = () => { try { window.name = KEY + JSON.stringify(S); } catch (e) { /* ignoruj */ } };
 
 /* ---------- dane pochodne ---------- */
 Q.forEach(q => {
@@ -571,7 +571,7 @@ function viewProgress() {
       <div class="card"><div class="muted" style="font-weight:700">Poprawne (ostatnia próba)</div><div class="big" style="font-size:2.6rem">${att.length ? pct(ok, att.length) + '%' : '–'}</div></div>
       <div class="card"><div class="muted" style="font-weight:700">Do powtórki</div><div class="big" style="font-size:2.6rem;color:var(--red)">${att.length - ok}</div></div>
     </div>
-    ${persist ? '' : '<div class="card" style="background:var(--amber-l);border-color:#EBD3A3;margin-bottom:1.2rem"><b>Podgląd w piaskownicy.</b> Ta przeglądarka blokuje zapis lokalny, więc postęp żyje tylko do zamknięcia karty. Skorzystaj z kopii zapasowej poniżej.</div>'}
+    ${persist ? '' : '<div class="card" style="background:var(--amber-l);border-color:#EBD3A3;margin-bottom:1.2rem"><b>Podgląd w piaskownicy.</b> Postęp przetrwa odświeżenie tej karty, ale znika po jej zamknięciu. Skorzystaj z kopii zapasowej poniżej.</div>'}
     <div class="plist">${MODS.map(m => {
       const st = modStats(m.id); const g = gOf(m.id).color; const at = m.at ? atById[m.at] : null;
       if (!m.at) return `<div class="prow" style="--gc:${g};opacity:.65"><span class="nb" style="background:transparent;border:2px dashed ${g};color:${g}">${m.id}</span><div><b>${esc(m.n)}</b><small>Brak atlasu w Projekcie</small></div><div class="muted" style="font-weight:700">–</div><span></span></div>`;
