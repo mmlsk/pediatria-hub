@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pediatria V · hub nauki do zaliczenia</title>
+<meta name="description" content="Jeden hub łączący wszystkie atlasy modułowe z pediatrii: czytanie, trening mieszany, baza pytań, mapa powiązań i postęp.">
+<meta name="theme-color" content="#F5F6F2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='9' cy='9' r='6' fill='%23C23B2A'/%3E%3Ccircle cx='23' cy='9' r='6' fill='%23B8730F'/%3E%3Ccircle cx='9' cy='23' r='6' fill='%232B63AE'/%3E%3Ccircle cx='23' cy='23' r='6' fill='%236E4CB0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/hub.css">
+</head>
+<body>
+<a class="sr" href="#view">Przejdź do treści</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="#/" aria-label="Pediatria V – strona główna"><i aria-hidden="true"><b></b><b></b><b></b><b></b></i>Pediatria<small>V rok</small></a>
+    <ul class="menu" id="menu" aria-label="Główna nawigacja">
+      <li><a href="#/" data-r="start">Start</a></li>
+      <li><a href="#/atlasy" data-r="atlasy">Atlasy</a></li>
+      <li><a href="#/trening" data-r="trening">Trening</a></li>
+      <li><a href="#/pytania" data-r="pytania">Pytania</a></li>
+      <li><a href="#/polaczenia" data-r="polaczenia">Połączenia</a></li>
+      <li><a href="#/postep" data-r="postep">Postęp</a></li>
+    </ul>
+    <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span>Szukaj</span><kbd>Ctrl K</kbd></button>
+  </div>
+</header>
+<main id="view" tabindex="-1"></main>
+<footer class="ft" id="ft"></footer>
+<dialog class="pal" id="pal" aria-label="Szukaj w hubie">
+  <input id="palIn" type="search" placeholder="Szukaj modułu, sekcji atlasu lub pytania…" autocomplete="off" aria-label="Szukaj">
+  <ul id="palList" role="listbox"></ul>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/meta.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

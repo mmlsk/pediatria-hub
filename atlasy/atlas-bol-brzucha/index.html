@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[1] Pacjent z bólem brzucha – atlas pediatryczny</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[1]</b> <span>Ból brzucha</span></div>
+  <ul id="navlist">
+    <li><a href="#badanie">Badanie</a></li>
+    <li><a href="#mapa">Mapa bólu</a></li>
+    <li><a href="#wiek">Wiek</a></li>
+    <li><a href="#algorytm">Algorytm</a></li>
+    <li><a href="#choroby">Choroby</a></li>
+    <li><a href="#zadania">Zadania testowe</a></li>
+    <li><a href="#klucz">Klucz vs wytyczne</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁ [1] · TK01 · Pediatria V rok</span>
+    <h1>Pacjent z <span>bólem brzucha</span><br>badanie i diagnostyka różnicowa</h1>
+    <p class="sub">Atlas do zaliczenia: wywiad i badanie dziecka, mapa bólu, różnicowanie zależne od wieku, algorytm postępowania, karty chorób oraz zadania testowe z puli wraz z omówieniami.</p>
+    <div class="chips">
+      <span class="chip s">🔪 Przyczyny chirurgiczne</span>
+      <span class="chip i">💊 Internistyczne</span>
+      <span class="chip e">🫁 Pozabrzuszne</span>
+      <span class="chip f">🧠 Czynnościowe</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ POTWIERDZONY</span> odpowiedź zaznaczona w pliku z omówieniem (podświetlenie w dokumencie)</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak klucza; odpowiedź wynika z omówień zakładu i wytycznych</div>
+      <div><span class="kb unk">BRAK KLUCZA</span> rozstrzygnięcie niepewne; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat narządów jamy brzusznej">
+    <svg viewBox="0 0 360 330" id="heroSvg" role="img" aria-label="Uproszczony schemat narządów jamy brzusznej"></svg>
+    <figcaption>Schemat poglądowy: widok z przodu, prawa strona pacjenta po lewej stronie rysunku.</figcaption>
+  </figure>
+</div></header>
+
+<main>
+<section id="badanie"><div class="wrap">
+  <div class="eyebrow">Część A</div>
+  <h2>Badanie pacjenta z bólem brzucha</h2>
+  <p class="lead">Im młodsze dziecko, tym więcej pułapek: dziecko do 3. roku życia różne dolegliwości określa jako ból brzucha i wskazuje okolicę pępka, a lokalizacja podawana przez starsze dzieci nie zawsze jest pewnym elementem diagnostycznym (wykład zakładu).</p>
+
+  <div class="tabs" role="tablist" id="examTabs">
+    <button role="tab" aria-selected="true" data-p="p1">🗣️ Wywiad</button>
+    <button role="tab" aria-selected="false" data-p="p2">🩺 Badanie krok po kroku</button>
+    <button role="tab" aria-selected="false" data-p="p3">⚠️ Objawy otrzewnowe</button>
+    <button role="tab" aria-selected="false" data-p="p4">🧪 Badania dodatkowe</button>
+  </div>
+
+  <div class="panel" id="p1">
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Co ustalić</h3>
+        <ul class="tight">
+          <li><b>Początek i przebieg:</b> nagły czy stopniowy, narastający, nawracający; czas trwania.</li>
+          <li><b>Lokalizacja i migracja:</b> okolica pępka → prawy dół biodrowy sugeruje zapalenie wyrostka.</li>
+          <li><b>Charakter:</b> kolkowy (napadowy) kontra ciągły; nasilany ruchem, kaszlem, jazdą po nierównościach.</li>
+          <li><b>Wymioty:</b> kiedy względem bólu, ile, jaka treść (patrz tabela obok).</li>
+          <li><b>Wypróżnienia:</b> ostatni stolec, krew, śluz, biegunka, zaparcie; u noworodka oddanie smółki.</li>
+          <li><b>Układ moczowy:</b> dyzuria, częstomocz, zmiana zapachu lub koloru moczu.</li>
+          <li><b>Objawy pozabrzuszne:</b> gorączka, kaszel, ból gardła, wysypka, bóle stawów, poliuria i pragnienie.</li>
+          <li><b>Nastolatki:</b> miesiączka, aktywność seksualna, możliwa ciąża.</li>
+          <li><b>Inne:</b> uraz, leki (NLPZ), podróże, kontakt z chorymi, wywiad rodzinny (IBD, celiakia, choroba wrzodowa), sytuacja szkolna i rodzinna.</li>
+        </ul>
+        <div class="callout red"><b class="k">Sygnały alarmowe u noworodka (wykład)</b>wielowodzie, problemy z karmieniem, brak oddania smółki, wymioty żółciowe, wady wrodzone lub zespoły (zespół Downa), choroba Hirschsprunga w rodzinie, cukrzyca u matki.</div>
+      </div>
+      <div class="card stack">
+        <h3>Treść wymiotów – co podpowiada (wykład)</h3>
+        <div class="tw"><table>
+          <tr><th>Cecha</th><th>Wniosek</th></tr>
+          <tr><td>Z gorączką</td><td>Zakażenie</td></tr>
+          <tr><td>Z domieszką śliny</td><td>Przeszkoda mechaniczna powyżej żołądka</td></tr>
+          <tr><td>Ścięty pokarm, niepodbarwiony żółcią</td><td>Wiotki dolny zwieracz przełyku, przepuklina przeponowa, „wysoka” niedrożność. W kontekście wieku także zwężenie odźwiernika.</td></tr>
+          <tr><td>Podbarwione żółcią</td><td class="small"><b style="color:var(--red)">Przeszkoda dystalnie od brodawki większej dwunastnicy.</b> U noworodka: malrotacja i skręt, dopóki nie wykluczono.</td></tr>
+          <tr><td>Z krwią</td><td>Krew matczyna lub noworodkowa (hemoglobina płodowa w środowisku alkalicznym pozostaje żywoczerwona – test Apta)</td></tr>
+        </table></div>
+        <div class="callout green"><b class="k">Perełka</b>W zapaleniu wyrostka wymioty zwykle pojawiają się po bólu i są nieliczne; w zapaleniu żołądka i jelit zwykle poprzedzają ból. Wymioty zielone w przebiegu zapalenia wyrostka pojawiają się wraz z postępem choroby (<a href="https://www.mp.pl/pacjent/pediatria/choroby/ukladpokarmowy/141842,ostre-zapalenie-wyrostka-robaczkowego" target="_blank" rel="noopener noreferrer">mp.pl</a>).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="p2" hidden>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Sekwencja badania</h3>
+        <ol class="tight" style="padding-left:1.2rem">
+          <li><b>Obserwacja zanim dotkniesz:</b> wygląd ogólny, nawodnienie [3], pozycja. Dziecko leżące nieruchomo z podkurczonymi nogami sugeruje zapalenie otrzewnej; dziecko wijące się sugeruje kolkę.</li>
+          <li><b>Parametry życiowe i PAT [5]:</b> HR, RR, temperatura, ciśnienie, SpO₂, czas powrotu włośniczkowego, masa ciała.</li>
+          <li><b>Oglądanie:</b> kształt i symetria brzucha, wzdęcie, widoczna perystaltyka, przepukliny (pępkowa, pachwinowa), blizny, skóra (plamica, żółtaczka).</li>
+          <li><b>Osłuchiwanie:</b> nasilona, metaliczna perystaltyka (niedrożność) kontra cisza (zapalenie otrzewnej, niedrożność porażenna). Wykonaj przed palpacją.</li>
+          <li><b>Opukiwanie:</b> bębenkowy odgłos (wzdęcie), tępy (płyn, guz); delikatne opukiwanie jest dobrze tolerowanym testem bolesności.</li>
+          <li><b>Palpacja:</b> ciepłe ręce, odwracanie uwagi, zaczynaj od miejsca najdalszego od bolącego, najpierw powierzchownie, potem głęboko, patrz na twarz dziecka. Wykład wyróżnia palpację orientacyjną i głęboką, narządową.</li>
+          <li><b>Poza brzuchem:</b> gardło, płuca (dolne płaty), jądra i moszna, pachwiny, narządy płciowe zewnętrzne, kręgosłup i stawy biodrowe, skóra i stawy.</li>
+          <li><b>Per rectum:</b> nie rutynowo; wskazania: krew w stolcu, przewlekłe zaparcie, podejrzenie choroby Hirschsprunga, zmiany okołoodbytnicze.</li>
+        </ol>
+      </div>
+      <div class="stack">
+        <div class="callout red"><b class="k">Nie zapomnij</b>U każdego dziecka z bólem brzucha obejrzyj narządy płciowe i zbadaj jądra. Skręt jądra może dawać ból promieniujący do pachwiny i podbrzusza, z nudnościami i wymiotami; jądro jest uniesione, moszna obrzęknięta i bardzo tkliwa (wykład).</div>
+        <div class="callout amber"><b class="k">Guz w brzuchu [10]</b>Przy podejrzeniu nefroblastoma nie uciskaj guza wielokrotnie. Guz Wilmsa to najczęstszy guz jamy brzusznej u dzieci, zwykle do 5. roku życia; guz w ok. 90%, ból w ok. 20%, krwiomocz w ok. 30% (wykład).</div>
+        <div class="callout blue"><b class="k">Wielkość wątroby</b>U noworodków wyczuwalna 2–3 cm poniżej łuku żebrowego; w wieku szkolnym jak u dorosłych (wykład).</div>
+        <div class="callout green"><b class="k">Pytania wykładu przy ostrym bólu</b>Czy jest obrona mięśniowa? Czy są objawy otrzewnowe? Jaki jest stan ogólny? Ile ma lat?</div>
+        <div class="callout"><b class="k">Zwężenie odźwiernika</b>Widoczna fala perystaltyczna od lewego górnego do prawego górnego kwadrantu oraz objaw „oliwki”: przerośnięty odźwiernik wyczuwalny nad pępkiem i na prawo od niego (wykład).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="p3" hidden>
+    <div class="tw"><table>
+      <tr><th>Objaw / manewr</th><th>Jak</th><th>Znaczenie</th></tr>
+      <tr><td><b>Obrona mięśniowa</b></td><td>Napięcie ściany brzucha utrzymujące się mimo rozproszenia uwagi i wydechu</td><td>Podrażnienie otrzewnej ściennej; różnicuj z obroną dobrowolną (lęk, zimne ręce)</td></tr>
+      <tr><td><b>Objaw Blumberga</b></td><td>Powolny ucisk, następnie nagłe zwolnienie; ból przy zwolnieniu</td><td>Zapalenie otrzewnej</td></tr>
+      <tr><td><b>Kaszel, skakanie, opukiwanie</b></td><td>Prośba o zakaszlnięcie lub podskok; ból w prawym dole biodrowym</td><td>Punktowany w PAS (2 pkt); alternatywa dla Blumberga u dzieci</td></tr>
+      <tr><td><b>Objaw Rovsinga</b></td><td>Ucisk lewego dołu biodrowego wywołuje ból po prawej</td><td>Zapalenie wyrostka</td></tr>
+      <tr><td><b>Objaw lędźwiowy i zasłonowy</b></td><td>Zgięcie i rotacja wewnętrzna uda przy zgiętym biodrze</td><td>Wyrostek zaotrzewnowy lub miedniczny, ropień</td></tr>
+      <tr><td><b>Objaw Murphy’ego</b></td><td>Zatrzymanie wdechu przy ucisku pod prawym łukiem żebrowym</td><td>Zapalenie pęcherzyka żółciowego</td></tr>
+      <tr><td><b>Objaw Goldflama</b></td><td>Bolesność przy uderzeniu w okolicę lędźwiową</td><td>Kamica lub zapalenie nerek</td></tr>
+      <tr><td><b>Objaw Dance’a</b></td><td>Pusty prawy dół biodrowy przy badaniu</td><td>Wgłobienie krętniczo-kątnicze</td></tr>
+    </table></div>
+    <p class="small" style="margin-top:.6rem">Objawy otrzewnowe u małych dzieci są mniej wiarygodne; oceniaj całość: grymas twarzy, niechęć do ruchu, kuśtykanie, pozycję.</p>
+  </div>
+
+  <div class="panel" id="p4" hidden>
+    <div class="tw"><table>
+      <tr><th>Sytuacja</th><th>Badanie</th></tr>
+      <tr><td>Każde dziecko z ostrym bólem</td><td>Glikemia i ketony (DKA), badanie ogólne moczu i posiew [14], morfologia, CRP</td></tr>
+      <tr><td>Podejrzenie chirurgiczne</td><td><b>USG jamy brzusznej jako badanie pierwszego rzutu</b> (wyrostek, wgłobienie, odźwiernik, jajnik i jądro z Dopplerem). RTG przeglądowe przy niedrożności lub perforacji. MR zamiast CT, gdy potrzebne dalsze obrazowanie.</td></tr>
+      <tr><td>Wymioty żółciowe u noworodka lub niemowlęcia</td><td>Pasaż górnego odcinka przewodu pokarmowego z kontrastem (malrotacja) – pilnie</td></tr>
+      <tr><td>Epigastralgia, wymioty, żółtaczka</td><td>Lipaza lub amylaza, ALT, AST, GGT, bilirubina, USG wątroby i dróg żółciowych</td></tr>
+      <tr><td>Dziewczynka w wieku rozrodczym</td><td>Test ciążowy (beta-hCG), USG miednicy</td></tr>
+      <tr><td>Biegunka z bólem [3]</td><td>Kał: krew utajona, posiew, toksyna C. difficile, Giardia, kalprotektyna</td></tr>
+      <tr><td>Podejrzenie HUS [15]</td><td>Morfologia z rozmazem (schistocyty), kreatynina, LDH, mocz, elektrolity</td></tr>
+      <tr><td>Przewlekły ból z cechami alarmowymi [6][7]</td><td>OB, CRP, ferrytyna, albumina, anty-tTG IgA z całkowitym IgA, kalprotektyna, endoskopia, enterografia MR</td></tr>
+    </table></div>
+  </div>
+</div></section>
+
+<section id="mapa"><div class="wrap">
+  <div class="eyebrow">Część B · Schematy</div>
+  <h2>Rodzaje bólu i mapa lokalizacji</h2>
+  <p class="lead">Wykład wyróżnia pięć typów bólu. Kliknij region na schemacie, aby zobaczyć listę przyczyn.</p>
+
+  <div class="grid3" style="margin-bottom:1.4rem">
+    <div class="card"><h4>🟠 Somatyczny</h4><p class="small">Źródło: otrzewna. Ostry, kłujący, nasilany ruchem, dobrze zlokalizowany; w badaniu obrona mięśniowa.</p></div>
+    <div class="card"><h4>🟣 Trzewny</h4><p class="small">Układ współczulny lub przywspółczulny. Tępy, rozlany, zwykle w śródbrzuszu; nudności, wymioty, bladość.</p></div>
+    <div class="card"><h4>🔵 Przeponowy</h4><p class="small">Nerw przeponowy (przepona, wątroba, żołądek, śledziona). Może promieniować w górę; nasila oddech i kaszel.</p></div>
+    <div class="card"><h4>🔴 Kolkowy</h4><p class="small">Nagły, napadowy; wzmożona perystaltyka lub skurcz odcinkowy, np. niedrożność mechaniczna.</p></div>
+    <div class="card"><h4>🟢 Przeniesiony</h4><p class="small">Ból trzewny odczuwany w określonych dermatomach (strefy Heada).</p></div>
+    <div class="card"><h4>Organiczny kontra czynnościowy</h4><p class="small"><b>Organiczny:</b> ciągły, narasta, lepiej zlokalizowany, niezależny od pory dnia, nasila się w ruchu. <b>Czynnościowy:</b> kolkowy, ~3 godz., bez jednoznacznej lokalizacji, w dzień, nasila się w spoczynku, niepokój ruchowy.</p></div>
+  </div>
+
+  <div class="map">
+    <figure class="fig">
+      <svg viewBox="0 0 360 430" id="mapSvg" role="group" aria-label="Mapa dziewięciu regionów brzucha"></svg>
+      <figcaption>Dziewięć regionów brzucha. Narządy rysowane schematycznie.</figcaption>
+    </figure>
+    <div class="card" id="regionPanel" aria-live="polite"></div>
+  </div>
+
+  <div class="grid2" style="margin-top:1.6rem">
+    <figure class="fig">
+      <svg viewBox="0 0 420 300" id="embSvg" role="img" aria-label="Embriologiczne pochodzenie bólu trzewnego i migracja bólu w zapaleniu wyrostka"></svg>
+      <figcaption>Ból trzewny odzwierciedla pochodzenie embriologiczne narządu (jelito przednie, środkowe, tylne). W zapaleniu wyrostka ból trzewny okołopępkowy przechodzi w somatyczny w prawym dole biodrowym.</figcaption>
+    </figure>
+    <div class="card stack">
+      <h3>Zapalenie wyrostka: migracja bólu</h3>
+      <p class="small">Typowo ból jest tępy, ciągły, zaczyna się w okolicy pępka i stopniowo przenosi nad prawy talerz biodrowy, gdzie staje się ostry i zlokalizowany; dziecko niechętnie się rusza i chroni prawą stronę, traci apetyt (<a href="https://www.mp.pl/pacjent/pediatria/choroby/ukladpokarmowy/141842,ostre-zapalenie-wyrostka-robaczkowego" target="_blank" rel="noopener noreferrer">mp.pl</a>).</p>
+      <div class="callout amber"><b class="k">Pułapka wieku</b>Poniżej 3. roku życia klasyczna migracja bywa niewidoczna, a perforacja częstsza. Ból brzucha w anginie lub zapaleniu płuc może naśladować początek zapalenia wyrostka (wykład).</div>
+    </div>
+  </div>
+</div></section>
+
+<section id="wiek"><div class="wrap">
+  <div class="eyebrow">Część B · Wykres</div>
+  <h2>Diagnostyka różnicowa wg wieku</h2>
+  <p class="lead">Wiek determinuje rozpoznanie. Intensywność koloru oznacza typowość w danej grupie wiekowej (schemat dydaktyczny opracowany na podstawie wykładu zakładu i piśmiennictwa, nie dane epidemiologiczne).</p>
+  <div class="filters" id="heatFilters">
+    <button aria-pressed="true" data-f="all">Wszystkie</button>
+    <button aria-pressed="false" data-f="s">🔪 Chirurgiczne</button>
+    <button aria-pressed="false" data-f="i">💊 Internistyczne</button>
+    <button aria-pressed="false" data-f="e">🫁 Pozabrzuszne</button>
+    <button aria-pressed="false" data-f="f">🧠 Czynnościowe</button>
+  </div>
+  <div class="tw"><table class="heat" id="heat"></table></div>
+  <p class="small" style="margin-top:.6rem">Skala: ● rzadkie, ●● możliwe, ●●● typowe. Najczęstsza przyczyna ostrego bólu w każdym wieku to zakażenie przewodu pokarmowego; najczęstsza przewlekłego – czynnościowa.</p>
+</div></section>
+
+<section id="algorytm"><div class="wrap">
+  <div class="eyebrow">Część B · Algorytm</div>
+  <h2>Algorytm postępowania</h2>
+  <p class="lead">Najpierw stabilność, potem czerwone flagi, na końcu rozróżnienie ostry kontra przewlekły.</p>
+  <div class="flow">
+    <div class="fn start">Dziecko z bólem brzucha</div><div class="ar">↓</div>
+    <div class="fn red"><b>1. ABCDE / PAT [5]</b>Wstrząs, sepsa [2], toksyczny wygląd, cechy odwodnienia [3]? → natychmiastowa stabilizacja (płyny izotoniczne, tlen, dostęp), potem diagnostyka</div><div class="ar">↓</div>
+    <div class="fn"><b>2. Czas trwania</b>Ostry (godziny–dni) czy przewlekły (nawracający ≥ 2 miesiące wg Rome IV)</div><div class="ar">↓</div>
+    <div class="branch">
+      <div>
+        <div class="fn amber"><b>OSTRY</b>Czerwone flagi?</div>
+        <div class="fn red"><b>TAK: wymioty żółciowe, obrona, wzdęcie, krew lub „galaretka”, guz, uraz, jądro, niemowlę z napadami</b>→ konsultacja chirurgiczna + USG (RTG przy niedrożności lub perforacji). Wymioty żółciowe: pasaż z kontrastem.</div>
+        <div class="fn blue"><b>NIE: szukaj przyczyn internistycznych i pozabrzusznych</b>Mocz → ZUM [14]; gardło i płuca → angina, zapalenie płuc [2]; glikemia i ketony → DKA [5]; skóra, stawy → IgAV [12][4]; krwista biegunka + oliguria → HUS [3][15]; stolec → gastroenteritis [3]</div>
+        <div class="fn green"><b>Niejasne?</b>Obserwacja z powtórnym badaniem po kilku godzinach, PAS, USG</div>
+      </div>
+      <div>
+        <div class="fn violet"><b>PRZEWLEKŁY</b>Objawy alarmowe?</div>
+        <div class="fn red"><b>TAK: utrata masy, zahamowanie wzrostu, krwawienie z przewodu pokarmowego, nasilone lub poranne wymioty, przewlekła biegunka, gorączka, ból w prawym górnym lub dolnym kwadrancie, dysfagia, wywiad IBD lub celiakii</b>→ celowana diagnostyka: OB/CRP, kalprotektyna, serologia celiakii, USG, endoskopia [6][7]</div>
+        <div class="fn green"><b>NIE: badanie prawidłowe, kał na krew ujemny</b>→ rozpoznanie czynnościowe (Rome IV), uspokojenie rodziny, leczenie zaparcia; nie badaj H. pylori w czynnościowym bólu</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:1.6rem">
+    <div class="card"><h4>Cechy alarmowe w przewlekłym bólu (AAP/NASPGHAN)</h4><p class="small">Niezamierzona utrata masy, zahamowanie wzrostu, krwawienie z przewodu pokarmowego, istotne wymioty (w tym żółciowe), przewlekła ciężka biegunka, uporczywy ból w prawym górnym lub dolnym kwadrancie, niewyjaśniona gorączka, wywiad rodzinny IBD oraz niepokojące wyniki badania. W badaniu: tkliwość w prawych kwadrantach, guz, hepato- lub splenomegalia, tkliwość kątów żebrowo-kręgowych i kręgosłupa, zmiany okołoodbytnicze (<a href="https://www.espghan.org/dam/jcr:49879d5e-b28b-45df-b4d0-dabff16320e3/Chronic_Abdominal_Pain_in_Children__A_Clinical.1.pdf" target="_blank" rel="noopener noreferrer">AAP/NASPGHAN</a>; lista polska: <a href="https://www.mp.pl/pytania/pediatria/chapter/B25.QA.3.7.13." target="_blank" rel="noopener noreferrer">mp.pl</a>).</p></div>
+    <div class="card"><h4>Kolka niemowlęca i zaburzenia czynnościowe</h4><p class="small">Kolka (Rome IV): niemowlę poniżej 5. miesiąca, napady płaczu i rozdrażnienia bez uchwytnej przyczyny, ≥ 3 godz. dziennie przez ≥ 3 dni w tygodniu, prawidłowy przyrost masy, bez gorączki i choroby; rozpoznanie wyłączenia. U starszych dzieci: czynnościowy ból brzucha NOS, zespół jelita drażliwego, dyspepsja czynnościowa, migrena brzuszna.</p></div>
+  </div>
+</div></section>
+
+<section id="choroby"><div class="wrap">
+  <div class="eyebrow">Część C</div>
+  <h2>Karty chorób</h2>
+  <p class="lead">Kliknij kartę, aby zobaczyć obraz kliniczny, diagnostykę, postępowanie, perełkę i pułapkę.</p>
+  <div class="filters" id="dFilters">
+    <button aria-pressed="true" data-f="all">Wszystkie</button>
+    <button aria-pressed="false" data-f="s">🔪 Chirurgiczne</button>
+    <button aria-pressed="false" data-f="i">💊 Internistyczne</button>
+    <button aria-pressed="false" data-f="e">🫁 Pozabrzuszne</button>
+    <button aria-pressed="false" data-f="f">🧠 Czynnościowe</button>
+  </div>
+  <div class="dcards" id="dcards"></div>
+
+  <div class="grid2" style="margin-top:2rem">
+    <figure class="fig">
+      <svg viewBox="0 0 440 250" id="intSvg" role="img" aria-label="Schemat wgłobienia jelita"></svg>
+      <figcaption>Wgłobienie: jelito wsuwa się w dalszy odcinek razem z krezką, co prowadzi do niedrożności i niedokrwienia. Najczęściej okolica krętniczo-kątnicza.</figcaption>
+    </figure>
+    <figure class="fig">
+      <svg viewBox="0 0 440 250" id="pylSvg" role="img" aria-label="Patofizjologia zwężenia odźwiernika"></svg>
+      <figcaption>Zwężenie odźwiernika: utrata kwasu solnego z wymiotami prowadzi do zasadowicy hipochloremicznej i hipokaliemicznej.</figcaption>
+    </figure>
+  </div>
+
+  <div class="card pas" style="margin-top:2rem">
+    <h3>🧮 Kalkulator Pediatric Appendicitis Score (PAS)</h3>
+    <p class="small" style="margin-bottom:.8rem">Narzędzie pomocnicze (maks. 10 pkt) dla dzieci z bólem brzucha trwającym do ok. 4 dni.</p>
+    <div class="grid2">
+      <div id="pasItems" class="stack" style="--gap:.4rem"></div>
+      <div class="stack">
+        <div>Wynik: <span class="pasout" id="pasScore">0</span> / 10</div>
+        <div class="callout" id="pasRes">Zaznacz cechy.</div>
+        <p class="small">Progi zależą od źródła: <a href="https://www.ebmedicine.net/media_library/files/Pediatric-Appendicitis-CD.pdf" target="_blank" rel="noopener noreferrer">EB Medicine</a> – poniżej 4 niskie, 4–6 pośrednie, ≥ 7 wysokie; protokół <a href="https://www.texaschildrens.org/sites/default/files/uploads/documents/outcomes/standards/Appendicitis%20Guideline%20FINAL%202023.pdf" target="_blank" rel="noopener noreferrer">Texas Children’s</a> – ≤ 4, 5–7, ≥ 8; tabela <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4949879/" target="_blank" rel="noopener noreferrer">WSES 2016</a> – ≥ 6 sugeruje zapalenie wyrostka. W grupie pośredniej zaleca się USG i konsultację chirurgiczną.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część D · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (pule S1, S4, S7 2025/26, S2 2024, grupy A, C, D, F, skrypt Kiedrasia). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze. Odznaki pokazują, na ile klucz jest pewny.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Powtarzalność tematów w plikach źródłowych</h4>
+    <p class="small" style="margin-bottom:.6rem">Liczba plików (z 23 przeszukanych), w których temat występuje w pytaniach, omówieniach lub notatkach.</p>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="filters" id="qFilters">
+    <button aria-pressed="true" data-f="all">Wszystkie</button>
+    <button aria-pressed="false" data-f="src">Klucz potwierdzony</button>
+    <button aria-pressed="false" data-f="inf">Wnioskowany</button>
+    <button aria-pressed="false" data-f="gap">Klucz vs wytyczne</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score" role="status">Wynik: 0 / 0</div>
+</div></section>
+
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część D</div>
+  <h2>Pod zaliczenie kontra aktualnie klinicznie</h2>
+  <div class="tw"><table id="gapTable"></table></div>
+</div></section>
+
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część E</div>
+  <h2>Połączenia międzymodułowe, flagi i perełki</h2>
+  <div class="grid2">
+    <figure class="fig"><svg viewBox="0 0 560 460" id="crossSvg" role="img" aria-label="Mapa połączeń modułu 1 z pozostałymi modułami"></svg><figcaption>Moduł [1] i choroby, w których ból brzucha łączy się z innymi modułami.</figcaption></figure>
+    <div class="stack" id="traps"></div>
+  </div>
+  <div class="grid3" style="margin-top:1.4rem">
+    <div class="callout red"><b class="k">🚩 Red flags: ostry ból</b><ul class="tight"><li>Wymioty żółciowe</li><li>Obrona mięśniowa, objawy otrzewnowe, sztywny lub wzdęty brzuch</li><li>Napadowy płacz z bladością i apatią między napadami</li><li>Krew w stolcu, „malinowa galaretka”</li><li>Guz, uraz, ból jądra</li><li>Wstrząs, letarg, toksyczny wygląd</li></ul></div>
+    <div class="callout green"><b class="k">💎 Perełki</b><ul class="tight"><li>Leżące nieruchomo = otrzewna; wijące się = kolka</li><li>Wymioty po bólu = chirurgia; przed bólem = gastroenteritis</li><li>Wgłobienie u starszego dziecka lub nawrotowe: szukaj punktu prowadzącego (Meckel, polip, chłoniak, IgAV)</li><li>Mniej niż 3 lata: ból „przy pępku” bez wartości lokalizacyjnej</li><li>Zielone wymioty u noworodka: malrotacja do wykluczenia</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>Nie zbadano jąder ani pachwin</li><li>Brak moczu na ZUM u dziecka z gorączką i bólem</li><li>Angina i zapalenie płuc jako „ostry brzuch”</li><li>Biegunka krwista leczona antybiotykiem lub loperamidem: ryzyko HUS</li><li>Zwężenie odźwiernika: zasadowica hipochloremiczna, nie hiperchloremiczna</li></ul></div>
+  </div>
+</div></section>
+</main>
+
+<footer id="zrodla"><div class="wrap">
+  <h3 style="margin-bottom:.6rem">Źródła</h3>
+  <p class="small" style="margin-bottom:.6rem"><b>Materiały zakładu i użytkownika:</b> pule pytań (S1, S3, S4, S7 2025/26; S2 2024; 2023/24), grupy A, C, D, F z omówieniami, skrypt Kiedrasia, wykład „Jama brzuszna”, notatki „Badanie przedmiotowe”, syllabus (TK01). Klucze potwierdzone odczytano z podświetleń w plikach grup F i 19-A.</p>
+  <ul>
+    <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7386163/" target="_blank" rel="noopener noreferrer">WSES Jerusalem 2020 – zapalenie wyrostka</a> i <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4949879/" target="_blank" rel="noopener noreferrer">wersja 2016 z tabelą skal</a></li>
+    <li><a href="https://www.ebmedicine.net/media_library/files/Pediatric-Appendicitis-CD.pdf" target="_blank" rel="noopener noreferrer">EB Medicine – Pediatric Appendicitis Score</a>; <a href="https://www.texaschildrens.org/sites/default/files/uploads/documents/outcomes/standards/Appendicitis%20Guideline%20FINAL%202023.pdf" target="_blank" rel="noopener noreferrer">Texas Children’s</a></li>
+    <li><a href="https://www.espghan.org/dam/jcr:49879d5e-b28b-45df-b4d0-dabff16320e3/Chronic_Abdominal_Pain_in_Children__A_Clinical.1.pdf" target="_blank" rel="noopener noreferrer">AAP/NASPGHAN – przewlekły ból brzucha u dzieci</a>; <a href="https://www.mp.pl/pediatria/artykuly-wytyczne/artykuly-przegladowe/353023,ostry-bol-brzucha-u-dzieci" target="_blank" rel="noopener noreferrer">mp.pl – ostry ból brzucha u dzieci</a></li>
+    <li><a href="https://www.acep.org/pediatrics/newsroom/2025/intussusception" target="_blank" rel="noopener noreferrer">ACEP – wgłobienie</a>; <a href="https://www.bsuh.nhs.uk/library/wp-content/uploads/sites/8/2020/08/Paediatric-guidelines-intussusception-and-air-enema-reduction-2019.pdf" target="_blank" rel="noopener noreferrer">BSUH – wgłobienie i kontrast powietrzny</a></li>
+    <li><a href="https://www.amboss.com/us/knowledge/hypertrophic-pyloric-stenosis" target="_blank" rel="noopener noreferrer">AMBOSS – przerostowe zwężenie odźwiernika</a></li>
+    <li><a href="https://discovery.ucl.ac.uk/id/eprint/10070928/3/Ozen_pbRHE-18-1225.R3%20-%20SHARE%20IgAV%20Recommendations%20-%20241218%20-%20DRAFT%20v1.035977.pdf" target="_blank" rel="noopener noreferrer">SHARE – IgAV</a>; <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11671997/" target="_blank" rel="noopener noreferrer">zalecenia brytyjskie 2024</a>; <a href="https://www.rch.org.au/clinicalguide/guideline_index/HenochSchonlein_Purpura/" target="_blank" rel="noopener noreferrer">RCH Melbourne</a></li>
+  </ul>
+  <p class="small" style="margin-top:.8rem">Materiał dydaktyczny. Schematy są uproszczone; dawek i progów nie traktuj jako zastępujących lokalny protokół.</p>
+</div></footer>
+<script src="app.js"></script>
+</body>
+</html>

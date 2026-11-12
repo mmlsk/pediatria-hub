@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[10] Nowotwory lite u dzieci – objawy, badanie, diagnostyka</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[10]</b> <span>Nowotwory lite</span></div>
+  <ul id="navlist">
+    <li><a href="#epi">Epidemiologia</a></li>
+    <li><a href="#mapa">Mapa guzów</a></li>
+    <li><a href="#wiek">Wiek</a></li>
+    <li><a href="#objawy">Objawy</a></li>
+    <li><a href="#badanie">Badanie</a></li>
+    <li><a href="#diagnostyka">Diagnostyka</a></li>
+    <li><a href="#guzy">Karty guzów</a></li>
+    <li><a href="#rozn">Różnicowanie</a></li>
+    <li><a href="#zadania">Zadania testowe</a></li>
+    <li><a href="#klucz">Klucz vs wytyczne</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁ [10] · TK10 · Pediatria V rok · PUM Szczecin</span>
+    <h1>Nowotwory <span>lite</span> u dzieci<br>objawy, badanie, diagnostyka</h1>
+    <p class="sub">Atlas do zaliczenia: mapa guzów i wieku zachorowania, objawy wg lokalizacji, zasady badania (w tym nieuciskanie guza brzucha przy podejrzeniu guza Wilmsa), algorytm diagnostyczny, markery, staging oraz zadania testowe z puli wraz z omówieniami.</p>
+    <div class="chips">
+      <span class="chip s">🔴 Wilms</span>
+      <span class="chip i">🔵 Neuroblastoma</span>
+      <span class="chip e">🟢 Siatkówczak</span>
+      <span class="chip f">🟣 Mięsaki i guzy kości</span>
+      <span class="chip">🟡 Wątroba i guzy zarodkowe</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ Z PLIKU</span> odpowiedź zaznaczona w pliku puli (czerwony tekst, podświetlenie, zielony prostokąt lub zakreślenie)</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak zaznaczenia; odpowiedź wynika z omówień zakładu i wytycznych</div>
+      <div><span class="kb unk">KLUCZ NIEPEWNY</span> wersje puli się różnią lub klucz budzi wątpliwości; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat: guzy lite u dzieci wg wieku">
+    <svg viewBox="0 0 380 330" id="heroSvg" role="img" aria-label="Uproszczony schemat: najczęstsze guzy lite u dzieci według narządu"></svg>
+    <figcaption>Najczęstsze guzy lite wg narządu i typowy wiek zachorowania (wykład i notatki zakładu).</figcaption>
+  </figure>
+</div></header>
+
+<main>
+<section id="epi"><div class="wrap">
+  <div class="eyebrow">Część A · Podstawy</div>
+  <h2>Epidemiologia: rzadkie, ale nie do przeoczenia</h2>
+  <p class="lead">Nowotwory dziecięce to około 1% wszystkich nowotworów, ale przebieg bywa skąpoobjawowy i podstępny, a szybkie rozpoznanie decyduje o wyleczeniu (wykład zakładu).</p>
+  <div class="stat" id="stat"></div>
+  <div class="grid2">
+    <div class="card"><h4>Standaryzowany współczynnik zachorowalności na 1 mln dzieci, Polska vs Europa</h4>
+      <p class="small" style="margin-bottom:.6rem">Dane z wykładu zakładu (rok 2004). Guzy lite wyróżnione kolorem.</p>
+      <div class="bars" id="epiBars"></div></div>
+    <div class="card"><h4>Co warto zapamiętać</h4>
+      <ul class="tight small" id="epiPts"></ul></div>
+  </div>
+</div></section>
+
+<section id="mapa"><div class="wrap">
+  <div class="eyebrow">Część A</div>
+  <h2>Mapa guzów: gdzie szukać i co z tego wynika</h2>
+  <p class="lead">Kliknij numer na schemacie, aby zobaczyć typowe guzy, objawy i pierwszy krok diagnostyczny w danej okolicy.</p>
+  <div class="body-map">
+    <figure class="fig"><svg viewBox="0 0 320 580" id="bodySvg" role="img" aria-label="Schemat sylwetki dziecka z numerowanymi okolicami guzów"></svg><figcaption>Schemat poglądowy (widok z przodu).</figcaption></figure>
+    <div class="card regbox" id="regBox" aria-live="polite"></div>
+  </div>
+  <h3 style="margin:2rem 0 .6rem">Zespoły predysponujące do nowotworów</h3>
+  <p class="small" style="margin-bottom:.8rem">Najmocniejsze powiązania zespół → guz (wykład zakładu: tabela zespołów dziedzicznej predyspozycji). Czerwone linie to połączenia najczęściej pytane w puli.</p>
+  <div class="grid2 syn-grid">
+    <figure class="fig syn-wrap"><svg viewBox="0 0 640 470" id="synSvg" class="syn-svg" role="img" aria-label="Graf: zespoły genetyczne i związane z nimi nowotwory"></svg></figure>
+    <div class="stack" id="synNotes"></div>
+  </div>
+</div></section>
+
+<section id="wiek"><div class="wrap">
+  <div class="eyebrow">Część A</div>
+  <h2>Wiek decyduje o rozpoznaniu</h2>
+  <p class="lead">Przy każdym guzie zacznij od pytania „ile ma lat?”. Poniżej: zakres zachorowania i szczyt dla najważniejszych guzów, a pod spodem mapa „o czym myśleć w pierwszej kolejności”.</p>
+  <figure class="fig age-wrap"><svg viewBox="0 0 760 400" id="ageSvg" class="age-svg" role="img" aria-label="Wykres zakresów wieku zachorowania na poszczególne guzy"></svg><figcaption>Zakresy wg wykładu i omówień puli; szczyt oznaczony rombem. Rozpiętość dla siatkówczaka i zarodkowych jest orientacyjna (PDQ, omówienia).</figcaption></figure>
+  <div class="filters" id="heatFilters" style="margin-top:1.4rem">
+    <button aria-pressed="true" data-f="all">Wszystkie</button>
+  </div>
+  <div class="tw"><table class="heat" id="heat"></table></div>
+</div></section>
+
+<section id="objawy"><div class="wrap">
+  <div class="eyebrow">Część B · Objawy</div>
+  <h2>Objawy: od „pierwszych sygnałów” do konkretnego guza</h2>
+  <div class="tabs" role="tablist" id="symTabs">
+    <button role="tab" aria-selected="true" data-p="s1">🚩 Pierwsze objawy</button>
+    <button role="tab" aria-selected="false" data-p="s2">📍 Wg lokalizacji</button>
+    <button role="tab" aria-selected="false" data-p="s3">🧬 Objawy ogólne vs hormonalne</button>
+    <button role="tab" aria-selected="false" data-p="s4">👶 Noworodek</button>
+  </div>
+  <div class="panel" id="s1"></div>
+  <div class="panel" id="s2" hidden></div>
+  <div class="panel" id="s3" hidden></div>
+  <div class="panel" id="s4" hidden></div>
+</div></section>
+
+<section id="badanie"><div class="wrap">
+  <div class="eyebrow">Część B · Badanie</div>
+  <h2>Badanie przedmiotowe dziecka z podejrzeniem guza</h2>
+  <div class="nodo" role="note" style="margin-bottom:1.4rem">
+    <div class="ic">🚫🤚</div>
+    <div><b>Nie uciskaj i nie ugniataj guza brzucha</b>
+    <p class="small" style="margin-top:.2rem">Przy podejrzeniu nefroblastoma badaj brzuch raz, łagodnie i płasko ułożoną dłonią. Cel to opis (wielkość, powierzchnia, ruchomość, strona, linia środkowa), a nie „wymacywanie” w nieskończoność. Głównym ryzykiem jest pęknięcie guza i rozsiew (pęknięcie lub biopsja podnoszą stopień zaawansowania), dlatego SIOP kładzie nacisk na zapobieganie pęknięciu guza w trakcie leczenia. Zasada wynika z założeń modułu [10]; w analizowanych plikach puli nie znalazłem osobnego pytania o ucisk guza. Pula zawiera za to pytanie, w którym lekarz bada palpacyjnie duży, niebolesny guz nieprzekraczający linii środkowej (odpowiedź: nefroblastoma).</p></div>
+  </div>
+  <div class="tabs" role="tablist" id="examTabs">
+    <button role="tab" aria-selected="true" data-p="e1">🩺 Ogólne i RR</button>
+    <button role="tab" aria-selected="false" data-p="e2">🫃 Brzuch</button>
+    <button role="tab" aria-selected="false" data-p="e3">👁️ Oczy</button>
+    <button role="tab" aria-selected="false" data-p="e4">🔎 Węzły i jamy</button>
+    <button role="tab" aria-selected="false" data-p="e5">🧠 Neurologiczne i kręgosłup</button>
+    <button role="tab" aria-selected="false" data-p="e6">🦴 Skóra, wady, kości</button>
+  </div>
+  <div class="panel" id="e1"></div>
+  <div class="panel" id="e2" hidden></div>
+  <div class="panel" id="e3" hidden></div>
+  <div class="panel" id="e4" hidden></div>
+  <div class="panel" id="e5" hidden></div>
+  <div class="panel" id="e6" hidden></div>
+</div></section>
+
+<section id="diagnostyka"><div class="wrap">
+  <div class="eyebrow">Część C · Diagnostyka</div>
+  <h2>Zaplanowanie diagnostyki</h2>
+  <p class="lead">Zasada zakładu: dokładny wywiad, dokładne badanie, podstawowe badania (morfologia, RTG, USG, TK, MRI) i pilne skierowanie do onkologa, jeśli nie wiesz, co robić.</p>
+  <div class="tabs" role="tablist" id="dxTabs">
+    <button role="tab" aria-selected="true" data-p="d1">🧭 Algorytm: guz brzucha</button>
+    <button role="tab" aria-selected="false" data-p="d2">🧪 Markery</button>
+    <button role="tab" aria-selected="false" data-p="d3">🖼️ Obrazowanie</button>
+    <button role="tab" aria-selected="false" data-p="d4">🔬 Biopsja</button>
+    <button role="tab" aria-selected="false" data-p="d5">🪜 Staging i ryzyko</button>
+  </div>
+  <div class="panel" id="d1"></div>
+  <div class="panel" id="d2" hidden></div>
+  <div class="panel" id="d3" hidden></div>
+  <div class="panel" id="d4" hidden></div>
+  <div class="panel" id="d5" hidden></div>
+</div></section>
+
+<section id="guzy"><div class="wrap">
+  <div class="eyebrow">Część C</div>
+  <h2>Karty guzów</h2>
+  <p class="lead">Rozwiń kartę, aby zobaczyć wiek, objawy, badanie, diagnostykę, leczenie oraz perełki i pułapki. Kolor krawędzi: czerwony Wilms, niebieski neuroblastoma, zielony siatkówczak, fiolet mięsaki i kości, bursztyn wątroba i zarodkowe.</p>
+  <div class="dcards" id="dcards"></div>
+</div></section>
+
+<section id="rozn"><div class="wrap">
+  <div class="eyebrow">Część C</div>
+  <h2>Różnicowanie guza jamy brzusznej</h2>
+  <p class="lead">Najczęstsza pułapka w puli: Wilms kontra neuroblastoma kontra „guz” z krwiomoczem, który wcale nie jest guzem (HUS).</p>
+  <div class="tw"><table id="diffTable" class="sm"></table></div>
+  <div class="grid2" style="margin-top:1.2rem" id="diffExtra"></div>
+</div></section>
+
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część D · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (pule V rok 21/22, 22/23, 2023/24, S1 – S7 2025/26, 2026/27, grupy A–F i omówienia). Wybierz odpowiedź; omówienie rozwija się po wyborze. Treść zadań jest skrócona lub odtworzona z plików; tam gdzie nie miałem pełnych opcji, uzupełniłem je typowymi dystraktorami, a klucz pochodzi z pliku. Odznaki pokazują, na ile klucz jest pewny.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Powtarzalność tematów w plikach źródłowych</h4>
+    <p class="small" style="margin-bottom:.6rem">Liczba plików (z 38 przeszukanych plików tekstowych z pul i omówień), w których temat występuje.</p>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="filters" id="qFilters">
+    <button aria-pressed="true" data-f="all">Wszystkie</button>
+    <button aria-pressed="false" data-f="src">Klucz z pliku</button>
+    <button aria-pressed="false" data-f="inf">Wnioskowany</button>
+    <button aria-pressed="false" data-f="unk">Niepewny</button>
+    <button aria-pressed="false" data-f="gap">Klucz vs wytyczne</button>
+    <button aria-pressed="false" data-f="x">Pułapki międzymodułowe</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score" role="status">Wynik: 0 / 0</div>
+</div></section>
+
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część D</div>
+  <h2>Pod zaliczenie kontra aktualnie klinicznie</h2>
+  <p class="lead">Tam, gdzie klucz z puli rozjeżdża się ze współczesnymi wytycznymi, obie wersje są pokazane osobno.</p>
+  <div class="tw"><table id="gapTable"></table></div>
+</div></section>
+
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część E</div>
+  <h2>Połączenia międzymodułowe, flagi i perełki</h2>
+  <div class="grid2">
+    <figure class="fig"><svg viewBox="0 0 680 480" id="crossSvg" role="img" aria-label="Mapa połączeń modułu 10 z pozostałymi modułami"></svg><figcaption>Moduł [10] i miejsca, w których guzy lite łączą się z innymi modułami.</figcaption></figure>
+    <div class="stack" id="traps"></div>
+  </div>
+  <div class="grid3" style="margin-top:1.4rem" id="pearls"></div>
+</div></section>
+</main>
+
+<footer id="zrodla"><div class="wrap">
+  <h3 style="margin-bottom:.6rem">Źródła</h3>
+  <p class="small" style="margin-bottom:.6rem"><b>Materiały zakładu i użytkownika:</b> sylabus 2025/26–2026/27 (seminarium TK10 „Nowotwory lite u dzieci – objawy, badanie, zaplanowanie diagnostyki”), wykład „Standardy diagnostyki i rozpoznawania guzów litych u dzieci” (J. Peregud-Pogorzelski), notatki z seminarium, pule pytań (V rok 21/22, 22/23, 2023/24, S1–S7 2025/26, 2026/27, grupy A–F) wraz z omówieniami. Klucze odczytano z oznaczeń w plikach (czerwony tekst, podświetlenie, zielone prostokąty, zakreślenia); tam gdzie ich brak, oznaczono „klucz wnioskowany”. Plik S5 2025/26 (skan) i część arkuszy xlsx nie zostały uwzględnione.</p>
+  <ul id="srcList"></ul>
+  <p class="small" style="margin-top:.8rem">Materiał dydaktyczny. Schematy są uproszczone; progów i schematów leczenia nie traktuj jako zastępujących protokół ośrodka onkologii dziecięcej.</p>
+</div></footer>
+<script src="app.js"></script>
+</body>
+</html>

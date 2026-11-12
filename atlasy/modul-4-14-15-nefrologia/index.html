@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[4][14][15] Nefrologia dziecięca – KZN, AKI i PChN, ZUM</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[4][14][15]</b> <span>Nefrologia</span></div>
+  <ul id="navlist">
+    <li><a href="#przeglad">Przegląd</a></li>
+    <li><a href="#kzn">[4] KZN</a></li>
+    <li><a href="#zn">[4] Zespół nerczycowy</a></li>
+    <li><a href="#aki">[15] AKI</a></li>
+    <li><a href="#pchn">[15] PChN</a></li>
+    <li><a href="#zum">[14] ZUM</a></li>
+    <li><a href="#zadania">Zadania testowe</a></li>
+    <li><a href="#klucz">Klucz vs wytyczne</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero" id="przeglad"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁY [4] · [14] · [15] · Pediatria V rok · Nefrologia</span>
+    <h1>Nerki u dzieci:<br><span>KZN</span>, <span>AKI/PChN</span> i <span>ZUM</span></h1>
+    <p class="sub">Atlas do zaliczenia: pacjent z uszkodzeniem nerek, objawy, badanie, ocena kliniczna, diagnostyka i powikłania. Do tego schematy, algorytmy, zadania testowe z puli z omówieniami oraz zestawienie „klucz kontra wytyczne”.</p>
+    <div class="chips">
+      <span class="chip s">🩸 Nefrytyczny: nadciśnienie + krwinkomocz + azotemia</span>
+      <span class="chip i">🧪 Nerczycowy: białkomocz &gt; 50 mg/kg/dobę</span>
+      <span class="chip e">🫘 PChN: CAKUT &gt; 40%</span>
+      <span class="chip f">🌡️ Gorączka bez ogniska: zrób mocz</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ POTWIERDZONY</span> odpowiedź zaznaczona w pliku z omówieniem (pogrubienie) lub w eksporcie z platformy</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak klucza; odpowiedź wynika z wykładu zakładu i wytycznych</div>
+      <div><span class="kb unk">KLUCZ NIEPEWNY</span> warianty puli są sprzeczne; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat układu moczowego i modułów">
+    <svg viewBox="0 0 380 440" id="heroSvg" role="img" aria-label="Schemat układu moczowego: nerki, moczowody, pęcherz, z oznaczeniem modułów 4, 15 i 14">
+      <defs>
+        <linearGradient id="kg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1B8AE"/><stop offset="1" stop-color="#E58A7D"/></linearGradient>
+        <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE0F5"/><stop offset="1" stop-color="#9DBFE8"/></linearGradient>
+      </defs>
+      <!-- kidneys -->
+      <path d="M112 62 C70 62 52 118 62 170 C70 214 110 232 138 210 C122 186 126 152 142 138 C158 124 154 62 112 62Z" fill="url(#kg)" stroke="#C23B2A" stroke-width="2.5"/>
+      <path d="M268 62 C310 62 328 118 318 170 C310 214 270 232 242 210 C258 186 254 152 238 138 C222 124 226 62 268 62Z" fill="url(#kg)" stroke="#C23B2A" stroke-width="2.5"/>
+      <path d="M92 92 C100 120 98 160 92 190 M288 92 C280 120 282 160 288 190" stroke="#fff" stroke-opacity=".6" stroke-width="3" fill="none"/>
+      <!-- ureters -->
+      <path d="M142 168 C150 220 168 262 176 304" stroke="#2B63AE" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M238 168 C230 220 212 262 204 304" stroke="#2B63AE" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <!-- bladder -->
+      <path d="M150 318 C150 296 230 296 230 318 C234 358 212 372 190 372 C168 372 146 358 150 318Z" fill="url(#bg2)" stroke="#2B63AE" stroke-width="2.5"/>
+      <path d="M190 372 L190 420" stroke="#2B63AE" stroke-width="7" stroke-linecap="round"/>
+      <!-- glomerulus inset -->
+      <circle cx="68" cy="330" r="52" fill="#fff" stroke="#C23B2A" stroke-width="2.5"/>
+      <path d="M40 330 C40 306 60 300 70 312 C80 324 62 334 70 344 C78 354 96 346 94 330 C92 316 76 316 72 326" stroke="#C23B2A" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="68" cy="330" r="40" fill="none" stroke="#B8730F" stroke-width="2" stroke-dasharray="4 3"/>
+      <line x1="98" y1="288" x2="84" y2="190" stroke="#C23B2A" stroke-dasharray="4 3" stroke-width="1.5"/>
+      <!-- module pills -->
+      <g font-weight="800" font-size="13">
+        <rect x="8" y="22" width="112" height="26" rx="13" fill="#C23B2A"/><text x="64" y="40" text-anchor="middle" fill="#fff">[4] kłębuszek</text>
+        <rect x="132" y="12" width="116" height="26" rx="13" fill="#2F8450"/><text x="190" y="30" text-anchor="middle" fill="#fff">[15] GFR / AKI</text>
+        <rect x="266" y="22" width="108" height="26" rx="13" fill="#2F8450"/><text x="320" y="40" text-anchor="middle" fill="#fff">[15] PChN</text>
+        <rect x="250" y="320" width="124" height="26" rx="13" fill="#2B63AE"/><text x="312" y="338" text-anchor="middle" fill="#fff">[14] drogi moczowe</text>
+      </g>
+      <g font-size="11.5" fill="#44545D">
+        <text x="226" y="250" font-weight="700" fill="#2B63AE">moczowody (VUR)</text>
+        <text x="190" y="344" text-anchor="middle" font-weight="700" fill="#13232C">pęcherz</text>
+        <text x="190" y="436" text-anchor="middle">cewka (PUV u chłopców)</text>
+        <text x="68" y="398" text-anchor="middle">tuft naczyń + podocyty</text>
+      </g>
+    </svg>
+    <figcaption>Gdzie leży problem: kłębuszek (KZN, ZN), nerka jako całość (AKI/PChN), drogi moczowe (ZUM, wady).</figcaption>
+  </figure>
+</div>
+
+<div class="wrap" style="margin-top:2rem">
+  <div class="kpis">
+    <div class="kpi"><b>3% / 1%</b><span>dziewczynek / chłopców z objawowym ZUM; u niemowląt chłopcy 2–5× częściej</span></div>
+    <div class="kpi"><b>50%</b><span>nawrotów ZUM w ciągu 12 miesięcy</span></div>
+    <div class="kpi"><b>&gt; 40%</b><span>PChN u dzieci z powodu CAKUT, KZN ok. 30%</span></div>
+    <div class="kpi"><b>8–12 tyg.</b><span>normalizacja C3 w PSGN</span></div>
+  </div>
+  <div class="grid2">
+    <div class="callout red"><b class="k">Pułapka międzymodułowa [3]+[12]+[15]</b>Krwista biegunka + małopłytkowość + niedokrwistość + oliguria = HUS. Nie myl z ZUM (bakterie w moczu) ani z KZN.</div>
+    <div class="callout amber"><b class="k">Pułapka [1]+[12]+[4]</b>Ból brzucha + plamica na pośladkach + krwinkomocz = IgAV (HSP). Nerki bywają zajęte u części chorych, zwykle w pierwszych tygodniach choroby: kontroluj mocz i ciśnienie.</div>
+    <div class="callout blue"><b class="k">Pułapka [1]+[2]+[14]</b>Gorączka + ból brzucha bez objawów dyzurycznych = wyklucz ZUM. Zaparcie i dysfunkcja pęcherza zwiększają ryzyko ZUM.</div>
+    <div class="callout green"><b class="k">Pułapka [4]+[15]</b>W zespole nerczycowym obrzęk wynika z NISKIEGO ciśnienia onkotycznego i hipowolemii. Duże dawki furosemidu = przednerkowe AKI i zakrzepica.</div>
+  </div>
+</div>
+</header>
+
+<!-- ================= [4] KZN ================= -->
+<section id="kzn"><div class="wrap">
+  <div class="sec-head"><span class="bigm m4">[4]</span><div><div class="eyebrow">Kłębuszkowe zapalenia nerek</div><h2>Pacjent z uszkodzeniem nerek</h2></div></div>
+  <p class="lead">Najpierw ustal zespół kliniczny (nefrytyczny, nerczycowy, mieszany, RPGN, izolowany krwinkomocz), potem przyczynę. Wykład zakładu: <b>zespół nefrytyczny = nadciśnienie + krwinkomocz + azotemia retencyjna</b>.</p>
+
+  <h3 style="margin-bottom:.6rem">Zespół nefrytyczny kontra nerczycowy</h3>
+  <div class="tw" style="margin-bottom:1.5rem"><table class="cmp2">
+    <thead><tr><th></th><th class="neph">Zespół nefrytyczny</th><th class="nerc">Zespół nerczycowy</th></tr></thead>
+    <tbody>
+    <tr><td>Definicja</td><td>nadciśnienie + krwinkomocz + azotemia ± białkomocz, często oliguria</td><td>białkomocz &gt; 50 mg/kg/dobę, albuminy &lt; 25 g/l, cholesterol &gt; 250 mg%, obrzęki</td></tr>
+    <tr><td>Mocz</td><td>krwinkomocz glomerularny (erytrocyty dysmorficzne, wałeczki erytrocytarne), „coca-cola”</td><td>mocz pieniący, wałeczki tłuszczowe, krwinkomocz zwykle brak</td></tr>
+    <tr><td>Obrzęki</td><td>twarz, powieki; efekt retencji sodu i wody</td><td>powieki, okolica lędźwiowo-krzyżowa, wodobrzusze, płyn w opłucnej; efekt niskiej albuminy</td></tr>
+    <tr><td>Ciśnienie</td><td>zwykle podwyższone (50–90% w PSGN)</td><td>prawidłowe lub niskie (hipowolemia)</td></tr>
+    <tr><td>C3</td><td>PSGN, MPGN/C3G, toczeń: niskie. IgA, IgAV, Alport, ANCA, anty-GBM: prawidłowe</td><td>prawidłowe (w MCD)</td></tr>
+    <tr><td>Przyczyny</td><td>PSGN, nefropatia IgA, IgAV, SLE, RPGN, MPGN</td><td>najczęściej MCD, także FSGS, nefropatie błoniaste, wrodzone (NPHS1)</td></tr>
+    <tr><td>Powikłania</td><td>encefalopatia nadciśnieniowa, obrzęk płuc, hiperkaliemia, AKI</td><td>zakrzepica i zatorowość, infekcje (SBP, pneumokoki), hipowolemia i przednerkowe AKI</td></tr>
+    <tr><td>Leczenie</td><td>sól i płyny, diuretyk pętlowy, leki hipotensyjne, leczenie przyczynowe</td><td>glikokortykosteroidy, ACE-I, leczenie obrzęków ostrożnie</td></tr>
+    </tbody></table></div>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <figure class="fig">
+      <svg viewBox="0 0 520 470" id="glomSvg" role="img" aria-label="Przekrój kapilary kłębuszkowej z lokalizacją złogów"></svg>
+      <figcaption>Przekrój pętli kapilarnej: komórka śródbłonka, błona podstawna (GBM), podocyty z przeponą szczelinową, mezangium. Kropki pokazują, gdzie odkładają się złogi.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card">
+        <h4>Gdzie leży złóg, tam leży rozpoznanie</h4>
+        <ul class="tight small">
+          <li><span class="pill r">podnabłonkowe „garby”</span> PSGN (kompleksy z antygenami paciorkowca, C3↓)</li>
+          <li><span class="pill b">mezangialne IgA</span> nefropatia IgA i IgAV (C3 prawidłowe)</li>
+          <li><span class="pill a">liniowo wzdłuż GBM</span> anty-GBM (Goodpasture: nerki + krwioplucie)</li>
+          <li><span class="pill v">podnabłonkowe</span> nefropatia błoniasta (ZN, HBV, SLE)</li>
+          <li><span class="pill g">zlanie stóp podocytów</span> MCD: zespół nerczycowy bez złogów (EM)</li>
+        </ul>
+      </div>
+      <div class="callout"><b class="k">Badania z listy zakładu (wykład)</b>Infekcja i ASO, HBV/HCV/EBV, ANA, C3/C4, ANCA, IgA, przeciwciała anty-GBM. Podstawa: ciśnienie, osad moczu, kreatynina, albumina.</div>
+      <div class="callout amber"><b class="k">Wiek a diagnoza</b>Noworodek i niemowlę poniżej 1 r.ż. z zespołem nerczycowym: pomyśl o wrodzonym (NPHS1). Młodzież: toczeń, ANCA, FSGS, nefropatia IgA.</div>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:.6rem">Karty chorób</h3>
+  <div class="dcards" id="kznCards"></div>
+
+  <h3 style="margin:1.8rem 0 .6rem">Oś czasu PSGN</h3>
+  <figure class="fig wide"><svg viewBox="0 0 780 330" id="psgnSvg" role="img" aria-label="Oś czasu ostrego popaciorkowcowego KZN: zakażenie, okres utajenia, zespół nefrytyczny, ASO, C3"></svg>
+  <figcaption>Okres utajenia: po anginie 1–3 tygodnie, po zakażeniu skóry 3–6 tygodni. Po skórze ASO bywa niskie: oznacz anty-DNazę B.</figcaption></figure>
+
+  <h3 style="margin:1.8rem 0 .6rem">Algorytm diagnostyczny</h3>
+  <div class="flow">
+    <div class="fn start">Krwinkomocz (erytrocyty dysmorficzne / wałeczki) ± białkomocz ± obrzęki ± nadciśnienie</div><div class="ar">↓</div>
+    <div class="fn red"><b>1. Ocena zagrożenia</b>ciśnienie tętnicze, diureza, kreatynina / eGFR, potas, bilans płynów. Szybki wzrost kreatyniny = RPGN, biopsja bez zwłoki</div><div class="ar">↓</div>
+    <div class="fn blue"><b>2. Dopełniacz C3/C4, ASO + anty-DNaza B, morfologia</b></div><div class="ar">↓</div>
+    <div class="branch">
+      <div><div class="fn amber"><b>C3 obniżone</b>PSGN (wraca do normy w 8–12 tyg.), MPGN / C3G (utrzymuje się &gt; 12 tyg.), SLE (C3 i C4 niskie), nefritis shuntowy</div><div class="fn green">ASO↑ + zespół nefrytyczny po anginie = PSGN. Nie wymaga biopsji</div></div>
+      <div><div class="fn violet"><b>C3 prawidłowe</b>IgA, IgAV (plamica!), Alport (rodzinnie, niedosłuch), anty-GBM, ANCA, nefropatia cienkich błon</div><div class="fn green">Dalej: ANA, anty-dsDNA, ANCA, anty-GBM, IgA wg obrazu</div></div>
+    </div>
+    <div class="ar">↓</div>
+    <div class="fn"><b>3. Biopsja nerki:</b> RPGN; zespół nerczycowy steroidooporny / zależny / częste nawroty; atypowe PSGN (C3 niskie &gt; 6–12 tyg., utrzymujący się białkomocz); SLE; wątpliwe rozpoznanie</div>
+  </div>
+
+  <div class="grid2" style="margin-top:1.5rem">
+    <div class="card"><h4>Powikłania ostrego KZN</h4><ul class="tight small">
+      <li><b>Nadciśnienie:</b> bóle głowy, drgawki, zaburzenia widzenia (encefalopatia)</li>
+      <li><b>Przeciążenie objętościowe:</b> obrzęk płuc, niewydolność krążenia</li>
+      <li><b>AKI:</b> oliguria, hiperkaliemia, kwasica, mocznica</li>
+      <li><b>RPGN:</b> półksiężyce, utrata nerek w tygodniach</li>
+      <li><b>Przewlekłe:</b> PChN (MPGN, FSGS, Alport, SLE, IgA)</li></ul></div>
+    <div class="card"><h4>Leczenie PSGN (wg wytycznych)</h4><ul class="tight small">
+      <li>Ograniczenie soli i płynów; diuretyk pętlowy przy obrzękach i nadciśnieniu</li>
+      <li>Leki hipotensyjne (np. bloker kanału wapniowego); ACE-I ostrożnie przy zaburzonej czynności nerek (hiperkaliemia)</li>
+      <li>Antybiotyk (penicylina, 10 dni) przy aktywnym zakażeniu paciorkowcowym</li>
+      <li>Dializa: oporna hiperkaliemia, mocznica, przewodnienie</li>
+      <li>Brak swoistego leczenia; immunosupresja tylko w RPGN</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ================= [4] ZN ================= -->
+<section id="zn"><div class="wrap">
+  <div class="sec-head"><span class="bigm m4">[4]</span><div><div class="eyebrow">Zespół nerczycowy u dzieci</div><h2>Białkomocz, obrzęki, powikłania</h2></div></div>
+  <p class="lead">Zdecydowana większość zespołów nerczycowych u dzieci jest pierwotna, a 95% przypadków jest steroidowrażliwych (wykład 4). Najczęstszy obraz w biopsji: zmiany minimalne.</p>
+  <div class="grid2">
+    <figure class="fig">
+      <svg viewBox="0 0 520 330" id="znSvg" role="img" aria-label="Patofizjologia zespołu nerczycowego"></svg>
+      <figcaption>Łańcuch: utrata albuminy → niskie ciśnienie onkotyczne → obrzęk i hipowolemia → powikłania.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h4>Algorytm leczenia pierwszego epizodu</h4><ul class="tight small">
+        <li>Wiek 1–10 lat, zespół czysto nerczycowy: <b>prednizon doustnie bez biopsji</b></li>
+        <li>Wykład zakładu: 60 mg/m²/dobę × 6 tyg., potem 40 mg/m² co drugi dzień × 6 tyg., plus ACE-I</li>
+        <li>IPNA 2022: 60 mg/m² (2 mg/kg, max 60 mg) × 4 lub 6 tyg., następnie 40 mg/m² co drugi dzień × 4 lub 6 tyg.</li>
+        <li>Steroidowrażliwość = remisja w ciągu 4 tygodni</li>
+        <li>Biopsja: steroidooporność, steroidozależność, częste nawroty, cechy nefrytyczne, wiek &lt; 1 r.ż.</li>
+        <li>Druga linia: inhibitory kalcyneuryny (cyklosporyna, takrolimus); cyklofosfamid (wg wykładu)</li></ul></div>
+      <div class="callout red"><b class="k">Czerwone flagi w ZN</b>Asymetryczny obrzęk kończyny lub nagła duszność (zakrzepica / zatorowość), gorączka z bólem brzucha (SBP), hipowolemia z oligurią (przednerkowe AKI), krwiomocz i nadciśnienie (zmiana rozpoznania).</div>
+      <div class="callout green"><b class="k">Genetyka (wykład 4)</b>NPHS1 – nefryna, wrodzony typ fiński. NPHS2 – podocyna, steroidooporny. WT1 – Denys-Drash (guz Wilmsa, wady narządów płciowych).</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ================= [15] AKI ================= -->
+<section id="aki"><div class="wrap">
+  <div class="sec-head"><span class="bigm m15">[15]</span><div><div class="eyebrow">Ostre uszkodzenie / niewydolność nerek</div><h2>AKI: objawy, badanie, plan diagnostyki</h2></div></div>
+  <p class="lead">Najczęstsza przyczyna zależy od wieku: noworodek – niedotlenienie, 1 mż.–3 r.ż. – HUS, powyżej 3 lat – KZN i choroby śródmiąższowe (wykład 12). Zawsze szukaj odwodnienia, wstrząsu i niedrożności dróg moczowych.</p>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <figure class="fig">
+      <svg viewBox="0 0 520 300" id="akiSvg" role="img" aria-label="Przednerkowe, nerkowe i zanerkowe AKI"></svg>
+      <figcaption>Trzy przedziały AKI: dopływ krwi (przednerkowe), miąższ (nerkowe), odpływ moczu (zanerkowe).</figcaption>
+    </figure>
+    <div class="tw"><table>
+      <thead><tr><th>Przednerkowe</th><th>Nerkowe</th><th>Zanerkowe</th></tr></thead>
+      <tbody><tr>
+        <td>odwodnienie, trzecia przestrzeń, wstrząs, ACE-I/ARB, NLPZ</td>
+        <td>ATN, mioglobina/hemoglobina, HUS, KZN, AIN (beta-laktamy, sulfonamidy, NLPZ), choroby układowe, TLS, CAKUT</td>
+        <td>PUV, zwężenia, kamica, pęcherz neurogenny, krystalurie (sulfonamidy, MTX, indynawir)</td></tr>
+        <tr><td colspan="3" class="small"><b>Wg wieku:</b> noworodek – hipowolemia, asfiksja, zakrzepica żył nerkowych, aminoglikozydy, PUV; niemowlę 1 mż–3 r.ż. – HUS, odwodnienie; &gt; 3 r.ż. – KZN, choroby śródmiąższowe.</td></tr></tbody></table></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <div>
+      <h3 style="margin-bottom:.5rem">Kryteria i stopnie (KDIGO 2012)</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Stopień</th><th>Kreatynina</th><th>Diureza</th></tr></thead>
+        <tbody>
+        <tr><td><span class="pill g">1</span></td><td>1,5–1,9× lub wzrost ≥ 0,3 mg/dl</td><td>&lt; 0,5 ml/kg/h przez 6–12 h</td></tr>
+        <tr><td><span class="pill a">2</span></td><td>2,0–2,9×</td><td>&lt; 0,5 ml/kg/h przez ≥ 12 h</td></tr>
+        <tr><td><span class="pill r">3</span></td><td>≥ 3× lub ≥ 4 mg/dl, RRT, eGFR &lt; 35 (&lt; 18 lat)</td><td>&lt; 0,3 ml/kg/h ≥ 24 h lub anuria ≥ 12 h</td></tr></tbody></table></div>
+      <p class="footnote">Rozpoznanie AKI: wzrost kreatyniny ≥ 0,3 mg/dl w 48 h, albo ≥ 1,5× wartości wyjściowej w 7 dni, albo diureza &lt; 0,5 ml/kg/h przez 6 h.</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom:.5rem">pRIFLE (wykład zakładu)</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Klasa</th><th>eGFR / kreatynina</th><th>Diureza</th></tr></thead>
+        <tbody>
+        <tr><td><span class="pill g">Risk</span></td><td>eGFR −25% (kreat. 1,5×)</td><td>&lt; 0,5 ml/kg/h × 8 h</td></tr>
+        <tr><td><span class="pill a">Injury</span></td><td>eGFR −50% (2×)</td><td>&lt; 0,5 ml/kg/h × 16 h</td></tr>
+        <tr><td><span class="pill r">Failure</span></td><td>eGFR −75% (3×)</td><td>&lt; 0,3 ml/kg/h × 24 h lub anuria 12 h</td></tr>
+        <tr><td><span class="pill v">Loss / ESKD</span></td><td>utrata funkcji &gt; 4 tyg. / &gt; 3 mies.</td><td></td></tr></tbody></table></div>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:.5rem">Przednerkowe kontra nerkowe (ATN)</h3>
+  <div class="tw" style="margin-bottom:1.5rem"><table>
+    <thead><tr><th>Parametr</th><th>Przednerkowe</th><th>Nerkowe (ATN)</th></tr></thead>
+    <tbody>
+    <tr><td>Osmolalność moczu</td><td>&gt; 500 mOsm/kg</td><td>&lt; 350</td></tr>
+    <tr><td>Na w moczu</td><td>&lt; 10–20 mmol/l</td><td>&gt; 30–40</td></tr>
+    <tr><td>FENa</td><td>&lt; 1% (noworodek &lt; 2%)</td><td>&gt; 1% (noworodek &gt; 2%)</td></tr>
+    <tr><td>Mocznik mocz/surowica</td><td>&gt; 10</td><td>&lt; 10</td></tr>
+    <tr><td>Osad moczu</td><td>prawidłowy</td><td>walcowate wałeczki ziarniste</td></tr>
+    <tr><td>Ciężar właściwy</td><td>&gt; 1,015</td><td>&lt; 1,009</td></tr></tbody></table></div>
+
+  <div class="grid2">
+    <div class="card"><h4>Plan diagnostyki AKI</h4><ul class="tight small">
+      <li><b>Wywiad:</b> biegunka i wymioty, krew w stolcu (HUS), gardło/skóra 1–3 tyg. wcześniej (PSGN), leki (aminoglikozydy, NLPZ, ACE-I), kontrast, chemioterapia (TLS), krwiomocz, zaburzenia mikcji</li>
+      <li><b>Badanie:</b> masa ciała i bilans, nawodnienie, ciśnienie, obrzęki, wybroczyny (HUS, DIC), żółtaczka, cewnik/pęcherz wyczuwalny</li>
+      <li><b>Badania:</b> kreatynina, mocznik, jonogram (K!), gazometria, morfologia z rozmazem (schistocyty), LDH, bilirubina, haptoglobina, C3/C4, mocz z osadem, Na w moczu, FENa</li>
+      <li><b>Obrazowanie:</b> USG nerek z dopplerem (zakrzepica żyły nerkowej, wodonercze, wielkość)</li></ul></div>
+    <div class="card"><h4>Leczenie i wskazania do RRT</h4><ul class="tight small">
+      <li>Leczenie przyczynowe; odstawić nefrotoksyny, dostosować dawki leków</li>
+      <li>Nawodnienie (wykład 20: 10–20 ml/kg); diuretyk pętlowy dopiero po optymalnym nawodnieniu (wykład 20: furosemid 1–5 mg/kg/24 h)</li>
+      <li>Białko 1,5 g/kg, energia 30–40 kcal/kg/dobę</li>
+      <li><b>RRT:</b> K &gt; 6,5; mocznik &gt; 150 mg/dl lub wzrost &gt; 50 mg/dl/dobę; oporne przewodnienie, obrzęk płuc/mózgu, zapalenie opłucnej/osierdzia mocznicowe, skaza mocznicowa, oporne nadciśnienie, śpiączka</li>
+      <li>Metody: dializa otrzewnowa (Tenckhoff), CVVHD/HF/HDF, SCUF, SLEDD</li></ul></div>
+  </div>
+
+  <h3 style="margin:1.8rem 0 .6rem">Zespół hemolityczno-mocznicowy</h3>
+  <div class="dcards" id="husCards"></div>
+</div></section>
+
+<!-- ================= [15] PChN ================= -->
+<section id="pchn"><div class="wrap">
+  <div class="sec-head"><span class="bigm m15">[15]</span><div><div class="eyebrow">Przewlekła choroba nerek</div><h2>PChN: stadia, przyczyny, powikłania</h2></div></div>
+  <p class="lead">PChN: uszkodzenie nerek lub GFR &lt; 60 ml/min/1,73 m² przez ≥ 3 miesiące. Klasyfikacja KDIGO 2024: przyczyna, kategoria G i kategoria albuminurii A.</p>
+  <figure class="fig wide" style="margin-bottom:1.5rem"><svg viewBox="0 0 780 190" id="gfrSvg" role="img" aria-label="Stadia PChN G1 do G5 według GFR"></svg>
+  <figcaption>Stadia G wg GFR (ml/min/1,73 m²). KDIGO 2024 dodaje kategorie albuminurii A1–A3 oraz przyczynę (klasyfikacja CGA).</figcaption></figure>
+
+  <div class="grid2">
+    <div class="card"><h4>Przyczyny PChN u dzieci</h4><div class="bars" id="barsPchn"></div>
+      <p class="footnote">CAKUT: wady układu moczowego, nefropatia refluksowa i zaporowa. Inne: HUS, cystynoza, Alport.</p></div>
+    <figure class="fig"><svg viewBox="0 0 520 420" id="pchnMap" role="img" aria-label="Mapa powikłań PChN"></svg>
+      <figcaption>Powikłania i leczenie: patrz każdy gałąź jako parę „problem → leczenie”.</figcaption></figure>
+  </div>
+
+  <div class="grid2" style="margin-top:1.5rem">
+    <div class="card"><h4>Objawy i badanie</h4><ul class="tight small">
+      <li>Poliuria i nocyturia (upośledzone zagęszczanie), nadciśnienie, bladość (niedokrwistość)</li>
+      <li>Zahamowanie wzrastania, krzywica nerkowa, ból kostny, zakażenia układu moczowego</li>
+      <li>Świąd, nudności, zaburzenia snu, kardiomiopatia, zapalenie osierdzia w mocznicy</li>
+      <li>Płytki: dysfunkcja (krwawienia), kwasica oddechowa Kussmaula</li></ul></div>
+    <div class="card"><h4>Zaplanowanie diagnostyki</h4><ul class="tight small">
+      <li>Mocznik, kreatynina, cystatyna C, kwas moczowy, K, Na, Ca, P, PTH, 25(OH)D₃, gazometria, morfologia</li>
+      <li>Mocz: osad, UPCR / UACR (oba u dzieci wg KDIGO 2024)</li>
+      <li>USG, CUM, scyntygrafia (DMSA/MAG3), echo serca, ABPM</li>
+      <li><b>Bez kontrastu jodowego</b> przy niskim GFR (urografia nieprzydatna)</li></ul></div>
+  </div>
+  <div class="callout blue" style="margin-top:1rem"><b class="k">Leczenie (wykład 20)</b>ACE-I/ARB przy nadciśnieniu i białkomoczu, erytropoetyna + żelazo, leczenie MBD (ograniczenie fosforanów, wiązacze, aktywna witamina D), wodorowęglan przy kwasicy, hormon wzrostu, odpowiednia podaż kalorii. W stadium G5: dializa i przeszczep. Dawkowanie wg protokołu ośrodka.</div>
+</div></section>
+
+<!-- ================= [14] ZUM ================= -->
+<section id="zum"><div class="wrap">
+  <div class="sec-head"><span class="bigm m14">[14]</span><div><div class="eyebrow">Zakażenia układu moczowego u dzieci</div><h2>Objawy, przyczyny, czynniki ryzyka, postępowanie</h2></div></div>
+  <p class="lead">Postacie: bezobjawowa bakteriuria, zapalenie pęcherza, ostre odmiedniczkowe zapalenie nerek (OOZN), przewlekłe odmiedniczkowe zapalenie z bliznami. U niemowląt droga krwiopochodna, potem wstępująca.</p>
+
+  <h3 style="margin-bottom:.5rem">Obraz kliniczny wg wieku</h3>
+  <div class="tw" style="margin-bottom:1.5rem"><table>
+    <thead><tr><th>Wiek</th><th>Charakterystyczne objawy</th><th>Uwaga</th></tr></thead>
+    <tbody>
+    <tr><td><b>Noworodek</b></td><td>przedłużająca się żółtaczka, sepsa, słabe ssanie, hipotermia lub gorączka, brak przyrostu</td><td>posiew krwi i moczu; USG u każdego</td></tr>
+    <tr><td><b>Niemowlę</b></td><td>gorączka bez ogniska, wymioty, biegunka, odmowa jedzenia, niepokój, brak przyrostów („maski”: przewód pokarmowy, OUN, upośledzone wchłanianie)</td><td>chłopcy 2–5× częściej; mocz z cewnika</td></tr>
+    <tr><td><b>1–5 lat</b></td><td>gorączka, ból brzucha, wymioty, zmiana wzorca mikcji, nietrzymanie moczu, nieprzyjemny zapach moczu</td><td>gorączka + ból brzucha bez dyzurii = ZUM</td></tr>
+    <tr><td><b>Wiek szkolny / nastolatek</b></td><td>dyzuria, częstomocz, parcie, ból nadłonowy, krwiomocz; OOZN: gorączka, dreszcze, ból w lędźwiach (Goldflam)</td><td>S. saprophyticus u dziewcząt; seksualna aktywność</td></tr></tbody></table></div>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <div>
+      <h3 style="margin-bottom:.5rem">Kryteria „fińskie” OOZN (wykład 19)</h3>
+      <div class="crit"><div><b>&gt; 38°C</b>gorączka</div><div><b>OB↑</b>podwyższone OB</div><div><b>CRP↑</b>podwyższone CRP</div><div><b>Goldflam</b>ból uciśnięcia lędźwi</div></div>
+      <p class="footnote">3 z 4 kryteriów uprawdopodabnia OOZN. DMSA: ogniska zmniejszonego wychwytu = ostre zakażenie lub blizna (nieobecność ognisk rozpoznania nie wyklucza).</p>
+    </div>
+    <div class="callout red"><b class="k">Nie wyklucza ZUM</b>Prawidłowe badanie ogólne moczu nie wyklucza ZUM; o rozpoznaniu decyduje posiew. Leukocyturia i bakteriuria w osadzie wspierają rozpoznanie.</div>
+  </div>
+
+  <h3 style="margin-bottom:.5rem">Zbiórka moczu i progi bakteriurii</h3>
+  <div class="tw" style="margin-bottom:.5rem"><table>
+    <thead><tr><th>Metoda</th><th>Próg (wykład 19)</th><th>Ocena w puli i wytycznych</th></tr></thead>
+    <tbody>
+    <tr><td>Nakłucie nadłonowe</td><td>każdy wzrost</td><td><span class="pill g">najbardziej jałowe</span>, nie rutynowo</td></tr>
+    <tr><td>Cewnikowanie</td><td>&gt; 10³/ml</td><td><span class="pill g">rutynowa metoda u niemowląt (klucz puli)</span>; AAP 2026: ≥ 10 000 CFU/ml</td></tr>
+    <tr><td>Środkowy strumień po umyciu</td><td>&gt; 10⁵/ml</td><td>starsze dzieci kontrolujące mikcję</td></tr>
+    <tr><td>Woreczek jałowy</td><td>10⁵/ml</td><td><span class="pill r">niezalecany do potwierdzenia</span>: wartość ma tylko wynik jałowy</td></tr></tbody></table></div>
+  <p class="footnote" style="margin-bottom:1.5rem">Mocz na posiew pobierz PRZED pierwszą dawką antybiotyku.</p>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <div class="card"><h4>Etiologia</h4><ul class="tight small">
+      <li><b>E. coli</b> – najczęstsza; <b>Klebsiella</b>, <b>Proteus</b> (ok. 30% u chłopców; ureaza → kamica struwitowa)</li>
+      <li><b>S. saprophyticus</b> – ok. 30% zapaleń pęcherza u dziewcząt w wieku szkolnym (G+)</li>
+      <li><b>Adenowirus</b> – krwotoczne zapalenie pęcherza</li>
+      <li><b>Candida</b> – cukrzyca, immunosupresja, cewnik</li>
+      <li>Kamica: wapniowa ok. 90%, moczanowa 8%, cystynowa 2%</li></ul></div>
+    <figure class="fig"><svg viewBox="0 0 520 380" id="zumMap" role="img" aria-label="Mapa czynników ryzyka ZUM"></svg>
+      <figcaption>Czynniki ryzyka: staza, anatomia, funkcja pęcherza i jelita, higiena i procedury.</figcaption></figure>
+  </div>
+
+  <div class="grid2" style="margin-bottom:1.5rem">
+    <div class="card"><h4>Postępowanie (wykład 19)</h4><ul class="tight small">
+      <li><b>OOZN:</b> antybiotyk 10–14 dni, empirycznie, potem wg antybiogramu</li>
+      <li>Posiew kontrolny: po 14 dniach; przy braku poprawy – po 48 godzinach leczenia</li>
+      <li>Wykluczyć wadę układu moczowego; <b>chemioprofilaktyka do zakończenia diagnostyki</b></li>
+      <li><b>Zapalenie pęcherza:</b> leczenie doustne wg antybiogramu, 3–5 dni (EAU/ESPU)</li>
+      <li><b>Bezobjawowa bakteriuria:</b> &gt; 5 lat bez leczenia; &lt; 5 lat wg antybiogramu</li>
+      <li>Higiena, regulacja stolca, regularne mikcje, odpowiednia podaż płynów</li></ul></div>
+    <div class="card"><h4>Wskazania do hospitalizacji</h4><ul class="tight small">
+      <li>Wiek &lt; 3 miesięcy (zwykle), toksyczny wygląd, wymioty, odwodnienie</li>
+      <li>Brak poprawy po 48 godzinach, podejrzenie urosepsy</li>
+      <li>Nieprawidłowa anatomia (PUV, hydronefroza), niewydolność nerek</li>
+      <li>Niemożność leczenia doustnego</li></ul></div>
+  </div>
+
+  <h3 style="margin-bottom:.5rem">Obrazowanie po ZUM i odpływ pęcherzowo-moczowodowy</h3>
+  <figure class="fig wide" style="margin-bottom:1rem"><svg viewBox="0 0 800 330" id="vurSvg" role="img" aria-label="Stopnie odpływu pęcherzowo-moczowodowego od I do V"></svg>
+  <figcaption>Międzynarodowa klasyfikacja VUR w CUM. Złoty standard rozpoznania: cystouretrografia mikcyjna.</figcaption></figure>
+  <div class="cmp" style="margin-bottom:1rem">
+    <div class="a"><b class="k">Pod zaliczenie (wg puli/zakładu)</b>Po OOZN: USG; CUM i DMSA w zależności od roku i grupy (warianty F, C, 5. rok, S1). VUR: CUM. PUV: cystoskopia. Chemioprofilaktyka do zakończenia diagnostyki.</div>
+    <div class="b"><b class="k">Aktualnie klinicznie (wg wytycznych)</b>AAP, EAU: USG po pierwszym gorączkowym ZUM, VCUG selektywnie (nieprawidłowe USG, nawrót, atypowo). NICE: obrazowanie rutynowo nie służy do lokalizacji ani wykrywania VUR. AAP 2026: profilaktyka selektywna, USG słabo wykrywa VUR.</div>
+  </div>
+  <div class="callout amber"><b class="k">Pułapka</b>Przed CUM mocz musi być jałowy; NICE zaleca profilaktykę doustną przez 3 dni, z CUM w drugiej dobie. Zastawki cewki tylnej występują tylko u chłopców: noworodek z małowodziem, pogrubiałym pęcherzem i obustronnym wodonerczem.</div>
+</div></section>
+
+<!-- ================= ZADANIA ================= -->
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część G · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (A17, C, D, F 2020, zestawy S1–S7 2025/26, pytania Moodle, pula V roku). Wybierz odpowiedź, aby zobaczyć omówienie. Znacznik „✎ opcje uzupełnione” oznacza, że pula podaje tylko klucz lub fragment, a opcje odtworzono. „Zadanie autorskie” to uzupełnienie z wykładu i wytycznych.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Zestaw zadań według tematu</h4>
+    <p class="small" style="margin-bottom:.6rem">Liczba zadań na tej stronie w danym obszarze. Pytania często powtarzają się w wielu grupach i rocznikach puli.</p>
+    <div class="bars" id="barsPool"></div>
+  </div>
+  <div class="qtools">
+    <div class="filters" id="qFilters" style="margin:0">
+      <button aria-pressed="true" data-f="all">Wszystkie</button>
+      <button aria-pressed="false" data-f="m4">[4] KZN i ZN</button>
+      <button aria-pressed="false" data-f="m15">[15] AKI i PChN</button>
+      <button aria-pressed="false" data-f="m14">[14] ZUM</button>
+      <button aria-pressed="false" data-f="x">Międzymodułowe</button>
+      <button aria-pressed="false" data-f="gap">Klucz vs wytyczne</button>
+      <button aria-pressed="false" data-f="unk">Klucz niepewny</button>
+    </div>
+    <span class="sp"></span>
+    <button class="btn" id="rand10">Losuj 10</button>
+    <button class="btn o" id="resetQ">Wyczyść wyniki</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score">Wynik: 0 / 0</div>
+</div></section>
+
+<!-- ================= KLUCZ vs WYTYCZNE ================= -->
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część H</div>
+  <h2>Klucz kontra wytyczne</h2>
+  <p class="lead">Tam, gdzie klucz puli odbiega od współczesnych standardów, na zaliczeniu obowiązuje klucz zakładu, a w praktyce klinicznej wytyczne.</p>
+  <div class="tw"><table id="gapTable"></table></div>
+  <div class="callout red" style="margin-top:1rem"><b class="k">Pytania bez klucza w plikach</b>Pula nie podaje klucza do pytania „badanie USG po rozpoznaniu pierwszego epizodu ZUM zalecane jest u dzieci w wieku poniżej: 6 / 12 / 18 / 24 / 48 mies.” (S7 #46). W wytycznych AAP i EAU USG wykonuje się po każdym pierwszym gorączkowym ZUM u niemowląt i małych dzieci. Zapytaj zakład o klucz.</div>
+</div></section>
+
+<!-- ================= PUŁAPKI ================= -->
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część I</div>
+  <h2>Pułapki, perełki i punkty wspólne</h2>
+  <div class="grid3" id="pearls" style="margin-bottom:1.5rem"></div>
+  <figure class="fig wide"><svg viewBox="0 0 860 470" id="crossSvg" role="img" aria-label="Mapa powiązań modułów 4, 14, 15 z innymi"></svg><figcaption>Mapa powiązań modułów do szybkiej powtórki.</figcaption></figure>
+  <div class="grid2" id="traps" style="margin-top:1.5rem"></div>
+</div></section>
+
+<!-- ================= ŹRÓDŁA ================= -->
+<section id="zrodla"><div class="wrap">
+  <div class="eyebrow">Część J</div>
+  <h2>Źródła</h2>
+  <div class="grid2">
+    <div class="card"><h4>Pliki zakładu (priorytet 1)</h4><ul class="tight srcs small">
+      <li>Wykład 4: Zespół nerczycowy</li>
+      <li>Wykład 12: Niewydolność nerek u dzieci</li>
+      <li>Wykład 19: Zakażenia układu moczowego</li>
+      <li>Wykład 20: Ostre uszkodzenie nerek i PChN (Żakowska-Żych)</li>
+      <li>Pule A17, C, D 2019/20, F 2020 z omówieniami; zestawy S1, S2, S3, S4, S5, S7 2025/26; pytania Moodle (Pediatria_lek); Kiedraś</li>
+      <li>Nie było osobnego wykładu o KZN w folderze: treść KZN pochodzi z pul, wykładu o zespole nerczycowym i omówień</li></ul></div>
+    <div class="card"><h4>Wytyczne i przeglądy (priorytet 2)</h4><ul class="tight srcs small">
+      <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9589698/pdf/467_2022_Article_5739.pdf">IPNA 2022: zespół nerczycowy steroidowrażliwy (Trautmann 2023)</a></li>
+      <li><a href="https://ncbi.nlm.nih.gov/pmc/articles/PMC7316686/">IPNA: zespół nerczycowy steroidooporny</a></li>
+      <li><a href="https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf">KDIGO 2012: AKI</a></li>
+      <li><a href="https://kdigo.org/wp-content/uploads/2025/03/KDIGO-2024-CKD-Guideline-Key-Takeaways-for-Pediatricians.pdf">KDIGO 2024: PChN, uwagi dla pediatrów</a></li>
+      <li><a href="https://uroweb.org/guidelines/paediatric-urology/chapter/urinary-tract-infections-in-children">EAU/ESPU: ZUM u dzieci (2025)</a></li>
+      <li><a href="https://www.nice.org.uk/guidance/ng224">NICE NG224: ZUM u dzieci poniżej 16 lat</a></li>
+      <li><a href="https://publications.aap.org/pediatrics/article/138/6/e20163026/52686/Reaffirmation-of-AAP-Clinical-Practice-Guideline?autologincheck=redirected">AAP 2011/2016: ZUM u dzieci 2–24 mies.</a></li>
+      <li><a href="https://publications.aap.org/aapnews/news/35967/New-AAP-guideline-reframes-diagnosis-management-of">AAP 2026: ZUM u dzieci 8 dni–5 lat (omówienie)</a></li>
+      <li><a href="https://academic.oup.com/ndt/article/40/10/1843/8197890">NDT 2025: PSGN u dzieci, standard leczenia</a></li>
+      <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3228372/">Podejście do dziecka z ostrym KZN</a></li></ul></div>
+  </div>
+  <p class="footnote" style="margin-top:1rem">Dawek leków nie podaję poza tymi, które zawiera wykład zakładu lub cytowana wytyczna. Dawkowanie ustala aktualna charakterystyka produktu i protokół ośrodka.</p>
+</div></section>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[9] Guzy mózgu u dzieci – atlas do zaliczenia z pediatrii</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[9]</b> <span>Guzy mózgu</span></div>
+  <ul id="navlist">
+    <li><a href="#wystepowanie">Występowanie</a></li>
+    <li><a href="#objawy">Objawy</a></li>
+    <li><a href="#diagnostyka">Diagnostyka</a></li>
+    <li><a href="#guzy">Karty guzów</a></li>
+    <li><a href="#rdzen">Rdzeń</a></li>
+    <li><a href="#leczenie">Leczenie</a></li>
+    <li><a href="#zadania">Zadania testowe</a></li>
+    <li><a href="#klucz">Klucz vs wytyczne</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁ [9] · Pediatria V rok · Onkologia</span>
+    <h1>Guzy <span>mózgu</span> u dzieci<br>diagnostyka, występowanie, leczenie</h1>
+    <p class="sub">Atlas do zaliczenia: lokalizacja i histologia guzów, algorytm objawów i diagnostyki, rozsiew po płynie mózgowo-rdzeniowym, ścieżka leczenia z ograniczeniami wiekowymi oraz zadania testowe z puli wraz z omówieniami.</p>
+    <div class="chips">
+      <span class="chip s">🧠 Podnamiotowo ok. 52–60%</span>
+      <span class="chip i">🔬 MRI mózgu i rdzenia</span>
+      <span class="chip e">🩺 Poranne wymioty + tarcza zastoinowa</span>
+      <span class="chip f">☢️ RTH: uwaga poniżej 3. r.ż.</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ POTWIERDZONY</span> odpowiedź zaznaczona w pliku z omówieniem (pogrubienie) lub w eksporcie z platformy</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak klucza; odpowiedź wynika z wykładu zakładu i wytycznych</div>
+      <div><span class="kb unk">KLUCZ NIEPEWNY</span> pula jest sprzeczna lub niejednoznaczna; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat lokalizacji guzów mózgu">
+    <svg viewBox="150 30 360 400" id="heroSvg" role="img" aria-label="Przekrój strzałkowy mózgu i rdzenia z lokalizacją guzów i odsetkami wg wykładu">
+      <defs><linearGradient id="gbr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E1ECF9"/><stop offset="1" stop-color="#CFE0F5"/></linearGradient></defs>
+      <!-- supratentorial cerebrum -->
+      <path d="M180 170 C170 90 250 45 330 48 C420 50 482 100 478 175 C476 205 440 225 400 226 L300 214 L246 205 C205 200 184 190 180 170Z" fill="url(#gbr)" stroke="#2B63AE" stroke-width="2.5"/>
+      <!-- sella region -->
+      <ellipse cx="398" cy="208" rx="34" ry="22" fill="#FCEFD6" stroke="#B8730F" stroke-width="2.5"/>
+      <!-- cerebellum -->
+      <path d="M190 215 C185 250 215 270 258 262 C295 255 300 232 290 214 C260 200 215 198 190 215Z" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2.5"/>
+      <path d="M200 226 C225 236 260 238 285 228 M206 242 C228 250 258 252 280 244" stroke="#E58A7D" stroke-width="1.5" fill="none"/>
+      <!-- brainstem -->
+      <path d="M300 214 L352 214 L346 300 L312 300Z" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2.5"/>
+      <!-- IV ventricle -->
+      <path d="M292 232 L304 222 L304 250 L292 246Z" fill="#fff" stroke="#C23B2A" stroke-width="2"/>
+      <!-- spinal cord -->
+      <path d="M312 300 L346 300 L342 420 L316 420Z" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2.5"/>
+      <path d="M329 305 L329 415" stroke="#A790D8" stroke-width="2" stroke-dasharray="4 4"/>
+      <!-- pineal -->
+      <circle cx="320" cy="196" r="9" fill="#6E4CB0"/>
+      <!-- markers -->
+      <g font-size="13" font-weight="800" fill="#fff" text-anchor="middle">
+        <circle cx="270" cy="120" r="12" fill="#2B63AE"/><text x="270" y="125">1</text>
+        
+        <circle cx="398" cy="208" r="12" fill="#B8730F"/><text x="398" y="213">2</text>
+        <circle cx="236" cy="236" r="12" fill="#C23B2A"/><text x="236" y="241">3</text>
+        <circle cx="329" cy="258" r="12" fill="#C23B2A"/><text x="329" y="263">4</text>
+        <circle cx="329" cy="360" r="12" fill="#6E4CB0"/><text x="329" y="365">5</text>
+      </g>
+      </svg>
+    <div class="herolist">
+      <div><b style="color:#2B63AE">1 Półkule 24%</b> astrocytoma, wyściółczak, GBM</div>
+      <div><b style="color:#B8730F">2 Okolica siodłowa 16%</b> czaszkogardlak 9, gruczolak 3</div>
+      <div><b style="color:#C23B2A">3 Móżdżek 45%</b> rdzeniak 25, astrocytoma 18</div>
+      <div><b style="color:#C23B2A">4 Pień mózgu 15%</b> astrocytoma, wyściółczak, GBM</div>
+      <div><b style="color:#6E4CB0">5 Rdzeń kręgowy 12%</b> Th 60%, L/S 30%</div>
+      <div><b style="color:#6E4CB0">Szyszynka</b> germinoma, pineoblastoma</div>
+    </div>
+    <figcaption>Schemat poglądowy, wartości wg wykładu. Czerwony = podnamiotowo, niebieski = nadnamiotowo, bursztynowy = okolica siodłowa, fiolet = szyszynka i rdzeń. IV komora: wyściółczak (60% w tylnym dole).</figcaption>
+  </figure>
+</div></header>
+
+<main>
+<!-- ============ A ============ -->
+<section id="wystepowanie"><div class="wrap">
+  <div class="eyebrow">Część A · Występowanie</div>
+  <h2>Epidemiologia, lokalizacja i histologia</h2>
+  <p class="lead">Guzy OUN to najczęstsze guzy lite wieku dziecięcego. Większość pochodzi z gleju, większość nie daje przerzutów poza OUN, a u dzieci przeważa lokalizacja podnamiotowa.</p>
+  <div class="kpis">
+    <div class="kpi"><b>105–130</b><span>nowych zachorowań na nowotwory na 1 mln dzieci &lt; 17 r.ż. rocznie w Polsce (wykład)</span></div>
+    <div class="kpi r"><b>16–28%</b><span>nowotworów dziecięcych w Polsce to guzy mózgu; w Europie 22,6% (wykład)</span></div>
+    <div class="kpi a"><b>70–80%</b><span>guzów OUN to guzy glejowe (wykład)</span></div>
+    <div class="kpi v"><b>29 / mln</b><span>zachorowań na guzy OUN u dzieci &lt; 15 r.ż. (wykład)</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Lokalizacja wg wykładu (% wszystkich guzów mózgu)</h4>
+      <p class="small" style="margin-bottom:.6rem">Wartości orientacyjne z wykładu, nie sumują się do 100%. Rdzeń kręgowy podano osobno (12%).</p>
+      <div class="bars" id="barsLoc"></div>
+    </div>
+    <div class="card">
+      <h4>Typy histologiczne wg wykładu (% guzów mózgu)</h4>
+      <p class="small" style="margin-bottom:.6rem">Suma wymienionych typów to ok. 90%. Rdzeniak i astrocytoma móżdżku dominują w tylnym dole.</p>
+      <div class="bars" id="barsHist"></div>
+    </div>
+  </div>
+
+  <div class="callout amber" style="margin-top:1.2rem"><b class="k">Pod zaliczenie: dwa „najczęstsze”</b>
+  Najczęstszy guz OUN u dzieci to <b>astrocytoma</b> (według notatki w puli: pilocytarny, I° WHO), drugi pod względem częstości jest <b>rdzeniak (medulloblastoma) IV°</b>. Rdzeniak jest natomiast <b>najczęstszym nowotworem o wysokim stopniu złośliwości</b> w mózgu dziecka (eksport z platformy, klucz zaznaczony). Pytania o „najczęstszy” rozstrzygaj po słowach „wysoki stopień złośliwości”.</div>
+
+  <h3 style="margin:1.6rem 0 .6rem">Wiek determinuje diagnozę</h3>
+  <p class="small" style="margin-bottom:.8rem">Układ wg podręczników pediatrycznych i przeglądów; wykład zakładu go nie podaje, więc traktuj jako uzupełnienie do pytań przypadkowych.</p>
+  <div class="agegrid">
+    <div class="agecol a1"><h4>Niemowlę i &lt; 3 lat</h4><ul><li>Częściej guzy zarodkowe i nadnamiotowe, duże w chwili rozpoznania</li><li>Napięte ciemię, rozsunięcie szwów, powiększenie obwodu głowy</li><li>Rdzeniak często SHH lub grupa 3</li><li>RTH odraczana lub pomijana</li></ul></div>
+    <div class="agecol a2"><h4>3–10 lat</h4><ul><li>Szczyt guzów tylnego dołu: rdzeniak, astrocytoma pilocytarny, wyściółczak</li><li>Poranne bóle głowy i wymioty, ataksja, oczopląs</li><li>Stratyfikacja ryzyka rdzeniaka: wiek ≥ 3 lat</li></ul></div>
+    <div class="agecol a3"><h4>10–14 lat</h4><ul><li>Guzy okolicy siodłowej: czaszkogardlak</li><li>Zaburzenia wzrastania, moczówka prosta, ubytki pola widzenia</li><li>Glejaki, guzy rdzenia z bólami pleców i skoliozą</li></ul></div>
+    <div class="agecol a4"><h4>Nastolatek</h4><ul><li>Guzy zarodkowe okolicy szyszynki i siodła, gruczolak przysadki</li><li>Glejaki wysokiego stopnia nadnamiotowe</li><li>Napady padaczkowe jako pierwszy objaw guza półkuli</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ B ============ -->
+<section id="objawy"><div class="wrap">
+  <div class="eyebrow">Część B · Obraz kliniczny</div>
+  <h2>Objawy zależą od lokalizacji i tempa wzrostu</h2>
+  <p class="lead">Guz wolno rosnący osiąga duże rozmiary, zanim da objawy; guz szybko rosnący ujawnia się, gdy jest jeszcze mały. Kluczowe jest rozdzielenie objawów wzmożonego ciśnienia śródczaszkowego od objawów ogniskowych.</p>
+  <figure class="fig wide">
+    <svg viewBox="0 0 900 400" id="symSvg" role="img" aria-label="Algorytm: objawy ICP i ogniskowe a lokalizacja guza">
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9Z" fill="#44545D"/></marker></defs>
+      <rect x="230" y="14" width="440" height="64" rx="14" fill="#13232C"/>
+      <text x="450" y="40" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">Dziecko z bólami głowy i wymiotami</text>
+      <text x="450" y="61" text-anchor="middle" fill="#CFE0E3" font-size="13">poranne, niezależne od posiłków, ± zaburzenia chodu lub widzenia</text>
+      <path d="M380 78 L200 130" stroke="#44545D" stroke-width="2" marker-end="url(#ar)" fill="none"/>
+      <path d="M520 78 L700 130" stroke="#44545D" stroke-width="2" marker-end="url(#ar)" fill="none"/>
+      <rect x="20" y="132" width="360" height="104" rx="14" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
+      <text x="200" y="158" text-anchor="middle" font-size="14.5" font-weight="800" fill="#C23B2A">Najpierw objawy ICP</text>
+      <text x="200" y="180" text-anchor="middle" font-size="13" fill="#13232C">ogniskowe pojawiają się później</text>
+      <text x="200" y="204" text-anchor="middle" font-size="13" font-weight="700" fill="#13232C">guz komorowy, głęboki, linii środkowej</text>
+      <text x="200" y="224" text-anchor="middle" font-size="12.5" fill="#44545D">(IV i III komora, szyszynka, siodło, wodogłowie)</text>
+      <rect x="520" y="132" width="360" height="104" rx="14" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+      <text x="700" y="158" text-anchor="middle" font-size="14.5" font-weight="800" fill="#2B63AE">Najpierw objawy ogniskowe</text>
+      <text x="700" y="180" text-anchor="middle" font-size="13" fill="#13232C">ICP bywa późne lub nieobecne</text>
+      <text x="700" y="204" text-anchor="middle" font-size="13" font-weight="700" fill="#13232C">guz miąższowy: półkula, pień, móżdżek</text>
+      <text x="700" y="224" text-anchor="middle" font-size="12.5" fill="#44545D">(napady, niedowład, porażenia nn. czaszkowych)</text>
+      <path d="M200 236 L200 262" stroke="#44545D" stroke-width="2" marker-end="url(#ar)"/>
+      <path d="M700 236 L700 262" stroke="#44545D" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="20" y="264" width="360" height="118" rx="12" fill="#fff" stroke="#C23B2A" stroke-width="1.5"/>
+      <text x="36" y="288" font-size="13.5" font-weight="800" fill="#C23B2A">Objawy ICP</text>
+      <text x="36" y="310" font-size="13" fill="#13232C">• bóle głowy, wymioty „chlustające”, poranne</text>
+      <text x="36" y="330" font-size="13" fill="#13232C">• tarcza zastoinowa na dnie oka</text>
+      <text x="36" y="350" font-size="13" fill="#13232C">• wgłobienie; bradykardia i nadciśnienie (Cushing)</text>
+      <text x="36" y="370" font-size="13" fill="#13232C">• niemowlę: napięte ciemię, rozsunięte szwy</text>
+      <rect x="520" y="264" width="360" height="118" rx="12" fill="#fff" stroke="#2B63AE" stroke-width="1.5"/>
+      <text x="536" y="288" font-size="13.5" font-weight="800" fill="#2B63AE">Objawy ogniskowe</text>
+      <text x="536" y="310" font-size="13" fill="#13232C">• napady padaczkowe, niedowłady</text>
+      <text x="536" y="330" font-size="13" fill="#13232C">• uszkodzenie nerwów czaszkowych</text>
+      <text x="536" y="350" font-size="13" fill="#13232C">• zaburzenia chodu, niezborność móżdżkowa</text>
+      <text x="536" y="370" font-size="13" fill="#13232C">• ubytki pola widzenia</text>
+    </svg>
+    <figcaption>Pułapka testowa: bóle głowy i wymioty to objawy ICP, a nie ogniskowe. Ataksja i zaburzenia pola widzenia to objawy ogniskowe (klucz grupy D 2019/20: napady, zaburzenia chodu, niezborność).</figcaption>
+  </figure>
+
+  <h3 style="margin:1.6rem 0 .8rem">Objawy według lokalizacji</h3>
+  <div class="grid3">
+    <div class="tcard r"><h4>Móżdżek, IV komora</h4><ul><li>Ataksja, niezborność tułowia, dysmetria</li><li>Oczopląs poziomy, zaburzenia równowagi</li><li>Szybko narasta wodogłowie: poranne wymioty, bóle głowy</li><li>W puli: guz tylnego dołu z ICP i oczopląsem = móżdżek; najpewniej rdzeniak</li></ul></div>
+    <div class="tcard r"><h4>Pień mózgu</h4><ul><li>Porażenia nerwów czaszkowych, długie drogi, zaburzenia chodu</li><li>ICP późno (guz miąższowy)</li><li>Rozlane guzy pnia: rokowanie bardzo złe, przeżycie 2-letnie &lt; 10% (wykład)</li><li>Prawdziwe w puli: „guzy pnia dają porażenia nn. czaszkowych”</li></ul></div>
+    <div class="tcard b"><h4>Półkule mózgu</h4><ul><li>Napady padaczkowe, niedowład połowiczy</li><li>Ubytki pola widzenia, zmiany osobowości</li><li>ICP przy dużych guzach lub wodogłowiu</li></ul></div>
+    <div class="tcard a"><h4>Okolica siodłowa</h4><ul><li>Czaszkogardlak: obustronne niedowidzenie połowicze (klucz A17), zez, oczopląs</li><li>Moczówka prosta, zahamowanie wzrastania, niedoczynność przysadki</li><li>Zawsze oznacz AFP i β-hCG (guzy zarodkowe)</li></ul></div>
+    <div class="tcard v"><h4>Podwzgórze i linia środkowa</h4><ul><li>Zaburzenia apetytu: wyniszczenie lub otyłość; zaburzenia emocjonalne (pula 19/20 i 22/23)</li><li>Moczówka prosta, niedoczynność przysadki, wtórna niedoczynność nadnerczy, przedwczesne dojrzewanie</li><li>Nie pierwotna niedoczynność tarczycy</li></ul></div>
+    <div class="tcard g"><h4>Szyszynka (uzupełnienie)</h4><ul><li>Guzy zarodkowe, pineoblastoma; wodogłowie przez ucisk wodociągu</li><li>Zaburzenia spojrzenia ku górze (zespół Parinauda, wiedza z podręczników)</li><li>Markery AFP i β-hCG w surowicy i PMR</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ C ============ -->
+<section id="diagnostyka"><div class="wrap">
+  <div class="eyebrow">Część C · Diagnostyka</div>
+  <h2>Postępowanie diagnostyczne krok po kroku</h2>
+  <p class="lead">Przy podejrzeniu guza: wywiad, badanie neurologiczne i dna oka, następnie MRI. Punkcji lędźwiowej nie wykonuje się przed obrazowaniem ani w ostrym wodogłowiu.</p>
+  <figure class="fig wide">
+    <svg viewBox="0 0 900 520" id="dxSvg" role="img" aria-label="Schemat diagnostyki guza mózgu u dziecka">
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9Z" fill="#075760"/></marker></defs>
+      <g font-size="13" fill="#13232C">
+        <rect x="20" y="20" width="260" height="104" rx="12" fill="#DDF1F2" stroke="#0C7A85" stroke-width="2"/>
+        <text x="36" y="44" font-weight="800" fill="#075760" font-size="14">1 Wywiad i badanie</text>
+        <text x="36" y="66">poranne bóle głowy, wymioty</text><text x="36" y="84">badanie neurologiczne</text><text x="36" y="102">dno oka: tarcza zastoinowa</text>
+        <rect x="320" y="20" width="260" height="104" rx="12" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
+        <text x="336" y="44" font-weight="800" fill="#C23B2A" font-size="14">2 Ocena ICP</text>
+        <text x="336" y="66">wodogłowie, wgłobienie?</text><text x="336" y="84">NIE wykonuj LP przed MRI/CT</text><text x="336" y="102">pilna konsultacja neurochirurgiczna</text>
+        <rect x="620" y="20" width="260" height="104" rx="12" fill="#DDF1F2" stroke="#0C7A85" stroke-width="2"/>
+        <text x="636" y="44" font-weight="800" fill="#075760" font-size="14">3 MRI mózgu z kontrastem</text>
+        <text x="636" y="66">metoda z wyboru (tylny dół,</text><text x="636" y="84">multiplanarnie, bez promieniowania)</text><text x="636" y="102">CT: stan nagły lub brak MRI</text>
+        <rect x="620" y="176" width="260" height="104" rx="12" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+        <text x="636" y="200" font-weight="800" fill="#2B63AE" font-size="14">4 MRI całego rdzenia</text>
+        <text x="636" y="222">najlepiej przed operacją</text><text x="636" y="240">(artefakty krwi po zabiegu)</text><text x="636" y="258">guzy zarodkowe i rozsiewające się</text>
+        <rect x="320" y="176" width="260" height="104" rx="12" fill="#FCEFD6" stroke="#B8730F" stroke-width="2"/>
+        <text x="336" y="200" font-weight="800" fill="#B8730F" font-size="14">5 Markery AFP i β-hCG</text>
+        <text x="336" y="222">surowica i PMR</text><text x="336" y="240">zawsze przy guzie siodłowo-</text><text x="336" y="258">nadsiodłowym i szyszynkowym</text>
+        <rect x="20" y="176" width="260" height="104" rx="12" fill="#DDF1F2" stroke="#0C7A85" stroke-width="2"/>
+        <text x="36" y="200" font-weight="800" fill="#075760" font-size="14">6 Operacja i histologia</text>
+        <text x="36" y="222">maks. bezpieczna resekcja</text><text x="36" y="240">badanie histopatologiczne</text><text x="36" y="258">+ molekularne (WHO CNS5)</text>
+        <rect x="20" y="332" width="260" height="104" rx="12" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+        <text x="36" y="356" font-weight="800" fill="#2B63AE" font-size="14">7 MRI pooperacyjne</text>
+        <text x="36" y="378">w ciągu 24–72 h od zabiegu</text><text x="36" y="396">ocena resztki guzu (próg 1,5 cm²)</text>
+        <rect x="320" y="332" width="260" height="104" rx="12" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+        <text x="336" y="356" font-weight="800" fill="#2B63AE" font-size="14">8 Cytologia PMR</text>
+        <text x="336" y="378">punkcja lędźwiowa ≥ 14 dni po</text><text x="336" y="396">operacji (wcześniej fałszywe +),</text><text x="336" y="414">o ile bezpieczna (M1)</text>
+        <rect x="620" y="332" width="260" height="104" rx="12" fill="#13232C"/>
+        <text x="636" y="356" font-weight="800" fill="#fff" font-size="14">9 Stratyfikacja ryzyka</text>
+        <text x="636" y="378" fill="#CFE0E3">wiek, resztka, M0–M4, histologia</text><text x="636" y="396" fill="#CFE0E3">i podgrupa molekularna</text><text x="636" y="414" fill="#CFE0E3">→ plan leczenia</text>
+      </g>
+      <g stroke="#075760" stroke-width="2.2" fill="none" marker-end="url(#ar2)">
+        <path d="M280 72 L316 72"/><path d="M580 72 L616 72"/>
+        <path d="M750 124 L750 172"/><path d="M620 228 L584 228"/><path d="M320 228 L284 228"/>
+        <path d="M150 280 L150 328"/><path d="M280 384 L316 384"/><path d="M580 384 L616 384"/>
+      </g>
+      <text x="20" y="478" font-size="12.5" fill="#44545D">Układ kroków 3–8 zgodny z PDQ (nowotwory zarodkowe). Chory z objawami ICP jest operowany pilnie, więc kolejność kroków 4–6 zależy od stanu dziecka.</text>
+      <text x="20" y="498" font-size="12.5" fill="#44545D">Rutynowa ocena układowa (szpik, scyntygrafia kości, TK jamy brzusznej) przy rdzeniaku nie jest obecnie wymagana, choć wymienia ją wykład zakładu.</text>
+    </svg>
+    <figcaption>Diagnostyka rdzeniaka jako wzorzec dla guzów rozsiewających się po PMR. Strzałki pokazują kolejność postępowania.</figcaption>
+  </figure>
+
+  <div class="grid2" style="margin-top:1.4rem">
+    <div class="card"><h4>🧪 Badania wg wykładu zakładu</h4>
+      <ul class="tight small">
+        <li><b>TK:</b> typ guza (torbielowaty, lity, krwotoczny), lepiej po kontraście</li>
+        <li><b>MRI (preferowany):</b> rozległość masy, tkanki naciekane, tylny dół, wiele płaszczyzn, brak promieniowania, mniej artefaktów kostnych, zmiany w rdzeniu (zastąpił mielografię)</li>
+        <li><b>PMR:</b> cytologia, białko, glukoza, poliaminy (putrescyna), AFP, hCG</li>
+        <li><b>Rdzeniak / wyściółczak wysokiego stopnia:</b> trepanobiopsja szpiku, scyntygrafia kości, TK jamy brzusznej</li>
+        <li>TK i angio-MR: unaczynienie i operacyjność; biopsja stereotaktyczna lub endoskopowa; fenestracja endoskopowa zamiast zastawki</li>
+      </ul></div>
+    <div class="card"><h4>🩺 Aktualnie klinicznie</h4>
+      <ul class="tight small">
+        <li>MRI mózgu i <b>całego rdzenia</b>, najlepiej przed operacją, aby krew pooperacyjna nie imitowała przerzutów</li>
+        <li>MRI pooperacyjne w 24–72 h, aby wiarygodnie ocenić resztkę</li>
+        <li>Cytologia PMR z nakłucia lędźwiowego co najmniej 14 dni po zabiegu; wynik dodatni wcześniej wymaga potwierdzenia</li>
+        <li>Brak rutynowej oceny układowej, bo przerzuty poza OUN są rzadkie w chwili rozpoznania</li>
+        <li>Przed LP zawsze dno oka lub obrazowanie; LP przeciwwskazana w ostrym wodogłowiu</li>
+      </ul></div>
+  </div>
+  <div class="callout red" style="margin-top:1rem"><b class="k">🚩 Red flags</b>Poranne wymioty niezwiązane z posiłkami i bóle głowy, nowe zaburzenia chodu, zez lub zaburzenia widzenia, tarcza zastoinowa, powiększający się obwód głowy u niemowlęcia, ból pleców nasilający się w nocy lub w pozycji leżącej. Wymioty poranne tuż po wstaniu z łóżka u nastolatka bez poprawy po IPP wymagają obrazowania głowy, a nie kolejnej gastroskopii.</div>
+</div></section>
+
+<!-- ============ D ============ -->
+<section id="guzy"><div class="wrap">
+  <div class="eyebrow">Część D · Karty guzów</div>
+  <h2>Najważniejsze guzy i rozsiew po płynie mózgowo-rdzeniowym</h2>
+  <p class="lead">Rozsiew po PMR decyduje o zakresie diagnostyki (MRI rdzenia, cytologia) i o radioterapii całego OUN.</p>
+  <div class="grid2" style="align-items:start">
+    <figure class="fig wide" style="margin:0">
+      <svg viewBox="0 0 520 420" id="csfSvg" role="img" aria-label="Schemat rozsiewu guzów po płynie mózgowo-rdzeniowym">
+        <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9Z" fill="#C23B2A"/></marker></defs>
+        <path d="M130 60 C120 20 220 10 290 22 C360 34 372 90 350 130 C330 160 200 170 150 140 C130 125 130 90 130 60Z" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+        <ellipse cx="250" cy="82" rx="58" ry="24" fill="#fff" stroke="#6B7A82" stroke-width="1.5"/>
+        <text x="250" y="86" text-anchor="middle" font-size="12.5" fill="#44545D">komory i zbiorniki PMR</text>
+        <rect x="236" y="150" width="30" height="62" rx="8" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
+        <text x="282" y="186" font-size="12.5" fill="#C23B2A" font-weight="700">IV komora: rdzeniak, wyściółczak</text>
+        <rect x="238" y="212" width="26" height="170" rx="8" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2"/>
+        <g stroke="#C23B2A" stroke-width="2.2" fill="none" marker-end="url(#ar3)"><path d="M251 212 L251 292"/><path d="M251 292 L251 360"/></g>
+        <g fill="#C23B2A"><circle cx="251" cy="330" r="6"/><circle cx="251" cy="352" r="6"/><circle cx="251" cy="372" r="6"/></g>
+        <text x="282" y="300" font-size="12.5" fill="#44545D">przerzuty „kroplowe” w kanale kręgowym</text>
+        <text x="282" y="346" font-size="12.5" fill="#44545D">guzki w worku oponowym</text>
+        <text x="20" y="402" font-size="12.5" fill="#44545D">Stąd napromienianie całego OUN tylko w guzach rozsiewających się po PMR.</text>
+      </svg>
+      <figcaption>Drogi rozsiewu: komory, przestrzeń podpajęczynówkowa, kanał kręgowy. Rzadko kości i szpik.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h4>Rozsiew po PMR (RTH całego OUN, MRI rdzenia, cytologia)</h4>
+        <p><span class="pill r">rdzeniak / PNET</span><span class="pill r">wyściółczak anaplastyczny (także kości)</span><span class="pill r">pineoblastoma</span><span class="pill a">guzy zarodkowe (uzupełnienie)</span></p></div>
+      <div class="card"><h4>Zwykle bez rozsiewu</h4>
+        <p><span class="pill g">astrocytoma pilocytarny</span><span class="pill g">astrocytoma móżdżku (niski stopień)</span><span class="pill g">czaszkogardlak</span><span class="pill g">oponiak</span></p>
+        <p class="small">Pewny klucz puli: astrocytoma pilocyticum nie daje przerzutów po PMR.</p></div>
+      <div class="callout"><b class="k">Pod zaliczenie</b>Wykład: rdzeniak i PNET rozsiewają się po przestrzeniach płynowych, nie da się ich całkowicie wyciąć (wzrost naciekający). Wyściółczak anaplastyczny daje przerzuty do kości.</div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:1.4rem" id="tumorCards"></div>
+
+  <h3 style="margin:1.8rem 0 .6rem">Klasyfikacja molekularna rdzeniaka (WHO CNS5)</h3>
+  <div class="grid2">
+    <div class="card"><h4>Szacunkowe 5-letnie PFS wg podgrup</h4><p class="small" style="margin-bottom:.6rem">Wartości przybliżone wg przeglądu PMC11506666.</p><div class="bars" id="barsMB"></div></div>
+    <div class="tw"><table id="mbTable"></table></div>
+  </div>
+</div></section>
+
+<!-- ============ E ============ -->
+<section id="rdzen"><div class="wrap">
+  <div class="eyebrow">Część E · Guzy rdzenia</div>
+  <h2>Guzy kanału kręgowego</h2>
+  <p class="lead">Zlokalizowane głównie piersiowo (Th 60%, L/S 30%). Pytanie o ból pleców u dziecka powtarza się w puli prawie co rok.</p>
+  <div class="grid2" style="align-items:start">
+    <figure class="fig wide" style="margin:0">
+      <svg viewBox="0 0 580 400" id="spSvg" role="img" aria-label="Przekrój poprzeczny kanału kręgowego z trzema przedziałami guzów">
+        <ellipse cx="190" cy="190" rx="150" ry="140" fill="#F5E9DB" stroke="#B8730F" stroke-width="2"/>
+        <ellipse cx="190" cy="190" rx="112" ry="104" fill="#fff" stroke="#6B7A82" stroke-width="2.5"/>
+        <ellipse cx="190" cy="188" rx="58" ry="52" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2.5"/>
+        <path d="M190 150 L190 226 M152 188 L228 188" stroke="#C9BCE8" stroke-width="1.5"/>
+        <circle cx="190" cy="188" r="17" fill="#6E4CB0"/>
+        <circle cx="262" cy="138" r="17" fill="#2B63AE"/>
+        <circle cx="190" cy="324" r="17" fill="#C23B2A"/>
+        <g stroke="#9AA7AD" stroke-width="1.3" fill="none"><path d="M207 188 L340 70"/><path d="M276 138 L340 140"/><path d="M207 324 L340 300"/></g>
+        <g font-size="12.5" fill="#13232C">
+          <text x="345" y="56" font-weight="800" fill="#6E4CB0" font-size="14">Śródrdzeniowe</text>
+          <text x="345" y="74">astrocytoma, wyściółczak,</text><text x="345" y="90">oligodendroglioma</text>
+          <text x="345" y="106" fill="#44545D">naciekają; mogą nie boleć</text>
+          <text x="345" y="134" font-weight="800" fill="#2B63AE" font-size="14">Zewnątrzrdzeniowe</text>
+          <text x="345" y="152">wewnątrzoponowe</text><text x="345" y="168">nerwiakowłókniak, oponiak</text>
+          <text x="345" y="184" fill="#44545D">najpierw bóle korzonkowe</text>
+          <text x="345" y="294" font-weight="800" fill="#C23B2A" font-size="14">Nadtwardówkowe</text>
+          <text x="345" y="312">neuroblastoma, chłoniaki,</text><text x="345" y="328">histiocytoza, guzy mezodermalne</text>
+        </g>
+        <text x="20" y="388" font-size="11.5" fill="#6B7A82">Schemat poglądowy: opona twarda = szary okrąg, rdzeń = fioletowy.</text>
+      </svg>
+      <figcaption>Przedział, w którym leży guz, wyznacza pierwszy objaw.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h4>🧷 Objawy (wykład zakładu)</h4>
+        <ul class="tight small">
+          <li>Ból pleców <b>nasilający się w pozycji leżącej i przy próbie Valsalvy, ustępujący w pozycji siedzącej</b></li>
+          <li>Skolioza, opór przy skłonach, zaburzenia chodu</li>
+          <li>Osłabienie (wiotkie lub spastyczne), objaw Babińskiego, odruchy osłabione w kończynach górnych i wzmożone w dolnych</li>
+          <li>Zaburzenia czucia poniżej poziomu guza (30%), mniejsze pocenie się, zaburzenia zwieraczy</li>
+          <li>Oczopląs przy guzach rdzenia szyjnego górnego</li>
+        </ul></div>
+      <div class="callout red"><b class="k">Pułapka: neuroblastoma „klepsydra”</b>Ból pleców, który <b>nie zmienia się</b> z pozycją ciała, + guz jamy brzusznej + osłabienie kończyn dolnych = neuroblastoma [10] z naciekiem kanału kręgowego, nie guz rdzenia.</div>
+      <div class="callout blue"><b class="k">Diagnostyka</b>MRI całego kręgosłupa (zastąpiło mielografię); to proces wypierający w kanale kręgowym wymaga pilnej oceny neurochirurgicznej.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ F ============ -->
+<section id="leczenie"><div class="wrap">
+  <div class="eyebrow">Część F · Leczenie</div>
+  <h2>Neurochirurgia, radioterapia i chemioterapia</h2>
+  <p class="lead">Leczenie jest skojarzone. Cel operacji to materiał do histologii najmniej urazowym sposobem, maksymalne bezpieczne wycięcie guza i odbarczenie wzmożonego ciśnienia przez udrożnienie odpływu PMR (wszystkie trzy: odpowiedź „a, b i c” w puli).</p>
+  <figure class="fig wide">
+    <svg viewBox="0 0 900 440" id="txSvg" role="img" aria-label="Ścieżka leczenia guza mózgu u dziecka">
+      <defs><marker id="ar4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9Z" fill="#075760"/></marker></defs>
+      <g font-size="13" fill="#13232C">
+        <rect x="20" y="16" width="190" height="70" rx="12" fill="#13232C"/>
+        <text x="115" y="46" text-anchor="middle" fill="#fff" font-weight="800" font-size="14">Guz OUN</text>
+        <text x="115" y="66" text-anchor="middle" fill="#CFE0E3">rozpoznanie w MRI</text>
+        <rect x="260" y="16" width="320" height="70" rx="12" fill="#DDF1F2" stroke="#0C7A85" stroke-width="2"/>
+        <text x="276" y="40" font-weight="800" fill="#075760" font-size="14">Neurochirurgia</text>
+        <text x="276" y="60">resekcja / biopsja / odbarczenie PMR</text><text x="276" y="77" fill="#44545D" font-size="12">(ETV lub drenaż komorowy zamiast zastawki)</text>
+        <rect x="630" y="16" width="250" height="70" rx="12" fill="#E1ECF9" stroke="#2B63AE" stroke-width="2"/>
+        <text x="646" y="40" font-weight="800" fill="#2B63AE" font-size="14">Histologia + biologia molekularna</text>
+        <text x="646" y="60">WHO CNS5, podgrupy rdzeniaka</text><text x="646" y="77" fill="#44545D" font-size="12">stopień resekcji R1–R4 / S1–S4</text>
+        <rect x="20" y="148" width="205" height="150" rx="12" fill="#E1F3E7" stroke="#2F8450" stroke-width="2"/>
+        <text x="36" y="172" font-weight="800" fill="#2F8450" font-size="14">Niski stopień (LGG)</text>
+        <text x="36" y="194">• resekcja radykalna = leczenie</text><text x="36" y="212">• resztka: obserwacja</text><text x="36" y="230">• CTH lub terapia celowana</text><text x="36" y="248">  (BRAF V600E, fuzje BRAF)</text><text x="36" y="266">• RTH oszczędnie, brachyterapia</text><text x="36" y="284">  (guzy małe ≤ 5 cm, kuliste)</text>
+        <rect x="250" y="148" width="205" height="150" rx="12" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
+        <text x="266" y="172" font-weight="800" fill="#C23B2A" font-size="14">Rdzeniak ≥ 3 lat</text>
+        <text x="266" y="194">• resekcja + MRI pooperacyjne</text><text x="266" y="212">• RTH całego OUN + boost</text><text x="266" y="230">• CTH uzupełniająca</text><text x="266" y="248">• ryzyko standardowe vs wysokie</text><text x="266" y="266">  (resztka ≤ 1,5 cm², M0)</text><text x="266" y="284">• 5-letnie przeżycie 50–70%</text>
+        <rect x="480" y="148" width="205" height="150" rx="12" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2"/>
+        <text x="496" y="172" font-weight="800" fill="#6E4CB0" font-size="14">Dziecko &lt; 3 lat</text>
+        <text x="496" y="194">• resekcja + CTH</text><text x="496" y="212">• RTH całego OUN pomijana</text><text x="496" y="230">  lub odraczana (neurotoks.)</text><text x="496" y="248">• CTH wysokodawkowa</text><text x="496" y="266">  z autoprzeszczepem</text><text x="496" y="284">  (wybrane protokoły)</text>
+        <rect x="710" y="148" width="170" height="150" rx="12" fill="#FCEFD6" stroke="#B8730F" stroke-width="2"/>
+        <text x="726" y="172" font-weight="800" fill="#B8730F" font-size="14">Inne</text>
+        <text x="726" y="194">• guzy zarodkowe:</text><text x="726" y="212">  CTH + RTH,</text><text x="726" y="228">  EFS 3-l. ~80%</text><text x="726" y="250">• DMG (guz pnia):</text><text x="726" y="266">  biopsja ± RTH,</text><text x="726" y="282">  rokowanie bardzo złe</text>
+      </g>
+      <g stroke="#075760" stroke-width="2.2" fill="none" marker-end="url(#ar4)">
+        <path d="M210 51 L256 51"/><path d="M580 51 L626 51"/>
+        <path d="M755 86 L755 118 L122 118 L122 144"/><path d="M352 118 L352 144"/><path d="M582 118 L582 144"/><path d="M795 118 L795 144"/>
+      </g>
+      <g font-size="12.5" fill="#44545D"><text x="20" y="334" font-weight="800" fill="#13232C" font-size="13.5">Ograniczenia wiekowe i zasady</text>
+      <text x="20" y="356">• Poniżej 3. r.ż. RTH całego OUN omija się lub odracza, bo niszczy rozwijający się mózg (PDQ, PMC11506666).</text>
+      <text x="20" y="376">• Ryzyko standardowe (dziecko ≥ 3 lat): CSI 23,4 Gy, całkowita dawka na tylny dół 54 Gy (PDQ). Zakres CSI 23,4–36 Gy zależnie od grupy ryzyka (PDQ).</text>
+      <text x="20" y="396">• W puli wykład podaje tylko zasadę: RTH całego OUN wyłącznie w guzach rozsiewających się po PMR; limit wieku nie jest w pytaniach zaznaczony.</text>
+      <text x="20" y="416">• Protony zmniejszają zaburzenia neurokognitywne po CSI w porównaniu z fotonami (Medscape).</text></g>
+    </svg>
+    <figcaption>Ścieżka leczenia: każdy chory ma operację, potem plan zależy od histologii, biologii, wieku i resztki guza.</figcaption>
+  </figure>
+
+  <div class="grid2" style="margin-top:1.4rem">
+    <div class="card"><h4>Zakres resekcji wg wykładu</h4>
+      <div class="tw" style="margin-top:.5rem"><table id="resTable"></table></div></div>
+    <div class="card"><h4>Wyniki leczenia wg wykładu</h4><p class="small" style="margin-bottom:.6rem">Różne punkty końcowe (przeżycie całkowite, EFS), więc nie porównuj słupków bezpośrednio.</p><div class="bars" id="barsOut"></div></div>
+  </div>
+
+  <div class="grid3" style="margin-top:1.2rem">
+    <div class="tcard"><h4>🗡️ Neurochirurgia</h4><ul><li>Histologia najmniej urazowo, maksymalna bezpieczna resekcja, odbarczenie PMR</li><li>Biopsja stereotaktyczna lub endoskopowa, gdy resekcja niemożliwa</li><li>Fenestracja endoskopowa może zastąpić zastawkę</li></ul></div>
+    <div class="tcard r"><h4>☢️ Radioterapia</h4><ul><li>Większość chorych, bo operacja zwykle nieradykalna</li><li>Zwykle miejscowo (loża guza); całe OUN tylko przy rozsiewie po PMR</li><li>Stereotaktyczna, hiperfrakcjonowana (2 razy dziennie), brachyterapia</li></ul></div>
+    <div class="tcard b"><h4>💉 Chemioterapia</h4><ul><li>Uzupełnia operację; wynik zależy od budowy i kinetyki guza, indeksu mitotycznego, dystrybucji leku, przepływu PMR i podania dokanałowego</li><li>Terapie celowane: dabrafenib + trametynib (LGG z BRAF V600E, od 1 r.ż.), tovorafenib (nawrót, fuzja BRAF), dordaviprone (DMG H3 K27M po wcześniejszym leczeniu)</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ G ============ -->
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część G · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2019/20, S1–S4, S7 2025/26, skrypt Kiedrasia, eksport z platformy, pytania V roku). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze. Badge pokazuje pewność klucza.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Zestaw zadań według tematu</h4>
+    <p class="small" style="margin-bottom:.6rem">Liczba zadań w tej stronie w danym obszarze (pytania powtarzają się w wielu grupach i latach puli).</p>
+    <div class="bars" id="barsPool"></div>
+  </div>
+  <div class="qtools">
+    <div class="filters" id="qFilters" style="margin:0">
+      <button aria-pressed="true" data-f="all">Wszystkie</button>
+      <button aria-pressed="false" data-f="epi">Epidemiologia</button>
+      <button aria-pressed="false" data-f="obj">Objawy</button>
+      <button aria-pressed="false" data-f="dx">Diagnostyka</button>
+      <button aria-pressed="false" data-f="tx">Leczenie</button>
+      <button aria-pressed="false" data-f="sp">Rdzeń</button>
+      <button aria-pressed="false" data-f="x">Międzymodułowe</button>
+      <button aria-pressed="false" data-f="gap">Klucz vs wytyczne</button>
+      <button aria-pressed="false" data-f="unk">Klucz niepewny</button>
+    </div>
+    <span class="sp"></span>
+    <button class="btn" id="rand10">🎲 Losuj 10</button>
+    <button class="btn o" id="resetQ">Resetuj</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score" role="status">Wynik: 0 / 0</div>
+</div></section>
+
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część H</div>
+  <h2>Pod zaliczenie kontra aktualnie klinicznie</h2>
+  <div class="tw"><table id="gapTable"></table></div>
+</div></section>
+
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część I</div>
+  <h2>Połączenia międzymodułowe, flagi i perełki</h2>
+  <div class="grid2">
+    <figure class="fig wide"><svg viewBox="0 0 680 480" id="crossSvg" role="img" aria-label="Mapa połączeń modułu 9 z pozostałymi modułami"></svg><figcaption>Moduł [9] i tematy, w których guz mózgu łączy się z innymi modułami.</figcaption></figure>
+    <div class="stack" id="traps"></div>
+  </div>
+  <div class="grid3" style="margin-top:1.4rem">
+    <div class="callout red"><b class="k">🚩 Red flags</b><ul class="tight"><li>Poranne wymioty bez biegunki, bóle głowy</li><li>Narastające zaburzenia chodu, oczopląs, zez</li><li>Tarcza zastoinowa, bradykardia z nadciśnieniem</li><li>Ból pleców w nocy lub w pozycji leżącej, skolioza</li><li>Moczówka prosta, zahamowanie wzrastania</li></ul></div>
+    <div class="callout green"><b class="k">💎 Perełki</b><ul class="tight"><li>Astrocytoma pilocytarny I°: nie rozsiewa się po PMR</li><li>Rdzeniak: najczęstszy złośliwy; ból pleców to sygnał rozsiewu</li><li>Czaszkogardlak: obustronne niedowidzenie połowicze</li><li>Guz linii środkowej: moczówka, nadnercza, dojrzewanie</li><li>MRI rdzenia przed operacją</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>Bóle głowy i wymioty to ICP, nie objawy ogniskowe</li><li>LP w guzie tylnego dołu bez obrazowania: wgłobienie</li><li>„Guz z oczopląsem” bywa neuroblastoma (opsoklonie-mioklonie)</li><li>Ból pleców stały bez zmiany pozycji + guz brzucha: neuroblastoma</li><li>Objawy ICP u dziecka z ALL: nawrót w OUN [11]</li></ul></div>
+  </div>
+</div></section>
+</main>
+
+<footer id="zrodla"><div class="wrap">
+  <div class="eyebrow">Źródła</div>
+  <h3 style="margin-bottom:.6rem">Materiały zakładu</h3>
+  <ul>
+    <li>Wykład „Nowotwory OUN u dzieci”, dr J. Peregud-Pogorzelski, PUM (podstawa epidemiologii, lokalizacji, objawów, diagnostyki i leczenia).</li>
+    <li>Pule: grupy A17, C, D 2019/20, S1–S4 i S7 2025/26, pytania V roku (21/22, 22/23), skrypt Kiedrasia, eksport z platformy (Pediatria_lek).</li>
+    <li>Brak w plikach: lokalnych wymagań zakładu dotyczących guzów mózgu oraz dawek leków. Pliki S5 25/26 (skan bez tekstu) i S6 (pusty) pominięto.</li>
+  </ul>
+  <h3 style="margin:1.2rem 0 .6rem">Wytyczne i piśmiennictwo</h3>
+  <ul>
+    <li><a href="https://www.cancer.gov/types/brain/hp/child-cns-embryonal-treatment-pdq">NCI PDQ: Childhood Medulloblastoma and Other CNS Embryonal Tumors</a> (diagnostyka, stratyfikacja ryzyka, dawki RTH, wiek poniżej 3 lat)</li>
+    <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11506666/">Risk-Stratified Radiotherapy in Pediatric Cancer</a> (podgrupy molekularne i PFS, CSI poniżej 3 lat)</li>
+    <li><a href="https://www.ncbi.nlm.nih.gov/sites/books/NBK431069/">StatPearls: Medulloblastoma</a> (MRI przedoperacyjne, MRI pooperacyjne w 24–72 h)</li>
+    <li><a href="https://emedicine.medscape.com/article//987886-workup">Medscape: Pediatric Medulloblastoma Workup</a> i <a href="https://emedicine.medscape.com/article//987886-treatment">Treatment</a> (dno oka przed LP, protony)</li>
+    <li><a href="https://siop-online.org/wp-content/uploads/2016/10/Parkes_et_al-2014-Pediatric_Blood__Cancer.pdf">SIOP PODC: zalecenia dla rdzeniaka standardowego ryzyka</a> (LP przeciwwskazana w ostrym wodogłowiu)</li>
+    <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8328013/">WHO CNS5 (2021): przegląd klasyfikacji</a> i <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9885151/">pediatric DMG H3K27-altered</a></li>
+    <li><a href="https://www.fda.gov/media/194049/download">FDA: pediatric brain tumor treatment advances</a> (dabrafenib + trametynib, tovorafenib, dordaviprone)</li>
+    <li><a href="https://www.fda.gov/drugs/cancer-approvals/fda-approves-dabrafenib-trametinib-pediatric-patients-low-grade-glioma-braf-v600e-mutation">FDA: dabrafenib z trametynibem w LGG z BRAF V600E</a></li>
+    <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3123765/">Tumors of the CNS in children (Dtsch Arztebl)</a> (obrazowanie przed LP, MRI rdzenia)</li>
+  </ul>
+  <p class="small" style="margin-top:1rem">Wyszukiwanie w premium.mp.pl (podręcznik Pediatria) nie zwróciło dedykowanego rozdziału o guzach mózgu, więc aktualizacje opierają się na wytycznych międzynarodowych. Weryfikuj lokalne protokoły (np. PTOHD, krajowe programy leczenia) przed zastosowaniem klinicznym.</p>
+</div></footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[5] Stany nagłe u dzieci – atlas do zaliczenia z pediatrii</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[5]</b> <span>Stany nagłe</span></div>
+  <ul id="navlist">
+    <li><a href="#pat">PAT</a></li>
+    <li><a href="#normy">Dawki</a></li>
+    <li><a href="#oddech">Oddech</a></li>
+    <li><a href="#wstrzas">Wstrząs</a></li>
+    <li><a href="#anafilaksja">Anafilaksja</a></li>
+    <li><a href="#drgawki">Drgawki</a></li>
+    <li><a href="#dka">DKA</a></li>
+    <li><a href="#zatrucia">Zatrucia</a></li>
+    <li><a href="#nzk">NZK</a></li>
+    <li><a href="#icp">ICP</a></li>
+    <li><a href="#zadania">Zadania</a></li>
+    <li><a href="#klucz">Klucz/wytyczne</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁ [5] · Pediatria V rok · Stany nagłe</span>
+    <h1>Stany nagłe u dzieci<br><span>rozpoznanie zagrożenia życia</span></h1>
+    <p class="sub">Atlas do zaliczenia: trójkąt oceny pediatrycznej (PAT), ABCDE, normy wiekowe, niewydolność oddechowa, wstrząs i sepsa (Phoenix 2024), anafilaksja, drgawki, kwasica ketonowa, zatrucia i RKO. Z zadaniami z puli, omówieniami i rozbieżnościami „klucz kontra wytyczne”.</p>
+    <div class="chips">
+      <span class="chip s">🚨 Najpierw A i B, potem C</span>
+      <span class="chip i">🫁 Niewydolność oddechowa → NZK</span>
+      <span class="chip e">💉 Adrenalina i.m. 0,01 mg/kg</span>
+      <span class="chip f">⏱️ Sepsa: antybiotyk w 1. godzinie</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ POTWIERDZONY</span> odpowiedź zaznaczona w pliku z omówieniem lub w eksporcie z platformy</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak klucza; odpowiedź wynika z wykładu zakładu i wytycznych</div>
+      <div><span class="kb unk">KLUCZ NIEPEWNY</span> pula jest sprzeczna lub brak pewności; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat: trójkąt PAT i ABCDE">
+    <svg viewBox="0 0 420 400" role="img" aria-label="Trójkąt oceny pediatrycznej: wygląd, praca oddychania, krążenie skóry, prowadzące do ABCDE">
+      <polygon points="210,48 62,290 358,290" fill="#FBE6E2" stroke="#C23B2A" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="210" cy="48" r="38" fill="#fff" stroke="#6E4CB0" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="22">🧒</text><text x="210" y="64" text-anchor="middle" font-size="10.5" font-weight="800" fill="#6E4CB0">WYGLĄD</text>
+      <circle cx="62" cy="290" r="38" fill="#fff" stroke="#2B63AE" stroke-width="3"/><text x="62" y="288" text-anchor="middle" font-size="22">🫁</text><text x="62" y="306" text-anchor="middle" font-size="10" font-weight="800" fill="#2B63AE">ODDECH</text>
+      <circle cx="358" cy="290" r="38" fill="#fff" stroke="#C23B2A" stroke-width="3"/><text x="358" y="288" text-anchor="middle" font-size="22">🫀</text><text x="358" y="306" text-anchor="middle" font-size="10" font-weight="800" fill="#C23B2A">SKÓRA</text>
+      <text x="210" y="165" text-anchor="middle" font-size="30" font-weight="800" fill="#13232C" font-family="Cabinet Grotesk">PAT</text>
+      <text x="210" y="188" text-anchor="middle" font-size="13" fill="#44545D">„od drzwi” 30–60 s</text>
+      <text x="210" y="208" text-anchor="middle" font-size="13" fill="#44545D">bez dotykania dziecka</text>
+      <path d="M210 322 v22" stroke="#13232C" stroke-width="3" marker-end="url(#ar)"/>
+      <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#13232C"/></marker></defs>
+      <g font-weight="800" font-size="16" text-anchor="middle" transform="translate(29 0)">
+        <rect x="46" y="362" width="46" height="32" rx="8" fill="#2B63AE"/><text x="69" y="384" fill="#fff">A</text>
+        <rect x="102" y="362" width="46" height="32" rx="8" fill="#2B63AE"/><text x="125" y="384" fill="#fff">B</text>
+        <rect x="158" y="362" width="46" height="32" rx="8" fill="#C23B2A"/><text x="181" y="384" fill="#fff">C</text>
+        <rect x="214" y="362" width="46" height="32" rx="8" fill="#6E4CB0"/><text x="237" y="384" fill="#fff">D</text>
+        <rect x="270" y="362" width="46" height="32" rx="8" fill="#B8730F"/><text x="293" y="384" fill="#fff">E</text>
+      </g>
+    </svg>
+    <figcaption>PAT wyznacza pilność, ABCDE porządkuje działanie. Wygląd to najlepszy jednoznaczny wskaźnik perfuzji mózgu.</figcaption>
+  </figure>
+</div>
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi r"><b>&gt;50%</b><span>zgonów w wieku 1–19 lat to wypadki (seminarium zakładu)</span></div>
+    <div class="kpi"><b>28</b><span>zadań z puli w module [5] ≈ 8,1% z 346 (moje liczenie ręczne, nie oficjalny blueprint)</span></div>
+    <div class="kpi a"><b>7 / 7</b><span>pul zawiera pytania z modułu [5]</span></div>
+    <div class="kpi v"><b>≥2 s</b><span>CRT powyżej 2 s = zaburzona perfuzja; hipotensja to objaw późny</span></div>
+  </div>
+  <div class="card">
+    <h4>Najczęstsze podtematy w puli (liczba zadań · liczba pul)</h4>
+    <p class="small" style="margin-bottom:.6rem">Moje zestawienie z pul V roku; liczby orientacyjne.</p>
+    <div class="bars" id="barsFreq"></div>
+  </div>
+</div></header>
+
+<!-- ============ A ============ -->
+<section id="pat"><div class="wrap">
+  <div class="eyebrow">Część A · Szybka ocena chorego</div>
+  <h2>PAT i ABCDE: jak rozpoznać zagrożenie życia</h2>
+  <p class="lead">NZK u dziecka jest zwykle wtórne do niewydolności oddechowej lub krążeniowej, dlatego ocena zaczyna się od patrzenia i słuchania, a nie od badania. Kliknij wierzchołek trójkąta, aby zobaczyć, co oceniamy.</p>
+  <div class="tri-wrap">
+    <figure class="fig">
+      <svg class="tri" viewBox="0 0 420 360" id="triSvg" role="group" aria-label="Interaktywny trójkąt PAT">
+        <polygon points="210,48 60,290 360,290" fill="#F5F6F2" stroke="#9AA7AD" stroke-width="3" stroke-linejoin="round"/>
+        <g class="v on" data-k="a" tabindex="0" role="button" aria-label="Wygląd"><circle cx="210" cy="48" r="42" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="24">🧒</text><text x="210" y="66" text-anchor="middle" font-size="11" font-weight="800" fill="#6E4CB0">WYGLĄD</text></g>
+        <g class="v" data-k="b" tabindex="0" role="button" aria-label="Praca oddychania"><circle cx="60" cy="290" r="42" fill="#E1ECF9" stroke="#2B63AE" stroke-width="3"/><text x="60" y="288" text-anchor="middle" font-size="24">🫁</text><text x="60" y="308" text-anchor="middle" font-size="10.5" font-weight="800" fill="#2B63AE">ODDYCHANIE</text></g>
+        <g class="v" data-k="c" tabindex="0" role="button" aria-label="Krążenie skóry"><circle cx="360" cy="290" r="42" fill="#FBE6E2" stroke="#C23B2A" stroke-width="3"/><text x="360" y="288" text-anchor="middle" font-size="24">🫀</text><text x="360" y="308" text-anchor="middle" font-size="10.5" font-weight="800" fill="#C23B2A">KRĄŻENIE</text></g>
+        <text x="210" y="190" text-anchor="middle" font-size="26" font-weight="800" fill="#13232C" font-family="Cabinet Grotesk">PAT</text>
+        <text x="210" y="212" text-anchor="middle" font-size="12" fill="#44545D">kliknij wierzchołek</text>
+      </svg>
+    </figure>
+    <div>
+      <div class="card" id="triPanel"></div>
+      <div class="ticls" id="ticls" aria-label="Mnemonik TICLS"></div>
+    </div>
+  </div>
+
+  <h3 style="margin:2rem 0 .6rem">Wnioski z PAT: co jest nieprawidłowe?</h3>
+  <div class="tw"><table class="pat" id="patTable"></table></div>
+  <p class="small" style="margin-top:.5rem">Interpretacja PAT i mnemonik TICLS: standard AAP/PALS, spójny z seminarium zakładu (wygląd, praca oddychania, krążenie skóry). Tag [5].</p>
+
+  <h3 style="margin:2rem 0 .8rem">ABCDE: schemat badania i reakcji</h3>
+  <div class="grid2">
+    <div class="card"><div class="flow" id="abcde"></div></div>
+    <div class="stack">
+      <div class="hlp"><b>Pierwsze 10 minut przy niestabilnym dziecku</b>
+        <div class="steps" style="margin-top:.6rem" id="ten"></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ B ============ -->
+<section id="normy"><div class="wrap">
+  <div class="eyebrow">Część B · Wiek decyduje o diagnozie</div>
+  <h2>Normy wiekowe i kalkulator dawek</h2>
+  <p class="lead">Wartości z seminarium zakładu. Zakres 1–2 lat nie jest w slajdzie podany, więc wykres go nie rysuje.</p>
+  <div class="grid2">
+    <figure class="fig"><svg viewBox="0 0 560 360" id="normSvg" role="img" aria-label="Zakresy prawidłowe tętna i częstości oddechów według wieku"></svg><figcaption>Zakresy prawidłowe: tętno (czerwony) i częstość oddechów (niebieski) wg wieku.</figcaption></figure>
+    <div class="card calc">
+      <h4>Kalkulator: norma i próg hipotensji dla wieku</h4>
+      <div class="in"><label>Wiek (lata): <output id="ageOut">4</output><input type="range" id="age" min="0" max="17" value="4"></label></div>
+      <div class="tw"><table id="normOut"></table></div>
+      <p class="small">Progi hipotensji: poniżej 70 mmHg (1 mies.–1 r.ż.), poniżej 70 + 2×wiek (1–10 lat), poniżej 90 mmHg (11–17 lat). Diureza prawidłowa: ≥1 ml/kg/h (niemowlęta ≥2 ml/kg/h).</p>
+    </div>
+  </div>
+
+  <h3 style="margin:2rem 0 .6rem">Kalkulator dawek wg masy ciała</h3>
+  <div class="card calc">
+    <div class="in"><label>Masa ciała (kg): <output id="wOut">20</output><input type="range" id="wt" min="3" max="80" value="20"></label>
+      <label>lub wpisz<input type="number" id="wtNum" min="3" max="80" value="20"></label></div>
+    <div class="tw"><table class="dose" id="doseTable"></table></div>
+    <p class="small">Wszystkie dawki mają źródło w kolumnie 3. Kalkulator pokazuje wyliczenie pomocnicze do nauki. Przy leczeniu kieruj się protokołem oddziału i aktualnymi charakterystykami produktów. Brak dawki w tabeli = brak pewnego źródła w materiałach Projektu.</p>
+  </div>
+</div></section>
+
+<!-- ============ C ============ -->
+<section id="oddech"><div class="wrap">
+  <div class="eyebrow">Część C · Niewydolność oddechowa</div>
+  <h2>Niewydolność oddechowa: górne vs dolne drogi</h2>
+  <p class="lead">Stridor wdechowy to przeszkoda w drogach górnych, świsty wydechowe w dolnych. Objawy alarmowe wg seminarium: stękanie, rozszerzanie skrzydełek nosa, „cicha klatka”.</p>
+  <div class="grid2">
+    <div class="card"><div class="flow" id="respTree"></div></div>
+    <div class="card"><h4>Niedrożność ciałem obcym: algorytm</h4><div class="flow" id="fbTree" style="margin-top:.7rem"></div></div>
+  </div>
+  <h3 style="margin:2rem 0 .6rem">Porównanie najczęstszych stanów</h3>
+  <div class="tw"><table class="vs" id="respTable"></table></div>
+  <div class="grid3" style="margin-top:1rem">
+    <div class="callout red"><b class="k">🚩 Zapalenie nagłośni</b>Nie badać gardła, nie układać na płasko. Anestezjolog, sala operacyjna lub OIT, posiew krwi, cefalosporyna i.v. po zabezpieczeniu dróg oddechowych.</div>
+    <div class="callout amber"><b class="k">⚠️ Krup</b>Deksametazon 0,15–0,6 mg/kg p.o. (lub budezonid), adrenalina wziewnie i tlen przy cięższym przebiegu (seminarium zakładu).</div>
+    <div class="callout blue"><b class="k">💨 Astma zagrażająca życiu</b>Tlen, SABA, ipratropium, GKS; zakład wymienia też adrenalinę i.m. i teofilinę. Cicha klatka = ostrzeżenie.</div>
+  </div>
+</div></section>
+
+<!-- ============ D ============ -->
+<section id="wstrzas"><div class="wrap">
+  <div class="eyebrow">Część D · Krążenie</div>
+  <h2>Wstrząs i sepsa</h2>
+  <p class="lead">Wstrząs to niedostateczna perfuzja tkanek. U dzieci kompensacja (tachykardia, skurcz naczyń) długo utrzymuje ciśnienie, więc hipotensja jest objawem późnym.</p>
+  <div class="grid4" id="shockTypes"></div>
+
+  <h3 style="margin:2rem 0 .6rem">Odwodnienie: stopnie i objawy</h3>
+  <div class="grid2">
+    <div class="tw"><table id="dehyTable"></table></div>
+    <figure class="fig"><svg viewBox="0 0 520 220" id="dehySvg" role="img" aria-label="Skala odwodnienia: poniżej 5%, 5–10%, powyżej 10%"></svg><figcaption>Zapotrzebowanie dobowe wg wykładu zakładu: 100 ml/kg (1–10 kg), 50 ml/kg (10–20 kg), 20 ml/kg (&gt;20 kg).</figcaption></figure>
+  </div>
+
+  <h3 style="margin:2rem 0 .6rem">Kalkulator Phoenix (sepsa dziecięca, 2024)</h3>
+  <p class="small" style="margin-bottom:.7rem">Pomoc dydaktyczna. Punkty układu oddechowego wymagają wyniku SpO₂/FiO₂ i rodzaju wentylacji; w tym kalkulatorze wybierasz je ręcznie. Progi MAP wg wieku z uproszczonej ścieżki Nationwide Children’s.</p>
+  <div class="phx-grid">
+    <div class="phx" id="phx"></div>
+    <div class="phx"><div class="res" id="phxRes"></div>
+      <button class="btn o" id="phxCase" style="margin-top:.8rem">Wczytaj przypadek 1 z seminarium (4 lata, angina)</button>
+      <button class="btn o" id="phxReset" style="margin-top:.5rem">Wyczyść</button></div>
+  </div>
+
+  <div class="grid2" style="margin-top:1.4rem">
+    <div class="card"><h4>🩸 Przypadek 1 · 4-latek z anginą paciorkowcową</h4>
+      <ul class="tight small"><li>RR 80/40 (MAP 53), HR 140/min, CRT 3 s</li><li>WBC 28 tys., CRP 140, mleczany 25 mg/dl (≈2,8 mmol/l)</li><li>Fibrynogen 95 mg/dl, PLT 95 tys.: DIC</li><li>Phoenix: koagulacja 2 pkt → sepsa. MAP powyżej progu → 0 pkt krążenia</li><li>Leczenie wg seminarium: penicylina 100 000 j.m./kg/dobę przez 10 dni, wsparcie krążenia</li></ul></div>
+    <div class="card"><h4>🕐 Antybiotyk i płyny</h4>
+      <ul class="tight small"><li>Śmiertelność zależy od czasu do podania antybiotyku (omówienie F 2020 #38)</li><li>Bolusy 0,9% NaCl 10–20 ml/kg z reewaluacją po każdym (seminarium zakładu)</li><li>Posiewy przed antybiotykiem, ale bez zwlekania</li><li>Cel: CRT &lt;2 s, diureza ≥1 ml/kg/h, poprawa świadomości</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ E ============ -->
+<section id="anafilaksja"><div class="wrap">
+  <div class="eyebrow">Część E · Alergologia w stanach nagłych</div>
+  <h2>Anafilaksja</h2>
+  <p class="lead">Rozpoznanie: ostry początek ze zmianami skórnymi lub śluzówkowymi i objawami oddechowymi albo hipotensją, albo ≥2 układy po kontakcie z alergenem. Pierwszy lek: adrenalina i.m.</p>
+  <div class="grid2">
+    <div class="card"><h4>Algorytm</h4><div class="flow" id="anaFlow" style="margin-top:.7rem"></div></div>
+    <div class="stack">
+      <div class="card"><h4>🍦 Przypadek 2 · 6-latek z astmą i alergią pokarmową</h4>
+        <p class="small">Anafilaksja po lodach. Wg seminarium zakładu: adrenalina i.m. 1 mg/ml w dawce 0,01 mg/kg (0,1 ml na 10 kg), maks. 0,5 mg, udo przednio-boczne, powtarzanie co 5–10 min. Dodatkowo: klemastyna 0,05 mg/kg (maks. 2 mg), hydrokortyzon 5 mg/kg (maks. 300 mg) lub deksametazon, bolus 10–20 ml/kg, salbutamol 0,1–0,15 mg/kg przy skurczu oskrzeli. Obserwacja 4–24 h; zaopatrzenie w autowstrzykiwacz (0,15 / 0,3 / 0,5 mg).</p></div>
+      <div class="callout amber"><b class="k">Progi ciśnienia skurczowego w anafilaksji</b>&lt;70 mmHg (1 mies.–1 rok), &lt;70 + 2×wiek (1–10 lat), &lt;90 mmHg (11–17 lat) wg seminarium zakładu.</div>
+      <div class="callout green"><b class="k">Dawki autowstrzykiwaczy</b>0,15 mg dla ok. 7,5–25(30) kg, 0,3 mg dla &gt;25–30 kg (EAACI 2021). ERC 2025 First Aid: 0,15 mg (1–5 lat), 0,3 mg (6–12 lat), 0,5 mg (&gt;12 lat).</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ F ============ -->
+<section id="drgawki"><div class="wrap">
+  <div class="eyebrow">Część F · Neurologia w stanach nagłych</div>
+  <h2>Drgawki i stan padaczkowy</h2>
+  <p class="lead">Napad trwający ≥5 min traktujemy jak stan padaczkowy. Zawsze oceń glikemię, Na⁺ i Ca²⁺, a przy gorączce neuroinfekcję.</p>
+  <figure class="fig wide scroll"><svg class="min" viewBox="0 0 800 250" id="szSvg" role="img" aria-label="Drabina czasowa leczenia stanu padaczkowego"></svg><figcaption>Drabina czasowa wg przeglądu PMC9491331, NICE NG217 i ścieżki Children’s Colorado. Dawki w kalkulatorze powyżej.</figcaption></figure>
+  <div class="grid3" style="margin-top:1rem">
+    <div class="callout blue"><b class="k">Przyczyny wg wieku</b>Noworodek: niedotlenienie, hipoglikemia, hipokalcemia, zakażenie. Niemowlę/mały dziecko: gorączka, biegunka z hiponatremią, neuroinfekcja. Starsze: padaczka, zatrucie, urazy.</div>
+    <div class="callout red"><b class="k">🚩 Biegunka + drgawki</b>Pomyśl o hiponatremii (płyny hipotoniczne). Pula: 5 zadań [3]+[5].</div>
+    <div class="callout amber"><b class="k">⚠️ LP</b>Przeciwwskazana przy cechach wzrostu ICP: zaburzenia oddychania, nadciśnienie, bradykardia (triada Cushinga).</div>
+  </div>
+</div></section>
+
+<!-- ============ G ============ -->
+<section id="dka"><div class="wrap">
+  <div class="eyebrow">Część G · Endokrynologia w stanach nagłych</div>
+  <h2>Kwasica ketonowa (DKA)</h2>
+  <p class="lead">Hiperglikemia, ketonemia, ketonuria i kwasica metaboliczna. Oddech Kussmauła kompensuje kwasicę. Pierwszą manifestacją cukrzycy typu 1 może być DKA.</p>
+  <div class="grid2">
+    <div class="card"><div class="flow" id="dkaFlow"></div></div>
+    <div class="stack">
+      <div class="callout red"><b class="k">Obrzęk mózgu w DKA</b>Występuje u ok. 1%. Sygnały: ból głowy, bradykardia, zaburzenia świadomości. Leczenie (ISPAD 2022): mannitol 0,5–1 g/kg w 10–15 min lub 3% NaCl 2,5–5 ml/kg; unikać nadmiaru płynów.</div>
+      <div class="cmp"><div class="a"><b class="k">Pod zaliczenie (wg puli/zakładu)</b>0,9% NaCl 10 ml/kg; insulina po opanowaniu wstrząsu.</div><div class="b"><b class="k">Aktualnie klinicznie (wg wytycznych)</b>ISPAD: 10–20 ml/kg (BSPED 10 ml/kg przy wstrząsie); insulina ≥1 h po rozpoczęciu płynów, 0,05–0,1 j./kg/h, bez bolusa.</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ H ============ -->
+<section id="zatrucia"><div class="wrap">
+  <div class="eyebrow">Część H · Toksykologia</div>
+  <h2>Zatrucia: toksydromy i odtrutki</h2>
+  <div class="tw"><table id="toxTable"></table></div>
+  <h3 style="margin:2rem 0 .6rem">Paracetamol: oś czasu</h3>
+  <figure class="fig wide scroll"><svg class="min" viewBox="0 0 780 250" id="paraSvg" role="img" aria-label="Oś czasu postępowania w zatruciu paracetamolem"></svg><figcaption>Poziom paracetamolu przed 4 h nie jest miarodajny. Schemat NAC australijski (RCH, NSW ACI); w Polsce obowiązują protokoły lokalne i konsultacja z Ośrodkiem Informacji Toksykologicznej.</figcaption></figure>
+</div></section>
+
+<!-- ============ I ============ -->
+<section id="nzk"><div class="wrap">
+  <div class="eyebrow">Część I · Resuscytacja</div>
+  <h2>Zatrzymanie krążenia u dziecka</h2>
+  <div class="grid2">
+    <div class="card"><h4>Sekwencja PBLS wg ERC 2025</h4><div class="flow" id="pblsFlow" style="margin-top:.7rem"></div></div>
+    <div class="stack">
+      <div class="card"><h4>Odwracalne przyczyny: 4H i 4T</h4>
+        <div class="fourh" style="margin-top:.6rem"><ul><li><b>H</b> Hipoksja</li><li><b>H</b> Hipowolemia</li><li><b>H</b> Hipo-/hiperkaliemia, zaburzenia metaboliczne</li><li><b>H</b> Hipo-/hipertermia</li></ul>
+        <ul><li><b>T</b> Odma prężna</li><li><b>T</b> Tamponada serca</li><li><b>T</b> Toksyny</li><li><b>T</b> Zakrzepica / zatorowość</li></ul></div></div>
+      <div class="callout blue"><b class="k">Leki i defibrylacja (ERC 2025)</b>Adrenalina 10 µg/kg i.v./i.o. (maks. 1 mg) co 3–5 min. Rytm defibrylacyjny: adrenalina i amiodaron 5 mg/kg (maks. 300 mg) po 3. wyładowaniu; druga dawka adrenaliny i amiodaronu 150 mg po 5. wyładowaniu.</div>
+      <div class="callout amber"><b class="k">Stosunek uciśnięć</b>Noworodek po porodzie 3:1 · dziecko 15:2 (PBLS) · 30:2 (nieprzeszkolony ratownik).</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ J ============ -->
+<section id="icp"><div class="wrap">
+  <div class="eyebrow">Część J · Neurochirurgia w stanach nagłych</div>
+  <h2>Wzrost ciśnienia śródczaszkowego (ICP)</h2>
+  <div class="grid3">
+    <div class="card" style="border-top:5px solid var(--red)"><h4>Triada Cushinga</h4><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0"><span class="sev r">↑ ciśnienie tętnicze</span><span class="sev a">↓ tętno</span><span class="sev b">nieregularny oddech</span></div><p class="small">Późny objaw zagrażającego wgłobienia.</p></div>
+    <div class="card" style="border-top:5px solid var(--blue)">
+      <svg viewBox="0 0 220 110" aria-label="Łóżko z głową uniesioną do 30 stopni"><line x1="10" y1="90" x2="210" y2="90" stroke="#9AA7AD" stroke-width="3"/><line x1="70" y1="90" x2="160" y2="52" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><line x1="70" y1="90" x2="10" y2="90" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><circle cx="170" cy="46" r="14" fill="#E1ECF9" stroke="#2B63AE" stroke-width="3"/><path d="M95 90 A25 25 0 0 1 93 78" stroke="#C23B2A" stroke-width="3" fill="none"/><text x="108" y="82" font-size="13" font-weight="800" fill="#C23B2A">30°</text></svg>
+      <h4>Postępowanie</h4><p class="small">Głowa uniesiona do 30°, linia środkowa, tlen, unikanie hipotensji. Mannitol 0,25–0,5 g/kg (wykład zakładu). LP przeciwwskazana.</p></div>
+    <div class="card" style="border-top:5px solid var(--amber)"><h4>Pamiętaj</h4><p class="small">Guz tylnego dołu [9] dziecka z porannymi wymiotami i bólem głowy to częsty scenariusz ICP. Najpierw obrazowanie, potem ewentualna LP.</p></div>
+  </div>
+</div></section>
+
+<!-- ============ ZADANIA ============ -->
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część K · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2014, F 2015 i 2020, S1–S7, eksport z platformy). Część zadań jest autorska lub ma uzupełnione opcje (oznaczone). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Zestaw zadań według tematu</h4>
+    <div class="bars" id="barsPool" style="margin-top:.6rem"></div>
+  </div>
+  <div class="qtools">
+    <div class="filters" id="qFilters" style="margin:0"></div>
+    <span class="sp"></span>
+    <button class="btn" id="rand10">🎲 Losuj 10</button>
+    <button class="btn o" id="resetQ">Resetuj</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score" role="status">Wynik: 0 / 0</div>
+</div></section>
+
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część L</div>
+  <h2>Pod zaliczenie kontra aktualnie klinicznie</h2>
+  <div class="tw"><table id="gapTable"></table></div>
+</div></section>
+
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część M</div>
+  <h2>Połączenia międzymodułowe, flagi i perełki</h2>
+  <div class="grid2">
+    <figure class="fig wide scroll"><svg class="min" viewBox="0 0 680 500" id="crossSvg" role="img" aria-label="Mapa połączeń modułu 5 z pozostałymi modułami"></svg><figcaption>Moduł [5] i tematy, w których stan nagły łączy się z innymi modułami.</figcaption></figure>
+    <div class="stack" id="traps"></div>
+  </div>
+  <div class="grid3" style="margin-top:1.4rem">
+    <div class="callout red"><b class="k">🚩 Red flags</b><ul class="tight"><li>Stękanie, cicha klatka, sinica, zaburzenia świadomości</li><li>CRT &gt;2 s, tachykardia, nitkowate tętno</li><li>Wybroczyny + gorączka + wstrząs</li><li>Ślinotok i niemożność picia</li><li>Triada Cushinga</li></ul></div>
+    <div class="callout green"><b class="k">💎 High-yield</b><ul class="tight"><li>Adrenalina i.m. 0,01 mg/kg w anafilaksji</li><li>Biegunka + drgawki → Na⁺</li><li>NZK: oddechowe → bradykardia/asystolia</li><li>Opioidy → miosis → nalokson</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>Adrenalina s.c. w kluczu vs i.m.</li><li>30:2 vs 15:2 vs 3:1</li><li>Hipotensja to objaw późny</li><li>Nie badać gardła przy epiglottitis</li><li>LP przy wzroście ICP</li></ul></div>
+  </div>
+</div></section>
+
+<footer id="zrodla"><div class="wrap">
+  <div class="eyebrow">Źródła</div>
+  <h2>Źródła i uwagi</h2>
+  <ul class="tight" id="srcList"></ul>
+  <p class="small" style="margin-top:1rem">Pod zaliczenie obowiązuje klucz puli i wykładu zakładu. Tam, gdzie klucz jest przestarzały, podano drugą kolumnę „aktualnie klinicznie”. Dawek nie wyznaczano z pamięci: każda ma źródło (seminarium zakładu, wykład lub wytyczna z listy). Licznik 28 zadań (8,1% z 346) to moje ręczne zestawienie, nie oficjalny blueprint. Weryfikuj lokalne protokoły (np. NAC, leki przeciwdrgawkowe) przed zastosowaniem klinicznym.</p>
+</div></footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
