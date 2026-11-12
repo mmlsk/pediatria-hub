@@ -6,7 +6,9 @@
 <title>Pediatria V · hub nauki do zaliczenia</title>
 <meta name="description" content="Jeden hub łączący wszystkie atlasy modułowe z pediatrii: czytanie, trening mieszany, baza pytań, mapa powiązań i postęp.">
 <meta name="theme-color" content="#F5F6F2">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='9' cy='9' r='6' fill='%23C23B2A'/%3E%3Ccircle cx='23' cy='9' r='6' fill='%23B8730F'/%3E%3Ccircle cx='9' cy='23' r='6' fill='%232B63AE'/%3E%3Ccircle cx='23' cy='23' r='6' fill='%236E4CB0'/%3E%3C/svg%3E">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/hub.css">
@@ -24,6 +26,7 @@
       <li><a href="#/polaczenia" data-r="polaczenia">Połączenia</a></li>
       <li><a href="#/postep" data-r="postep">Postęp</a></li>
     </ul>
+    <button class="pwa-install" id="btnInstall" aria-label="Zainstaluj aplikację" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Zainstaluj</span></button>
     <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span>Szukaj</span><kbd>Ctrl K</kbd></button>
   </div>
 </header>

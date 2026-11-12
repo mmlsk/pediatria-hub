@@ -29,7 +29,18 @@ function rich(h) {
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
 let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); }
+function toast(msg, opts = {}) {
+  const t = $('#toast');
+  if (typeof msg === 'string' && !opts.html) {
+    t.textContent = msg;
+  } else {
+    t.innerHTML = msg;
+  }
+  t.classList.add('on');
+  clearTimeout(toastT);
+  const dur = opts.duration || 2200;
+  if (dur > 0) toastT = setTimeout(() => t.classList.remove('on'), dur);
+}
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- krótkie nazwy ---------- */
@@ -40,11 +51,26 @@ const gOf = id => GROUPS[modById[id].g];
 
 /* ---------- magazyn postępu ---------- */
 const KEY = 'pediatria-hub.v1:';
-const persist = false; // podgląd w piaskownicy nie zapewnia trwałego magazynu; pełna kopia przez kod w widoku Postęp
+const STORAGE_KEY = 'pediatria_hub_state_v1';
 let S = { visited: {}, last: null, done: {}, ans: {}, bm: {} };
-// przetrwanie odświeżenia karty: window.name (bez dostępu do magazynów przeglądarki)
-try { if (window.name.indexOf(KEY) === 0) Object.assign(S, JSON.parse(window.name.slice(KEY.length))); } catch (e) { /* pusty */ }
-const save = () => { try { window.name = KEY + JSON.stringify(S); } catch (e) { /* ignoruj */ } };
+
+// Wczytanie stanu: localStorage z fallbackiem do window.name
+try {
+  const local = localStorage.getItem(STORAGE_KEY);
+  if (local) {
+    Object.assign(S, JSON.parse(local));
+  } else if (window.name.indexOf(KEY) === 0) {
+    Object.assign(S, JSON.parse(window.name.slice(KEY.length)));
+  }
+} catch (e) {
+  try { if (window.name.indexOf(KEY) === 0) Object.assign(S, JSON.parse(window.name.slice(KEY.length))); } catch (_) {}
+}
+
+const save = () => {
+  const serialized = JSON.stringify(S);
+  try { localStorage.setItem(STORAGE_KEY, serialized); } catch (e) { /* ignoruj jeśli zablokowany */ }
+  try { window.name = KEY + serialized; } catch (e) { /* ignoruj */ }
+};
 
 /* ---------- dane pochodne ---------- */
 Q.forEach(q => {
@@ -632,5 +658,70 @@ document.addEventListener('keydown', e => {
 });
 if (/Mac|iPhone|iPad/.test(navigator.platform)) $('.srch kbd').textContent = '⌘ K';
 
+/* ---------- PWA & Service Worker ---------- */
+let deferredInstallPrompt = null;
+function initPWA() {
+  const btnInstall = $('#btnInstall');
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (btnInstall) btnInstall.style.display = 'inline-flex';
+  });
+
+  if (btnInstall) {
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        btnInstall.style.display = 'none';
+        toast('Dziękujemy za instalację Pediatria V Hub!');
+      }
+      deferredInstallPrompt = null;
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (btnInstall) btnInstall.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              toast(
+                `<span>Dostępna nowa wersja materiałów.</span> <button id="swReload" style="margin-left:.6rem;background:var(--teal);color:#fff;border:0;padding:.25rem .7rem;border-radius:999px;font-weight:700;cursor:pointer">Odśwież</button>`,
+                { html: true, duration: 10000 }
+              );
+              const b = $('#swReload');
+              if (b) {
+                b.onclick = () => {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                };
+              }
+            }
+          });
+        });
+      }).catch(err => {
+        console.debug('ServiceWorker registration error:', err);
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    });
+  }
+}
+
+initPWA();
 route();
 })();

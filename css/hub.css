@@ -270,8 +270,10 @@ footer.ft h3{color:#fff;font-family:var(--font-display);font-size:1.25rem;margin
 footer.ft p{font-size:.88rem;max-width:60ch}
 footer.ft a{color:#8BD3D9}
 body.reader footer.ft{display:none}
-.toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:.6rem 1.1rem;border-radius:999px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100}
-.toast.on{opacity:1;transform:translateX(-50%)}
+.pwa-install{display:none;align-items:center;gap:.4rem;padding:.4rem .75rem;border:1px solid var(--teal);border-radius:999px;background:var(--teal-l);color:var(--teal-d);font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.pwa-install:hover{background:var(--teal);color:#fff}
+.toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:.6rem 1.1rem;border-radius:999px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:100;display:flex;align-items:center;gap:.5rem}
+.toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
 
 /* ---------- responsive ---------- */
 @media (max-width:1000px){
