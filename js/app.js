@@ -343,7 +343,7 @@ function route() {
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
   $$('#menu a').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
-  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
+  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, kalkulator: viewCalculator, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
   if (!v) { location.hash = '#/'; return; }
@@ -2403,6 +2403,1022 @@ ${wrongQs.map((q, idx) => `### ${idx + 1}. [${q.pm || 'Moduł'}] ${q.stem.slice(
   renderContent();
 }
 
+/* ---------- KALKULATOR PEDIATRYCZNY & STANY NAGŁE ---------- */
+const CALC_KEY = 'pediatria_hub_calc_v1';
+let CALC_STATE = {
+  weight: 12.0,
+  ageVal: 2,
+  ageUnit: 'y', // 'y' | 'm'
+  tab: 'nagle', // 'nagle' | 'plyny' | 'goraczka' | 'antybiotyki' | 'skale'
+  dehydr: 'mod', // 'mild' | 'mod' | 'sev'
+  pgcs: { eyes: 4, verbal: 5, motor: 6 },
+  apgar: { hr: 2, resp: 2, tone: 2, reflex: 2, color: 2 },
+  silverman: { chest: 0, ic: 0, xiph: 0, nares: 0, grunt: 0 }
+};
+
+try {
+  const savedCalc = localStorage.getItem(CALC_KEY);
+  if (savedCalc) Object.assign(CALC_STATE, JSON.parse(savedCalc));
+} catch (e) {}
+
+function saveCalcState() {
+  try { localStorage.setItem(CALC_KEY, JSON.stringify(CALC_STATE)); } catch (e) {}
+}
+
+function estimateWeightFromAge(val, unit) {
+  if (unit === 'm') {
+    return Math.max(2.5, Math.min(11, Math.round(((val + 9) / 2) * 10) / 10));
+  }
+  if (val <= 5) return Math.max(9, Math.round(((val + 4) * 2) * 10) / 10);
+  if (val <= 12) return Math.round((val * 3 + 7) * 10) / 10;
+  return Math.min(75, Math.round(val * 3.5));
+}
+
+function viewCalculator(parts, params) {
+  if (params && params.tab && ['nagle', 'plyny', 'goraczka', 'antybiotyki', 'skale'].includes(params.tab)) {
+    CALC_STATE.tab = params.tab;
+  }
+  if (params && params.w && !isNaN(+params.w)) {
+    CALC_STATE.weight = Math.max(1, Math.min(100, +params.w));
+  }
+
+  const render = () => {
+    const w = CALC_STATE.weight;
+    const tab = CALC_STATE.tab;
+
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:960px">
+      <div class="eyebrow">Narzędzia kliniczne</div>
+      <h2>Kalkulator dawek pediatrycznych & Stany nagłe</h2>
+      <p class="lead">Przeliczaj dawki leków ratunkowych (PALS), płynoterapię odwodnienia (Holliday-Segar), syropy przeciwgorączkowe, antybiotyki oraz skale kliniczne w czasie rzeczywistym.</p>
+
+      <!-- Panel parametrów pacjenta -->
+      <div class="calc-param-card">
+        <div class="calc-param-grid">
+          <!-- Masa ciała -->
+          <div class="calc-field-group">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span class="muted" style="font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Masa ciała pacjenta</span>
+              <span class="srcline">Zakres: 1.0 – 80.0 kg</span>
+            </div>
+            <div class="calc-val-display">
+              <span class="calc-val-number" id="calcWeightNum">${w.toFixed(1)}</span>
+              <span style="font-weight:800;color:var(--muted);font-size:1.1rem">kg</span>
+              <input type="number" id="calcWeightIn" min="1" max="100" step="0.5" value="${w}" style="width:80px;padding:.3rem .5rem;margin-left:auto;border:1.5px solid var(--line);border-radius:8px;font-weight:800;font-size:1.1rem;background:var(--bg);color:var(--ink);text-align:right">
+            </div>
+            <input type="range" class="calc-slider" id="calcWeightSlider" min="1" max="80" step="0.5" value="${w}">
+            <div class="calc-quick-pills">
+              <span class="muted" style="font-size:.74rem;align-self:center;font-weight:700;margin-right:.2rem">Szybki wybór:</span>
+              <button class="calc-pill ${w === 3.5 ? 'active' : ''}" data-pw="3.5">3.5 kg (Noworodek)</button>
+              <button class="calc-pill ${w === 8.0 ? 'active' : ''}" data-pw="8.0">8.0 kg (6 mż)</button>
+              <button class="calc-pill ${w === 10.0 ? 'active' : ''}" data-pw="10.0">10 kg (1 rż)</button>
+              <button class="calc-pill ${w === 12.0 ? 'active' : ''}" data-pw="12.0">12 kg (2 lata)</button>
+              <button class="calc-pill ${w === 18.0 ? 'active' : ''}" data-pw="18.0">18 kg (5 lat)</button>
+              <button class="calc-pill ${w === 25.0 ? 'active' : ''}" data-pw="25.0">25 kg (8 lat)</button>
+              <button class="calc-pill ${w === 40.0 ? 'active' : ''}" data-pw="40.0">40 kg (12 lat)</button>
+            </div>
+          </div>
+
+          <!-- Szacowanie z wieku -->
+          <div class="calc-field-group" style="border-left:1px solid var(--line-2);padding-left:1.2rem">
+            <span class="muted" style="font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Szacowanie wagi z wieku (APLS)</span>
+            <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+              <input type="number" id="calcAgeVal" min="1" max="18" value="${CALC_STATE.ageVal}" style="width:70px;padding:.4rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:800;background:var(--bg);color:var(--ink)">
+              <select id="calcAgeUnit" style="padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:700;background:var(--bg);color:var(--ink)">
+                <option value="y" ${CALC_STATE.ageUnit === 'y' ? 'selected' : ''}>lat</option>
+                <option value="m" ${CALC_STATE.ageUnit === 'm' ? 'selected' : ''}>miesięcy</option>
+              </select>
+              <button class="btn sec sm" id="btnApplyAgeEst" style="font-size:.82rem">Przelicz wagę</button>
+            </div>
+            <p class="srcline" id="calcAgeFormulaHint" style="margin-top:.4rem">
+              Formuła: ${getAgeFormulaHint(CALC_STATE.ageVal, CALC_STATE.ageUnit)}
+            </p>
+            <div style="margin-top:.6rem">
+              <button class="btn pri sm" id="btnExportToNotes" style="font-size:.82rem">📋 Kopiuj kartę dawek do Notatnika</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pasek zakładek -->
+      <div class="calc-tab-nav" id="calcTabNav">
+        <button class="calc-tab-btn ${tab === 'nagle' ? 'active' : ''}" data-tab="nagle">🚨 Stany nagłe (PALS)</button>
+        <button class="calc-tab-btn ${tab === 'plyny' ? 'active' : ''}" data-tab="plyny">💧 Płynoterapia i Odwodnienie</button>
+        <button class="calc-tab-btn ${tab === 'goraczka' ? 'active' : ''}" data-tab="goraczka">💊 Przeciwgorączkowe & Syropy</button>
+        <button class="calc-tab-btn ${tab === 'antybiotyki' ? 'active' : ''}" data-tab="antybiotyki">🦠 Antybiotyki</button>
+        <button class="calc-tab-btn ${tab === 'skale' ? 'active' : ''}" data-tab="skale">📋 Skale kliniczne</button>
+      </div>
+
+      <!-- Treść wybranej zakładki -->
+      <div id="calcTabContent">
+        ${renderTabContent(tab, w)}
+      </div>
+    </div></section>`;
+
+    attachEvents();
+  };
+
+  const getAgeFormulaHint = (val, unit) => {
+    if (unit === 'm') return `(<12 m.ż.): (miesiące + 9) / 2 = ${((val + 9) / 2).toFixed(1)} kg`;
+    if (val <= 5) return `(1–5 lat): (wiek + 4) × 2 = ${((val + 4) * 2).toFixed(1)} kg`;
+    if (val <= 12) return `(6–12 lat): wiek × 3 + 7 = ${(val * 3 + 7).toFixed(1)} kg`;
+    return `(>12 lat): wiek × 3.5 = ${(val * 3.5).toFixed(1)} kg`;
+  };
+
+  const renderTabContent = (tab, w) => {
+    switch (tab) {
+      case 'nagle': return renderTabEmergency(w);
+      case 'plyny': return renderTabFluids(w);
+      case 'goraczka': return renderTabAntipyretics(w);
+      case 'antybiotyki': return renderTabAntibiotics(w);
+      case 'skale': return renderTabScales();
+      default: return renderTabEmergency(w);
+    }
+  };
+
+  /* Zakładka 1: Stany nagłe */
+  const renderTabEmergency = w => {
+    const adrCprDose = Math.min(1.0, Math.round((w * 0.01) * 100) / 100);
+    const adrCprVol = Math.min(10.0, Math.round((w * 0.1) * 10) / 10);
+    const adrAnaVol = Math.min(0.5, Math.max(0.05, Math.round((w * 0.01) * 100) / 100));
+    const defibJ = Math.min(200, Math.round(w * 4));
+    const cardioJ = Math.min(100, Math.round(w * 1));
+    const amiodaronMg = Math.min(300, Math.round(w * 5));
+    const atropinaMg = Math.min(0.5, Math.max(0.1, Math.round((w * 0.02) * 100) / 100));
+    const bolusFluidMl = Math.round(w * 20);
+    const midazolamBuccalMg = Math.min(10, Math.round((w * 0.25) * 10) / 10);
+    const diazepamPrMg = Math.min(10, Math.round((w * 0.5) * 10) / 10);
+    const dexaKrupMg = Math.min(8.0, Math.round((w * 0.15) * 10) / 10);
+    const glucose10Ml = Math.round(w * 2.5);
+
+    return `<div class="drug-grid">
+      <!-- Adrenalina NZK -->
+      <div class="drug-card" style="border-left:5px solid var(--red)">
+        <div class="drug-header">
+          <span class="drug-title">Adrenalina w NZK (1:10 000)</span>
+          <span class="chip" style="background:var(--red-l);color:var(--red);border-color:var(--red)">PALS / NZK</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${adrCprDose} mg</div>
+            <div class="drug-formula">Dawka: 0.01 mg/kg mc. i.v. / i.o.</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${adrCprVol} ml</div>
+            <span class="srcline">roztwór 1:10 000 (0.1 mg/ml)</span>
+          </div>
+        </div>
+        <p class="drug-notes">Podawaj co 3–5 min w asystolii/PEA lub po 3. defibrylacji w VF/pVT. Po każdej dawce podaj bolus 5 ml NaCl 0.9%.</p>
+      </div>
+
+      <!-- Adrenalina Anafilaksja -->
+      <div class="drug-card" style="border-left:5px solid var(--amber)">
+        <div class="drug-header">
+          <span class="drug-title">Adrenalina w Anafilaksji (1:1000)</span>
+          <span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:var(--amber)">I rzut i.m.</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${adrAnaVol} mg</div>
+            <div class="drug-formula">Dawka: 0.01 mg/kg mc. i.m. (max 0.3 / 0.5 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${adrAnaVol} ml</div>
+            <span class="srcline">roztwór 1:1000 (1 mg/ml nierozc.)</span>
+          </div>
+        </div>
+        <p class="drug-notes">Wstrzyknij domięśniowo w przednio-boczną powierzchnię uda. W razie braku poprawy powtórz dawkę po 5–15 minutach.</p>
+      </div>
+
+      <!-- Defibrylacja i kardiowersja -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Energia defibrylacji i kardiowersji</span>
+          <span class="chip">Elektroterapia</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${defibJ} J</div>
+            <div class="drug-formula">Defibrylacja (VF/pVT): 4 J/kg mc.</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${cardioJ} J</div>
+            <span class="srcline">Kardiowersja (SVT/VT): 1 J/kg mc.</span>
+          </div>
+        </div>
+        <p class="drug-notes">Defibrylacja asynchroniczna (4 J/kg od pierwszego wyładowania). Kardiowersja zsynchronizowana (1 J/kg, kolejna 2 J/kg).</p>
+      </div>
+
+      <!-- Amiodaron -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Amiodaron (Cordarone)</span>
+          <span class="chip">VF / pVT</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${amiodaronMg} mg</div>
+            <div class="drug-formula">Dawka: 5 mg/kg mc. i.v. / i.o. (max 300 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${(amiodaronMg / 50).toFixed(1)} ml</div>
+            <span class="srcline">ampułka 150 mg / 3 ml (50 mg/ml)</span>
+          </div>
+        </div>
+        <p class="drug-notes">Podaj w bolusie po 3. i po 5. nieskutecznym wyładowaniu defibrylatora.</p>
+      </div>
+
+      <!-- Bolus płynowy we wstrząsie -->
+      <div class="drug-card" style="border-left:5px solid var(--blue)">
+        <div class="drug-header">
+          <span class="drug-title">Bolus płynowy we wstrząsie</span>
+          <span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:var(--blue)">Krystaloidy</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${bolusFluidMl} ml</div>
+            <div class="drug-formula">Dawka: 20 ml/kg mc. w 10–20 min</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">Plasmalyte / NaCl 0.9%</div>
+            <span class="srcline">we wstrząsie kardiogennym 5–10 ml/kg</span>
+          </div>
+        </div>
+        <p class="drug-notes">Oceń wątrobę i płuca po każdym bolusie. W razie cech przewodnienia zatrzymaj płynoterapię i włącz inotropy.</p>
+      </div>
+
+      <!-- Midazolam w drgawkach -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Midazolam w drgawkach (Buccolam)</span>
+          <span class="chip">Przeciwdrgawkowe</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${midazolamBuccalMg} mg</div>
+            <div class="drug-formula">Policzkowo: 0.25 mg/kg (max 10 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${(w * 0.1).toFixed(1)} mg i.v.</div>
+            <span class="srcline">dożylnie: 0.1–0.15 mg/kg mc.</span>
+          </div>
+        </div>
+        <p class="drug-notes">Buccolam gotowe dawki: 2.5 mg (3–12 mż), 5 mg (1–5 lat), 7.5 mg (5–10 lat), 10 mg (>10 lat).</p>
+      </div>
+
+      <!-- Diazepam w drgawkach -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Diazepam (Relsed / Relanium)</span>
+          <span class="chip">Przeciwdrgawkowe</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${diazepamPrMg} mg p.r.</div>
+            <div class="drug-formula">Doodbytniczo: 0.5 mg/kg (max 10 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${w < 12 ? 'Wlewka 5 mg' : 'Wlewka 10 mg'}</div>
+            <span class="srcline">i.v.: ${(w * 0.2).toFixed(1)} mg (0.2 mg/kg)</span>
+          </div>
+        </div>
+        <p class="drug-notes">Wlewka doodbytnicza działa w 2–5 minut. Nie podawać diazepamu domięśniowo (nierówne wchłanianie).</p>
+      </div>
+
+      <!-- Deksametazon w krupie -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Deksametazon w zapaleniu krtani</span>
+          <span class="chip">Krup / Podgłośniowe</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${dexaKrupMg} mg</div>
+            <div class="drug-formula">Dawka: 0.15–0.6 mg/kg mc. (max 8–10 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">p.o. / i.m. / i.v.</div>
+            <span class="srcline">roztwór 4 mg/1 ml</span>
+          </div>
+        </div>
+        <p class="drug-notes">Dawka 0.15 mg/kg p.o. jest równie skuteczna jak 0.6 mg/kg. W duszności spoczynkowej dołącz nebulizację z adrenaliny 1:1000 (2–5 ml).</p>
+      </div>
+
+      <!-- Glukoza 10% -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Glukoza 10% w hipoglikemii</span>
+          <span class="chip">Metaboliczne</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${glucose10Ml} ml</div>
+            <div class="drug-formula">Dawka: 2–5 ml/kg mc. 10% Glukozy</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${(w * 0.25).toFixed(1)} g glukozy</div>
+            <span class="srcline">bolus i.v. powoli</span>
+          </div>
+        </div>
+        <p class="drug-notes">Podaj powoli dożylnie, skontroluj glikemię po 10 minutach. Następnie włącz wlew ciągły glukozy (GIR 4–8 mg/kg/min).</p>
+      </div>
+    </div>`;
+  };
+
+  /* Zakładka 2: Płynoterapia */
+  const renderTabFluids = w => {
+    // Holliday-Segar
+    let dailyMl = 0;
+    if (w <= 10) dailyMl = w * 100;
+    else if (w <= 20) dailyMl = 1000 + (w - 10) * 50;
+    else dailyMl = 1500 + Math.min(60, w - 20) * 20;
+
+    const hourlyMl = Math.round(dailyMl / 24);
+    const dropRateStandard = Math.round(hourlyMl / 3);
+    const dropRateMicro = hourlyMl;
+
+    // Deficyt odwodnienia
+    const dStage = CALC_STATE.dehydr;
+    const defPct = dStage === 'mild' ? 0.05 : dStage === 'mod' ? 0.08 : 0.10;
+    const deficitMl = Math.round(w * defPct * 1000);
+    const totalWithDeficit = dailyMl + deficitMl;
+    const phase1Rate = Math.round(((deficitMl / 2) + (dailyMl / 3)) / 8);
+    const phase2Rate = Math.round(((deficitMl / 2) + (dailyMl * 2 / 3)) / 16);
+
+    return `<div>
+      <!-- Holliday Segar -->
+      <div class="card" style="margin-bottom:1.4rem">
+        <div class="drug-header" style="margin-bottom:.8rem">
+          <div>
+            <h3 style="font-size:1.25rem">Zapotrzebowanie podstawowe (Holliday-Segar)</h3>
+            <span class="muted" style="font-size:.85rem">Płyny bytowe u dzieci bez odwodnienia na 24 godziny.</span>
+          </div>
+          <span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:var(--blue)">Norma dobowa</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.1rem">
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Objętość dobowa</span>
+            <div class="drug-result-dose" style="font-size:2rem;margin-top:.2rem">${dailyMl} ml/24h</div>
+          </div>
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Przepływ w pompie</span>
+            <div class="drug-result-dose" style="font-size:2rem;margin-top:.2rem">${hourlyMl} ml/h</div>
+          </div>
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Zwykły aparat (20 kr/ml)</span>
+            <div class="drug-result-vol" style="font-size:1.6rem;margin-top:.2rem">${dropRateStandard} kr/min</div>
+          </div>
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Mikrodrips (60 kr/ml)</span>
+            <div class="drug-result-vol" style="font-size:1.6rem;margin-top:.2rem">${dropRateMicro} kr/min</div>
+          </div>
+        </div>
+
+        <div class="calc-formula-box" style="background:var(--surface);border:1px solid var(--line-2);padding:.8rem;border-radius:8px;font-size:.84rem">
+          <b>Zasada Holliday-Segar:</b> pierwsze 10 kg × 100 ml/kg (${Math.min(1000, w * 100)} ml) + kolejne 10 kg × 50 ml/kg (${w > 10 ? Math.min(500, (w - 10) * 50) : 0} ml) + każdy kg > 20 kg × 20 ml/kg (${w > 20 ? (w - 20) * 20 : 0} ml).
+        </div>
+      </div>
+
+      <!-- Wyrównanie odwodnienia -->
+      <div class="card">
+        <div class="drug-header" style="margin-bottom:.8rem">
+          <div>
+            <h3 style="font-size:1.25rem">Wyrównanie odwodnienia i deficytu płynowego</h3>
+            <span class="muted" style="font-size:.85rem">Obliczanie całkowitego zapotrzebowania (bytowe + uzupełnienie deficytu).</span>
+          </div>
+          <div class="seg" id="calcDehydrSeg">
+            <button data-ds="mild" aria-pressed="${dStage === 'mild'}">Lekkie (5%)</button>
+            <button data-ds="mod" aria-pressed="${dStage === 'mod'}">Umiarkowane (8%)</button>
+            <button data-ds="sev" aria-pressed="${dStage === 'sev'}">Ciężkie (10%)</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.1rem">
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Szacowany deficyt płynowy</span>
+            <div class="drug-result-dose" style="font-size:1.8rem;color:var(--amber);margin-top:.2rem">${deficitMl} ml</div>
+            <span class="srcline">${(defPct * 100).toFixed(0)}% masy ciała (${Math.round(defPct * 1000)} ml/kg)</span>
+          </div>
+          <div class="card" style="background:var(--bg)">
+            <span class="muted" style="font-size:.78rem;font-weight:700">Płyny na 24h (Bytowe + Deficyt)</span>
+            <div class="drug-result-dose" style="font-size:1.8rem;color:var(--teal);margin-top:.2rem">${totalWithDeficit} ml</div>
+            <span class="srcline">średnio ${Math.round(totalWithDeficit / 24)} ml/h</span>
+          </div>
+        </div>
+
+        <h4 style="margin:1rem 0 .5rem;font-size:.95rem">Dwufazowy plan nawadniania dożylnego (przy braku wstrząsu):</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="card" style="background:var(--teal-xl);border-color:var(--teal)">
+            <b>Faza I (pierwsze 8 godzin)</b>
+            <div style="font-size:1.3rem;font-weight:800;color:var(--teal);margin:.3rem 0">${phase1Rate} ml / godzinę</div>
+            <span class="srcline">Podaj 50% deficytu (${Math.round(deficitMl / 2)} ml) + 1/3 zapotrzebowania bytowego (${Math.round(dailyMl / 3)} ml).</span>
+          </div>
+          <div class="card" style="background:var(--surface)">
+            <b>Faza II (kolejne 16 godzin)</b>
+            <div style="font-size:1.3rem;font-weight:800;color:var(--ink);margin:.3rem 0">${phase2Rate} ml / godzinę</div>
+            <span class="srcline">Podaj pozostałe 50% deficytu (${Math.round(deficitMl / 2)} ml) + 2/3 zapotrzebowania bytowego (${Math.round(dailyMl * 2 / 3)} ml).</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1.1rem;background:var(--bg)">
+          <b>Nawadnianie doustne (DPN / ORS – I rzut w odwodnieniu lekkim i umiarkowanym):</b>
+          <div style="font-size:1.05rem;font-weight:800;color:var(--ink);margin:.3rem 0">${Math.round(w * 50)} – ${Math.round(w * 100)} ml płynu nawadniającego w ciągu pierwszych 4 godzin.</div>
+          <span class="srcline">Podawaj łyżeczką lub strzykawką: 5 ml co 1–2 minuty. Wymioty nie są przeciwwskazaniem – zrób 10 min przerwy i kontynuuj mniejszymi porcjami.</span>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  /* Zakładka 3: Przeciwgorączkowe */
+  const renderTabAntipyretics = w => {
+    // Paracetamol: 15 mg/kg, max 60-75 mg/kg/doba
+    const parSingleMg = Math.min(1000, Math.round(w * 15));
+    const parDailyMg = Math.min(4000, Math.round(w * 60));
+    const parSyr120Ml = Math.round((parSingleMg / 24) * 10) / 10;
+    const parSyr200Ml = Math.round((parSingleMg / 40) * 10) / 10;
+    const parSyr250Ml = Math.round((parSingleMg / 50) * 10) / 10;
+
+    // Najbliższy czopek paracetamolu
+    const parCzopki = [50, 80, 125, 150, 250, 500];
+    const bestParCzopek = parCzopki.reduce((prev, curr) => Math.abs(curr - parSingleMg) < Math.abs(prev - parSingleMg) ? curr : prev);
+
+    // Ibuprofen: 10 mg/kg, max 30-40 mg/kg/doba
+    const ibuSingleMg = Math.min(400, Math.round(w * 10));
+    const ibuDailyMg = Math.min(1200, Math.round(w * 30));
+    const ibuSyr100Ml = Math.round((ibuSingleMg / 20) * 10) / 10;
+    const ibuSyr200Ml = Math.round((ibuSingleMg / 40) * 10) / 10;
+    const ibuCzopki = [60, 125, 250];
+    const bestIbuCzopek = ibuCzopki.reduce((prev, curr) => Math.abs(curr - ibuSingleMg) < Math.abs(prev - ibuSingleMg) ? curr : prev);
+
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem">
+      <!-- Paracetamol -->
+      <div class="card" style="border-top:4px solid var(--teal)">
+        <div class="drug-header">
+          <div>
+            <h3 style="font-size:1.3rem;color:var(--teal)">Paracetamol (od 1. dnia życia)</h3>
+            <span class="muted" style="font-size:.82rem">Lek przeciwgorączkowy i przeciwbólowy I rzutu.</span>
+          </div>
+          <span class="chip" style="background:var(--teal-l);color:var(--teal)">15 mg/kg</span>
+        </div>
+
+        <div class="drug-result-box" style="margin:1rem 0">
+          <div>
+            <div class="drug-result-dose">${parSingleMg} mg</div>
+            <div class="drug-formula">Dawka jednorazowa (co 4–6 godz.)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${parDailyMg} mg</div>
+            <span class="srcline">Maksymalnie na dobę (60 mg/kg)</span>
+          </div>
+        </div>
+
+        <h4 style="font-size:.9rem;margin-bottom:.5rem">Przeliczenie na syropy i zawiesiny:</h4>
+        <div style="display:grid;gap:.4rem;font-size:.85rem;margin-bottom:1rem">
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Syrop standard (120 mg / 5 ml = 24 mg/ml)</b>
+            <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr120Ml} ml</div>
+          </div>
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Syrop forte (200 mg / 5 ml = 40 mg/ml)</b>
+            <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr200Ml} ml</div>
+          </div>
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Syrop koncentrat (250 mg / 5 ml = 50 mg/ml)</b>
+            <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr250Ml} ml</div>
+          </div>
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Rekomendowany czopek doodbytniczy:</b>
+            <div style="font-weight:800;color:var(--ink);text-align:right">${bestParCzopek} mg</div>
+          </div>
+        </div>
+
+        <p class="drug-notes">Paracetamol podawaj co 4–6 godzin (maksymalnie 4–5 razy na dobę). Przy podaniu doodbytniczym wchłanianie jest wolniejsze i mniej przewidywalne (dawka czopka może wynosić do 20 mg/kg).</p>
+      </div>
+
+      <!-- Ibuprofen -->
+      <div class="card" style="border-top:4px solid var(--amber)">
+        <div class="drug-header">
+          <div>
+            <h3 style="font-size:1.3rem;color:var(--amber)">Ibuprofen (> 3. miesiąca życia)</h3>
+            <span class="muted" style="font-size:.82rem">Działanie przeciwgorączkowe, przeciwbólowe i przeciwzapalne.</span>
+          </div>
+          <span class="chip" style="background:var(--amber-l);color:var(--amber)">10 mg/kg</span>
+        </div>
+
+        <div class="drug-result-box" style="margin:1rem 0">
+          <div>
+            <div class="drug-result-dose" style="color:var(--amber)">${ibuSingleMg} mg</div>
+            <div class="drug-formula">Dawka jednorazowa (co 6–8 godz.)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${ibuDailyMg} mg</div>
+            <span class="srcline">Maksymalnie na dobę (30 mg/kg)</span>
+          </div>
+        </div>
+
+        <h4 style="font-size:.9rem;margin-bottom:.5rem">Przeliczenie na syropy i zawiesiny:</h4>
+        <div style="display:grid;gap:.4rem;font-size:.85rem;margin-bottom:1rem">
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Syrop standard (100 mg / 5 ml = 20 mg/ml)</b>
+            <div style="font-weight:800;color:var(--amber);text-align:right">${ibuSyr100Ml} ml</div>
+          </div>
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Syrop forte (200 mg / 5 ml = 40 mg/ml)</b>
+            <div style="font-weight:800;color:var(--amber);text-align:right">${ibuSyr200Ml} ml</div>
+          </div>
+          <div class="prow" style="padding:.5rem .7rem">
+            <b>Rekomendowany czopek doodbytniczy:</b>
+            <div style="font-weight:800;color:var(--ink);text-align:right">${bestIbuCzopek} mg</div>
+          </div>
+        </div>
+
+        <div class="drug-alert" style="margin-bottom:.7rem">
+          ⚠️ <b>Przeciwwskazania bezwzględne:</b> OSPA WIETRZNA (ryzyko martwiczego zapalenia powięzi i powikłań paciorkowcowych!) oraz CIĘŻKIE ODWODNIENIE (ryzyko nefrotoksyczności i ostrej niewydolności nerek AKI).
+        </div>
+        <p class="drug-notes">Podawaj co 6–8 godzin (maksymalnie 3 razy na dobę). Nie stosować u niemowląt poniżej 3. miesiąca życia ani o masie < 5 kg.</p>
+      </div>
+    </div>`;
+  };
+
+  /* Zakładka 4: Antybiotyki */
+  const renderTabAntibiotics = w => {
+    const amoxHighDaily = Math.min(3000, Math.round(w * 90));
+    const amoxStdDaily = Math.min(2000, Math.round(w * 50));
+    const cefuroxDaily = Math.min(1000, Math.round(w * 30));
+    const azithroDaily = Math.min(500, Math.round(w * 10));
+    const ceftriaxDaily = Math.min(4000, Math.round(w * 80));
+
+    return `<div class="drug-grid">
+      <!-- Amoksycylina wysoka dawka -->
+      <div class="drug-card" style="border-left:5px solid var(--green)">
+        <div class="drug-header">
+          <span class="drug-title">Amoksycylina – wysoka dawka (AOM / Zapalenie płuc)</span>
+          <span class="chip" style="background:var(--green-l);color:var(--green)">90 mg/kg/dobę</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose" style="color:var(--green)">${amoxHighDaily} mg / dobę</div>
+            <div class="drug-formula">Dawka: 90 mg/kg mc./dobę (max 3000 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${Math.round(amoxHighDaily / 2)} mg co 12h</div>
+            <span class="srcline">lub ${Math.round(amoxHighDaily / 3)} mg co 8h</span>
+          </div>
+        </div>
+        <p class="drug-notes">I rzut w ostrym zapaleniu ucha środkowego (AOM) i pozaszpitalnym zapaleniu płuc u dzieci. Przełamuje oporność pneumokoków. Zawiesina 400 mg / 5 ml: ${(amoxHighDaily / 80).toFixed(1)} ml na dobę.</p>
+      </div>
+
+      <!-- Amoksycylina dawka standardowa -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Amoksycylina – dawka standardowa</span>
+          <span class="chip">50 mg/kg/dobę</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${amoxStdDaily} mg / dobę</div>
+            <div class="drug-formula">Dawka: 50 mg/kg mc./dobę (max 2000 mg)</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${Math.round(amoxStdDaily / 2)} mg co 12h</div>
+            <span class="srcline">lub ${Math.round(amoxStdDaily / 3)} mg co 8h</span>
+          </div>
+        </div>
+        <p class="drug-notes">Stosowana w łagodnych zakażeniach dróg oddechowych. W anginie paciorkowcowej (S. pyogenes) lekiem I rzutu jest Fenoksymetylopenicylina (Ospen) przez 10 dni!</p>
+      </div>
+
+      <!-- Cefuroksym aksetyl -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Cefuroksym aksetyl (Zinnat)</span>
+          <span class="chip">Cefalosporyna II gen.</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${cefuroxDaily} mg / dobę</div>
+            <div class="drug-formula">Dawka: 30 mg/kg mc./dobę w 2 dawkach</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${Math.round(cefuroxDaily / 2)} mg co 12h</div>
+            <span class="srcline">zawiesina 125 lub 250 mg/5 ml</span>
+          </div>
+        </div>
+        <p class="drug-notes">ZUM, zakażenia dróg oddechowych w razie nadwrażliwości na penicyliny (bez anafilaksji). Podawać bezpośrednio po posiłku (zwiększa wchłanianie).</p>
+      </div>
+
+      <!-- Azytromycyna -->
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-title">Azytromycyna (Sumamed)</span>
+          <span class="chip">Makrolid</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose">${azithroDaily} mg / dobę</div>
+            <div class="drug-formula">Dawka: 10 mg/kg mc. raz na dobę przez 3 dni</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">${(azithroDaily / 40).toFixed(1)} ml</div>
+            <span class="srcline">zawiesina 200 mg/5 ml (40 mg/ml)</span>
+          </div>
+        </div>
+        <p class="drug-notes">Atypowe zapalenie płuc (Mycoplasma pneumoniae, Chlamydia pneumoniae), krztusiec. Podawać 1 raz na dobę na czczo (1h przed lub 2h po posiłku).</p>
+      </div>
+
+      <!-- Ceftriakson -->
+      <div class="drug-card" style="border-left:5px solid var(--violet)">
+        <div class="drug-header">
+          <span class="drug-title">Ceftriakson (Biotrakson)</span>
+          <span class="chip" style="background:var(--violet-l);color:var(--violet)">Cefalosporyna III gen.</span>
+        </div>
+        <div class="drug-result-box">
+          <div>
+            <div class="drug-result-dose" style="color:var(--violet)">${ceftriaxDaily} mg / dobę</div>
+            <div class="drug-formula">Dawka: 50–100 mg/kg mc./dobę i.v.</div>
+          </div>
+          <div style="text-align:right">
+            <div class="drug-result-vol">1 raz na dobę i.v.</div>
+            <span class="srcline">max 4000 mg/dobę</span>
+          </div>
+        </div>
+        <p class="drug-notes">Leczenie szpitalne: podejrzenie sepsy, neuroinfekcji (ZOMR), ciężkie odmiedniczkowe zapalenie nerek (PZN). Nie łączyć z roztworami wapnia.</p>
+      </div>
+    </div>`;
+  };
+
+  /* Zakładka 5: Skale pediatryczne */
+  const renderTabScales = () => {
+    // pGCS calculation
+    const g = CALC_STATE.pgcs;
+    const gcsTotal = g.eyes + g.verbal + g.motor;
+    let gcsInterp = 'Stan prawidłowy (13–15)';
+    let gcsColor = 'var(--green)';
+    if (gcsTotal <= 8) {
+      gcsInterp = 'Ciężkie uszkodzenie OUN (≤8) – wskazanie do intubacji!';
+      gcsColor = 'var(--red)';
+    } else if (gcsTotal <= 12) {
+      gcsInterp = 'Umiarkowane uszkodzenie OUN (9–12)';
+      gcsColor = 'var(--amber)';
+    }
+
+    // Apgar calculation
+    const a = CALC_STATE.apgar;
+    const apgarTotal = a.hr + a.resp + a.tone + a.reflex + a.color;
+    let apgarInterp = 'Stan dobry (8–10 punktów)';
+    let apgarColor = 'var(--green)';
+    if (apgarTotal <= 3) {
+      apgarInterp = 'Ciężka zamartwica (0–3 pkt) – natychmiastowa resuscytacja!';
+      apgarColor = 'var(--red)';
+    } else if (apgarTotal <= 7) {
+      apgarInterp = 'Stan średni / umiarkowane niedotlenienie (4–7 pkt)';
+      apgarColor = 'var(--amber)';
+    }
+
+    // Silverman calculation
+    const s = CALC_STATE.silverman;
+    const silverTotal = s.chest + s.ic + s.xiph + s.nares + s.grunt;
+    let silverInterp = 'Brak niewydolności oddechowej (0 pkt)';
+    let silverColor = 'var(--green)';
+    if (silverTotal >= 7) {
+      silverInterp = 'Ciężka niewydolność oddechowa (7–10 pkt) – zagrożenie życia!';
+      silverColor = 'var(--red)';
+    } else if (silverTotal >= 4) {
+      silverInterp = 'Umiarkowana niewydolność oddechowa (4–6 pkt)';
+      silverColor = 'var(--amber)';
+    } else if (silverTotal >= 1) {
+      silverInterp = 'Łagodna niewydolność oddechowa (1–3 pkt)';
+      silverColor = 'var(--teal)';
+    }
+
+    return `<div>
+      <!-- Pediatryczna skala Glasgow (pGCS) -->
+      <div class="scale-card">
+        <div class="scale-header">
+          <div>
+            <h3 style="font-size:1.3rem">Pediatryczna skala Glasgow (pGCS)</h3>
+            <span class="muted" style="font-size:.82rem">Ocena stanu świadomości dostosowana do niemowląt i małych dzieci.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem">
+            <span style="font-weight:800;color:${gcsColor}">${gcsInterp}</span>
+            <div class="scale-score-badge" style="color:${gcsColor}">${gcsTotal} / 15</div>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Otwieranie oczu (E)</b>
+          <div class="scale-opt-group" data-scale="pgcs-eyes">
+            <button class="scale-opt-btn ${g.eyes === 4 ? 'active' : ''}" data-val="4">Spontaniczne (4)</button>
+            <button class="scale-opt-btn ${g.eyes === 3 ? 'active' : ''}" data-val="3">Na polecenie / głos (3)</button>
+            <button class="scale-opt-btn ${g.eyes === 2 ? 'active' : ''}" data-val="2">Na bodziec bólowy (2)</button>
+            <button class="scale-opt-btn ${g.eyes === 1 ? 'active' : ''}" data-val="1">Brak reakcji (1)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Odpowiedź słowna (V)</b>
+          <div class="scale-opt-group" data-scale="pgcs-verbal">
+            <button class="scale-opt-btn ${g.verbal === 5 ? 'active' : ''}" data-val="5">Głużenie, gaworzenie, uśmiech (5)</button>
+            <button class="scale-opt-btn ${g.verbal === 4 ? 'active' : ''}" data-val="4">Płacz z możliwością utulenia (4)</button>
+            <button class="scale-opt-btn ${g.verbal === 3 ? 'active' : ''}" data-val="3">Płacz nieukojony / krzyk (3)</button>
+            <button class="scale-opt-btn ${g.verbal === 2 ? 'active' : ''}" data-val="2">Jęki, niepokój, postękiwanie (2)</button>
+            <button class="scale-opt-btn ${g.verbal === 1 ? 'active' : ''}" data-val="1">Brak odpowiedzi słownej (1)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Odpowiedź ruchowa (M)</b>
+          <div class="scale-opt-group" data-scale="pgcs-motor">
+            <button class="scale-opt-btn ${g.motor === 6 ? 'active' : ''}" data-val="6">Ruchy spontaniczne / spełnia polecenia (6)</button>
+            <button class="scale-opt-btn ${g.motor === 5 ? 'active' : ''}" data-val="5">Lokalizuje bodziec bólowy (5)</button>
+            <button class="scale-opt-btn ${g.motor === 4 ? 'active' : ''}" data-val="4">Ucieczka przed bólem (4)</button>
+            <button class="scale-opt-btn ${g.motor === 3 ? 'active' : ''}" data-val="3">Zgięcie patologiczne (odkorowanie) (3)</button>
+            <button class="scale-opt-btn ${g.motor === 2 ? 'active' : ''}" data-val="2">Wyprost patologiczny (odmóżdżenie) (2)</button>
+            <button class="scale-opt-btn ${g.motor === 1 ? 'active' : ''}" data-val="1">Brak reakcji ruchowej / wiotkość (1)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skala Apgar -->
+      <div class="scale-card">
+        <div class="scale-header">
+          <div>
+            <h3 style="font-size:1.3rem">Skala Apgar (ocena noworodka)</h3>
+            <span class="muted" style="font-size:.82rem">Ocena stanu noworodka w 1., 3., 5. i 10. minucie życia.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem">
+            <span style="font-weight:800;color:${apgarColor}">${apgarInterp}</span>
+            <div class="scale-score-badge" style="color:${apgarColor}">${apgarTotal} / 10</div>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Czynność serca (HR)</b>
+          <div class="scale-opt-group" data-scale="apgar-hr">
+            <button class="scale-opt-btn ${a.hr === 2 ? 'active' : ''}" data-val="2">> 100 / min (2)</button>
+            <button class="scale-opt-btn ${a.hr === 1 ? 'active' : ''}" data-val="1">< 100 / min (1)</button>
+            <button class="scale-opt-btn ${a.hr === 0 ? 'active' : ''}" data-val="0">Brak czynności serca (0)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Oddychanie</b>
+          <div class="scale-opt-group" data-scale="apgar-resp">
+            <button class="scale-opt-btn ${a.resp === 2 ? 'active' : ''}" data-val="2">Głośny płacz / miarowy (2)</button>
+            <button class="scale-opt-btn ${a.resp === 1 ? 'active' : ''}" data-val="1">Wolny / nieregularny (1)</button>
+            <button class="scale-opt-btn ${a.resp === 0 ? 'active' : ''}" data-val="0">Brak oddechu (0)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Napięcie mięśni</b>
+          <div class="scale-opt-group" data-scale="apgar-tone">
+            <button class="scale-opt-btn ${a.tone === 2 ? 'active' : ''}" data-val="2">Ruchy aktywne (2)</button>
+            <button class="scale-opt-btn ${a.tone === 1 ? 'active' : ''}" data-val="1">Kończyny zgięte (1)</button>
+            <button class="scale-opt-btn ${a.tone === 0 ? 'active' : ''}" data-val="0">Wiotkie (0)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Reakcja na bodziec</b>
+          <div class="scale-opt-group" data-scale="apgar-reflex">
+            <button class="scale-opt-btn ${a.reflex === 2 ? 'active' : ''}" data-val="2">Kichanie, kaszel, energiczny grymas (2)</button>
+            <button class="scale-opt-btn ${a.reflex === 1 ? 'active' : ''}" data-val="1">Słaby grymas (1)</button>
+            <button class="scale-opt-btn ${a.reflex === 0 ? 'active' : ''}" data-val="0">Brak reakcji (0)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Zabarwienie skóry</b>
+          <div class="scale-opt-group" data-scale="apgar-color">
+            <button class="scale-opt-btn ${a.color === 2 ? 'active' : ''}" data-val="2">Różowe całe ciało (2)</button>
+            <button class="scale-opt-btn ${a.color === 1 ? 'active' : ''}" data-val="1">Tułów różowy, sinica dłoni i stóp (1)</button>
+            <button class="scale-opt-btn ${a.color === 0 ? 'active' : ''}" data-val="0">Blade lub sine uogólnione (0)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skala Silvermana -->
+      <div class="scale-card">
+        <div class="scale-header">
+          <div>
+            <h3 style="font-size:1.3rem">Skala Silvermana-Andersena (niewydolność oddechowa noworodka)</h3>
+            <span class="muted" style="font-size:.82rem">Ocena nasilenia duszności u noworodka (im więcej punktów, tym cięższa niewydolność!).</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem">
+            <span style="font-weight:800;color:${silverColor}">${silverInterp}</span>
+            <div class="scale-score-badge" style="color:${silverColor}">${silverTotal} / 10</div>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Ruchy klatki i brzucha</b>
+          <div class="scale-opt-group" data-scale="silv-chest">
+            <button class="scale-opt-btn ${s.chest === 0 ? 'active' : ''}" data-val="0">Zsynchronizowane (0)</button>
+            <button class="scale-opt-btn ${s.chest === 1 ? 'active' : ''}" data-val="1">Klatka opóźniona we wdechu (1)</button>
+            <button class="scale-opt-btn ${s.chest === 2 ? 'active' : ''}" data-val="2">Ruchy huśtawkowe (paradoksalne) (2)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Zaciąganie międzyżebrzy</b>
+          <div class="scale-opt-group" data-scale="silv-ic">
+            <button class="scale-opt-btn ${s.ic === 0 ? 'active' : ''}" data-val="0">Brak zaciągania (0)</button>
+            <button class="scale-opt-btn ${s.ic === 1 ? 'active' : ''}" data-val="1">Ledwo widoczne (1)</button>
+            <button class="scale-opt-btn ${s.ic === 2 ? 'active' : ''}" data-val="2">Wyraźne zaciąganie (2)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Zaciąganie dołka podsercowego</b>
+          <div class="scale-opt-group" data-scale="silv-xiph">
+            <button class="scale-opt-btn ${s.xiph === 0 ? 'active' : ''}" data-val="0">Brak zaciągania (0)</button>
+            <button class="scale-opt-btn ${s.xiph === 1 ? 'active' : ''}" data-val="1">Ledwo widoczne (1)</button>
+            <button class="scale-opt-btn ${s.xiph === 2 ? 'active' : ''}" data-val="2">Wyraźne zaciąganie (2)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Ruchy skrzydełek nosa</b>
+          <div class="scale-opt-group" data-scale="silv-nares">
+            <button class="scale-opt-btn ${s.nares === 0 ? 'active' : ''}" data-val="0">Brak poruszania (0)</button>
+            <button class="scale-opt-btn ${s.nares === 1 ? 'active' : ''}" data-val="1">Minimalne poruszanie (1)</button>
+            <button class="scale-opt-btn ${s.nares === 2 ? 'active' : ''}" data-val="2">Wyraźne rozszerzanie (2)</button>
+          </div>
+        </div>
+
+        <div class="scale-row">
+          <b>Stękanie wydechowe (grunting)</b>
+          <div class="scale-opt-group" data-scale="silv-grunt">
+            <button class="scale-opt-btn ${s.grunt === 0 ? 'active' : ''}" data-val="0">Brak stękania (0)</button>
+            <button class="scale-opt-btn ${s.grunt === 1 ? 'active' : ''}" data-val="1">Słyszalne stetoskopem (1)</button>
+            <button class="scale-opt-btn ${s.grunt === 2 ? 'active' : ''}" data-val="2">Słyszalne uchem bez słuchawek (2)</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const attachEvents = () => {
+    // Suwak i pole wagi
+    const slider = $('#calcWeightSlider');
+    const numIn = $('#calcWeightIn');
+
+    const updateWeight = val => {
+      const clamped = Math.max(1, Math.min(100, Math.round(val * 10) / 10));
+      CALC_STATE.weight = clamped;
+      saveCalcState();
+      render();
+    };
+
+    if (slider) slider.addEventListener('input', e => updateWeight(+e.target.value));
+    if (numIn) numIn.addEventListener('change', e => updateWeight(+e.target.value));
+
+    // Pigułki szybkiego wyboru wagi
+    $$('[data-pw]').forEach(btn => {
+      btn.onclick = () => updateWeight(+btn.dataset.pw);
+    });
+
+    // Wiek i szacowanie APLS
+    const ageValIn = $('#calcAgeVal');
+    const ageUnitSel = $('#calcAgeUnit');
+    const applyAgeBtn = $('#btnApplyAgeEst');
+
+    if (applyAgeBtn) {
+      applyAgeBtn.onclick = () => {
+        const val = +ageValIn.value;
+        const unit = ageUnitSel.value;
+        CALC_STATE.ageVal = val;
+        CALC_STATE.ageUnit = unit;
+        const estW = estimateWeightFromAge(val, unit);
+        updateWeight(estW);
+        toast(`Oszacowano wagę z wieku: ${estW} kg`);
+      };
+    }
+
+    // Zakładki kalkulatora
+    $$('#calcTabNav button').forEach(btn => {
+      btn.onclick = () => {
+        CALC_STATE.tab = btn.dataset.tab;
+        saveCalcState();
+        render();
+      };
+    });
+
+    // Płynoterapia stopień odwodnienia
+    const dehydrSeg = $('#calcDehydrSeg');
+    if (dehydrSeg) {
+      dehydrSeg.onclick = e => {
+        const b = e.target.closest('[data-ds]');
+        if (!b) return;
+        CALC_STATE.dehydr = b.dataset.ds;
+        saveCalcState();
+        render();
+      };
+    }
+
+    // Skale kliniczne – przyciski wyboru opcji
+    $$('[data-scale]').forEach(group => {
+      group.onclick = e => {
+        const b = e.target.closest('[data-val]');
+        if (!b) return;
+        const scaleType = group.dataset.scale;
+        const val = +b.dataset.val;
+
+        if (scaleType === 'pgcs-eyes') CALC_STATE.pgcs.eyes = val;
+        else if (scaleType === 'pgcs-verbal') CALC_STATE.pgcs.verbal = val;
+        else if (scaleType === 'pgcs-motor') CALC_STATE.pgcs.motor = val;
+        else if (scaleType === 'apgar-hr') CALC_STATE.apgar.hr = val;
+        else if (scaleType === 'apgar-resp') CALC_STATE.apgar.resp = val;
+        else if (scaleType === 'apgar-tone') CALC_STATE.apgar.tone = val;
+        else if (scaleType === 'apgar-reflex') CALC_STATE.apgar.reflex = val;
+        else if (scaleType === 'apgar-color') CALC_STATE.apgar.color = val;
+        else if (scaleType === 'silv-chest') CALC_STATE.silverman.chest = val;
+        else if (scaleType === 'silv-ic') CALC_STATE.silverman.ic = val;
+        else if (scaleType === 'silv-xiph') CALC_STATE.silverman.xiph = val;
+        else if (scaleType === 'silv-nares') CALC_STATE.silverman.nares = val;
+        else if (scaleType === 'silv-grunt') CALC_STATE.silverman.grunt = val;
+
+        saveCalcState();
+        render();
+      };
+    });
+
+    // Kopiuj kartę dawek do Notatnika
+    const exportBtn = $('#btnExportToNotes');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const w = CALC_STATE.weight;
+        const age = `${CALC_STATE.ageVal} ${CALC_STATE.ageUnit === 'y' ? 'lat' : 'miesięcy'}`;
+
+        let dailyMl = 0;
+        if (w <= 10) dailyMl = w * 100;
+        else if (w <= 20) dailyMl = 1000 + (w - 10) * 50;
+        else dailyMl = 1500 + Math.min(60, w - 20) * 20;
+
+        const md = `# Karta zlecenia i dawek leków pacjenta
+**Data wygenerowania:** ${new Date().toLocaleString('pl-PL')}
+**Masa ciała:** ${w.toFixed(1)} kg | **Wiek szacowany:** ${age}
+
+---
+
+## 1. Leki ratunkowe i stany nagłe (PALS)
+| Lek | Dawka obliczona | Objętość / Postać | Sposób podania |
+|---|---|---|---|
+| **Adrenalina w NZK** (1:10 000) | ${(w * 0.01).toFixed(2)} mg | ${(w * 0.1).toFixed(1)} ml | i.v. / i.o. co 3–5 min |
+| **Adrenalina w Anafilaksji** (1:1000) | ${Math.min(0.5, (w * 0.01)).toFixed(2)} mg | ${Math.min(0.5, (w * 0.01)).toFixed(2)} ml | i.m. udo (nierozcieńczona) |
+| **Defibrylacja (VF/pVT)** | ${Math.min(200, Math.round(w * 4))} J | – | 4 J/kg mc. |
+| **Bolus płynowy we wstrząsie** | ${Math.round(w * 20)} ml | Krystaloidy | w 10–20 min |
+| **Amiodaron** (5 mg/kg) | ${Math.min(300, Math.round(w * 5))} mg | ${(Math.min(300, Math.round(w * 5)) / 50).toFixed(1)} ml | i.v. / i.o. po 3. i 5. defibrylacji |
+| **Midazolam w drgawkach** | ${Math.min(10, (w * 0.25)).toFixed(1)} mg | Buccolam | policzkowo (buccal) |
+| **Diazepam w drgawkach** | ${Math.min(10, (w * 0.5)).toFixed(1)} mg | Wlewka doodbyt. | doodbytniczo (p.r.) |
+| **Deksametazon (Krup)** | ${Math.min(8, (w * 0.15)).toFixed(1)} mg | p.o. / i.m. / i.v. | 0.15–0.6 mg/kg |
+| **Glukoza 10% (hipoglikemia)** | ${Math.round(w * 2.5)} ml | 10% Glukoza | bolus i.v. |
+
+---
+
+## 2. Płynoterapia podstawowa (Holliday-Segar)
+- **Objętość dobowa:** ${dailyMl} ml / dobę
+- **Przepływ w pompie infuzyjnej:** ${Math.round(dailyMl / 24)} ml / godzinę
+- **Przepływ grawitacyjny (aparat 20 kr/ml):** ${Math.round((dailyMl / 24) / 3)} kropel / min
+
+---
+
+## 3. Leki przeciwgorączkowe i przeciwbólowe
+- **Paracetamol (15 mg/kg):** ${Math.min(1000, Math.round(w * 15))} mg jednorazowo (co 4–6 godz., max ${Math.min(4000, Math.round(w * 60))} mg/dobę)
+  - *Syrop 120 mg/5 ml (24 mg/ml):* ${((Math.min(1000, Math.round(w * 15))) / 24).toFixed(1)} ml
+  - *Syrop forte 200 mg/5 ml (40 mg/ml):* ${((Math.min(1000, Math.round(w * 15))) / 40).toFixed(1)} ml
+- **Ibuprofen (10 mg/kg):** ${Math.min(400, Math.round(w * 10))} mg jednorazowo (co 6–8 godz., max ${Math.min(1200, Math.round(w * 30))} mg/dobę)
+  - *Syrop 100 mg/5 ml (20 mg/ml):* ${((Math.min(400, Math.round(w * 10))) / 20).toFixed(1)} ml
+  - *Syrop forte 200 mg/5 ml (40 mg/ml):* ${((Math.min(400, Math.round(w * 10))) / 40).toFixed(1)} ml
+  - *Uwaga:* Przeciwwskazany w ospie wietrznej i odwodnieniu!
+
+---
+
+## 4. Antybiotykoterapia
+- **Amoksycylina wysoka dawka (90 mg/kg/doba - AOM/zapalenie płuc):** ${Math.min(3000, Math.round(w * 90))} mg/dobę (w 2 dawkach co 12h: ${Math.round(Math.min(3000, Math.round(w * 90)) / 2)} mg)
+- **Cefuroksym aksetyl (30 mg/kg/doba):** ${Math.min(1000, Math.round(w * 30))} mg/dobę (co 12h: ${Math.round(Math.min(1000, Math.round(w * 30)) / 2)} mg po jedzeniu)
+- **Azytromycyna (10 mg/kg):** ${Math.min(500, Math.round(w * 10))} mg raz na dobę przez 3 dni
+`;
+
+        const notes = getNotes();
+        const note = {
+          id: 'note_calc_' + Date.now(),
+          title: `Karta dawek i leków pacjenta (${w.toFixed(1)} kg, ${new Date().toLocaleDateString('pl-PL')})`,
+          content: md,
+          mod: 'all',
+          updatedAt: Date.now()
+        };
+        notes.unshift(note);
+        saveNotes(notes);
+        toast('Zapisano kartę dawek pacjenta do Notatnika!');
+        location.hash = '#/notatki?id=' + note.id;
+      };
+    }
+  };
+
+  render();
+}
+
 /* ---------- TRENING ---------- */
 function viewTrening(parts, params) {
   if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank) {
@@ -2657,6 +3673,7 @@ const VIEWS = [
   ['Atlasy', '#/atlasy'],
   ['Trening mieszany', '#/trening'],
   ['Egzamin próbny', '#/egzamin'],
+  ['Kalkulator dawek i PALS', '#/kalkulator'],
   ['Baza pytań', '#/pytania'],
   ['Notatki Markdown', '#/notatki'],
   ['Mapa powiązań', '#/polaczenia'],
