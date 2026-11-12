@@ -58,7 +58,7 @@ const gOf = id => GROUPS[modById[id].g];
 /* ---------- magazyn postępu ---------- */
 const KEY = 'pediatria-hub.v1:';
 const STORAGE_KEY = 'pediatria_hub_state_v1';
-let S = { visited: {}, last: null, done: {}, ans: {}, bm: {} };
+let S = { visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [] };
 
 // Wczytanie stanu: localStorage z fallbackiem do window.name
 try {
@@ -71,6 +71,7 @@ try {
 } catch (e) {
   try { if (window.name.indexOf(KEY) === 0) Object.assign(S, JSON.parse(window.name.slice(KEY.length))); } catch (_) {}
 }
+S.examHistory = Array.isArray(S.examHistory) ? S.examHistory : [];
 
 const save = () => {
   const serialized = JSON.stringify(S);
@@ -342,7 +343,7 @@ function route() {
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
   $$('#menu a').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
-  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, pytania: viewQuestions, polaczenia: viewConnections, postep: viewProgress }[name];
+  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
   if (!v) { location.hash = '#/'; return; }
@@ -1031,6 +1032,1378 @@ function pool() {
     return true;
   });
 }
+/* ---------- LEKKI PARSER MARKDOWN & NOTATNIK ---------- */
+function parseMarkdown(src) {
+  if (!src) return '';
+  const codeBlocks = [];
+  // Ekstrakcja bloków kodu ```...```
+  let s = String(src).replace(/```([a-z0-9_-]*)\n([\s\S]*?)```/gi, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code class="${lang ? 'lang-' + esc(lang) : ''}">${esc(code.trim())}</code></pre>`);
+    return `@@CODE_BLOCK_${idx}@@`;
+  });
+
+  // Bezpieczna ucieczka tagów
+  s = esc(s);
+
+  // Tabele Markdown
+  s = s.replace(/(?:^|\n)(\|[^\n]+\|\n\|[\s:|-]+\|\n(?:\|[^\n]+\|(?:\n|$))+)/g, match => {
+    const lines = match.trim().split('\n').map(l => l.trim());
+    if (lines.length < 3) return match;
+    const parseRow = row => row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+    const headers = parseRow(lines[0]);
+    const bodyRows = lines.slice(2).map(parseRow);
+    const ths = headers.map(h => `<th>${h}</th>`).join('');
+    const trs = bodyRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+    return `\n<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>\n`;
+  });
+
+  // Nagłówki
+  s = s.replace(/^#### (.*?)$/gm, '<h4>$1</h4>')
+       .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+       .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+       .replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+
+  // Poziome linie
+  s = s.replace(/^(?:---|\*\*\*|___)$/gm, '<hr>');
+
+  // Cytaty
+  s = s.replace(/^(?:&gt;|>)\s?(.*?)$/gm, '<blockquote>$1</blockquote>');
+
+  // Checklisty (task list)
+  s = s.replace(/^[-*]\s+\[x\]\s+(.*?)$/gim, '<li class="task-item checked"><input type="checkbox" checked disabled> <span>$1</span></li>')
+       .replace(/^[-*]\s+\[ \]\s+(.*?)$/gim, '<li class="task-item"><input type="checkbox" disabled> <span>$1</span></li>');
+
+  // Zwykłe listy
+  s = s.replace(/^[-*]\s+(.*?)$/gm, '<li class="bullet-item">$1</li>');
+  s = s.replace(/^\d+\.\s+(.*?)$/gm, '<li class="num-item">$1</li>');
+
+  // Grupowanie <li> w <ul> / <ol> z odstępami blokowymi
+  s = s.replace(/(?:<li class="task-item[^"]*"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ul class="task-list" style="list-style:none;padding-left:.3rem">\n${m.trim()}\n</ul>\n\n`);
+  s = s.replace(/(?:<li class="bullet-item"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ul>\n${m.replace(/class="bullet-item"/g, '').trim()}\n</ul>\n\n`);
+  s = s.replace(/(?:<li class="num-item"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ol>\n${m.replace(/class="num-item"/g, '').trim()}\n</ol>\n\n`);
+
+  // Formatowanie liniowe
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|#[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Przywrócenie bloków kodu
+  codeBlocks.forEach((codeHtml, idx) => {
+    s = s.replace(`@@CODE_BLOCK_${idx}@@`, codeHtml);
+  });
+
+  // Akapity
+  const blocks = s.split(/\n{2,}/);
+  const htmlBlocks = blocks.map(b => {
+    b = b.trim();
+    if (!b) return '';
+    if (/^<(h[1-4]|table|ul|ol|pre|blockquote|hr)/i.test(b)) return b;
+    return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  return htmlBlocks.filter(Boolean).join('\n');
+}
+
+function downloadFile(filename, content, mime = 'text/markdown') {
+  const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function insertMarkdownAt(textarea, type) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = textarea.value;
+  const sel = val.slice(start, end);
+  let ins = '';
+  let cursorOffset = 0;
+
+  switch (type) {
+    case 'b': ins = `**${sel || 'pogrubienie'}**`; cursorOffset = sel ? ins.length : 2; break;
+    case 'i': ins = `*${sel || 'kursywa'}*`; cursorOffset = sel ? ins.length : 1; break;
+    case 'h2': ins = `\n## ${sel || 'Nagłówek sekcji'}\n`; cursorOffset = ins.length; break;
+    case 'h3': ins = `\n### ${sel || 'Podnagłówek'}\n`; cursorOffset = ins.length; break;
+    case 'list': ins = `\n- ${sel || 'Element listy'}\n`; cursorOffset = ins.length; break;
+    case 'check': ins = `\n- [ ] ${sel || 'Zadanie / objaw do weryfikacji'}\n`; cursorOffset = ins.length; break;
+    case 'table':
+      ins = `\n| Cecha | Parametr A | Parametr B |\n|---|---|---|\n| Norma | Wartość 1 | Wartość 2 |\n| Patologia | Objaw 1 | Objaw 2 |\n`;
+      cursorOffset = ins.length;
+      break;
+    case 'quote': ins = `\n> ${sel || 'Kluczowa perła kliniczna / uwaga'}\n`; cursorOffset = ins.length; break;
+    case 'code': ins = `\`${sel || 'kod/dawka'}\``; cursorOffset = sel ? ins.length : 1; break;
+  }
+
+  textarea.value = val.slice(0, start) + ins + val.slice(end);
+  textarea.selectionStart = textarea.selectionEnd = start + cursorOffset;
+  textarea.focus();
+}
+
+const NOTES_KEY = 'pediatria_hub_notes_v1';
+const SCRATCH_KEY = 'pediatria_quick_scratchpad';
+
+const NOTE_TEMPLATES = {
+  choroba: `# [Nazwa jednostki chorobowej]
+**Moduł:** [Wybierz moduł]
+**Atlas:** [Wybierz atlas]
+
+### 1. Epidemiologia i patofizjologia
+- Wiek szczytu zachorowań: 
+- Czynnik etiologiczny / patomechanizm: 
+
+### 2. Obraz kliniczny i objawy
+- Objawy osiowe (triada/tetrada): 
+- Czerwone flagi (red flags): 
+
+### 3. Diagnostyka różnicowa
+- Badania I rzutu (laboratorium / USG): 
+- Złoty standard potwierdzenia: 
+
+### 4. Leczenie i dawki
+- Postępowanie objawowe / stabilizacja: 
+- Terapia celowana / dawkowanie leków: 
+
+### 5. Pułapki egzaminacyjne
+- Klucz zakładowy vs wytyczne: 
+`,
+  nagle: `# Różnicowanie stanów nagłych: [Temat]
+
+### Trójkąt Oceny Pediatrycznej (PAT)
+- **Wygląd (Appearance):** interakcja, napięcie mięśniowe, płacz, spojrzenie
+- **Oddychanie (Work of breathing):** świsty, zaciąganie, poruszanie skrzydełkami nosa
+- **Krążenie (Circulation):** bladość, marmurkowatość skóry, sinica
+
+### Ocena ABCDE
+- **A (Airway):** Drożność dróg oddechowych
+- **B (Breathing):** Liczba oddechów, wysiłek, SpO2, osłuchiwanie
+- **C (Circulation):** Tętno, CRT (< 2s), ciśnienie tętnicze, nawodnienie
+- **D (Disability):** AVPU / GCS, reakcja źrenic, poziom glukozy!
+- **E (Exposure):** Wysypka (wybroczyny!), temperatura ciała
+
+### Plan działania i dawki
+1. Dostęp naczyniowy / doszpikowy (I.O.)
+2. Bolus płynowy: 10–20 ml/kg mc. krystaloidów
+3. Leki ratunkowe w przeliczeniu na wagę:
+`,
+  dawki: `# Tabela dawek leków i resuscytacja (PALS)
+
+| Lek | Wskazanie | Dawka pediatryczna | Droga podania |
+|---|---|---|---|
+| Adrenalina (1:10 000) | NZK / zatrzymanie krążenia | 0,01 mg/kg (0,1 ml/kg) | I.V. / I.O. |
+| Adrenalina (1:1000) | Anafilaksja | 0,01 mg/kg (max 0,3–0,5 mg) | I.M. (przednio-boczne udo) |
+| Midazolam | Drgawki gorączkowe | 0,2–0,3 mg/kg mc. | Policzkowo (buccal) |
+| Diazepam | Stan padaczkowy | 0,5 mg/kg mc. | Doodbytniczo (p.r.) |
+| Paracetamol | Ból / gorączka | 15 mg/kg mc. co 4–6h | P.O. / P.R. / I.V. |
+| Ibuprofen | Ból / zapalenie (>3 mż) | 10 mg/kg mc. co 6–8h | P.O. |
+| Deksametazon | Podgłośniowe zap. krtani (krup) | 0,15–0,6 mg/kg mc. | P.O. / I.M. / I.V. |
+`,
+  checklista: `# Checklista powtórkowa przed egzaminem
+
+- [ ] Moduł 1: Ból brzucha (wgłobienie, zapalenie wyrostka, ZNZ, skręt jądra)
+- [ ] Moduł 2: Zakażenia u dzieci (wysypki zakaźne, neuroinfekcje, sepsa, szczepienia)
+- [ ] Moduł 3: Biegunki, odwodnienie izo/hipo/hipertoniczne, celiakia
+- [ ] Moduł 4: Kłębuszkowe zapalenia nerek (APSGN) i zespół nerczycowy
+- [ ] Moduł 5: Stany nagłe (PAT, wstrząs, drgawki, anafilaksja, DKA, NZK)
+- [ ] Moduł 6: Choroba wrzodowa i diagnostyka H. pylori (inwazyjna vs nieinwazyjna)
+- [ ] Moduł 7: Nieswoiste zapalenia jelit (Choroba Leśniowskiego-Crohna vs WZJG)
+- [ ] Moduł 8: Alergie pokarmowe (IgE-zależne, anafilaksja, FPIES)
+- [ ] Moduł 9: Guzy mózgu (tylny dół, objawy wzmożonego ICP, dno oka)
+- [ ] Moduł 10: Nowotwory lite (guz Wilmsa, neuroblastoma, siatkówczak)
+- [ ] Moduł 11: ALL, AML, chłoniaki, zespół lizy guza, zespół żyły głównej górnej
+- [ ] Moduł 12: Skazy krwotoczne (ITP, hemofilia A/B, choroba von Willebranda, IgAV)
+- [ ] Moduł 13a: Niedokrwistości u dzieci (niedobór żelaza, talasemie, sferocytoza)
+- [ ] Moduł 13b: Pierwotne niedobory odporności i zasady szczepień żywych
+- [ ] Moduł 14: ZUM u dzieci, pobieranie moczu, diagnostyka obrazowa (USG, CUM)
+- [ ] Moduł 15: Ostre uszkodzenie nerek (KDIGO) i przewlekła choroba nerek
+`
+};
+
+function getNotes() {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (e) {}
+  return [
+    {
+      id: 'note_starter_1',
+      title: '📋 Wskazówki i perły kliniczne do zaliczenia (Pediatria V rok)',
+      content: `# 📋 Wskazówki i perły kliniczne do zaliczenia
+
+## 1. Wartości referencyjne i normy wiekowe
+| Wiek | Czynność serca (HR/min) | Oddechy (RR/min) | SBP (mmHg, 50 pc) |
+|---|---|---|---|
+| Noworodek (<28 dż.) | 100–160 | 30–60 | >60 |
+| Niemowlę (<1 rż.) | 100–150 | 25–40 | >70 |
+| Dziecko małe (1–3 l.) | 80–130 | 20–30 | >70 + (2 × wiek) |
+| Wiek szkolny (4–12 l.) | 70–110 | 15–25 | >70 + (2 × wiek) |
+| Młodzież (>12 l.) | 60–100 | 12–20 | >90 |
+
+## 2. Czerwone flagi w stanach ostrych
+- [ ] Ból brzucha budzący ze snu lub zlokalizowany z dala od pępka
+- [ ] Poranne bóle głowy z wymiotami (tylny dół czaszki / wzrost ICP)
+- [ ] Wybroczyny / petocje nieblednące pod uciskiem (wyklucz sepsę meningokokową i ITP!)
+- [ ] Brak mikcji > 6 godzin u niemowlęcia
+- [ ] Sinica centralna lub zaciąganie międzyżebrzy (nawrót kapilarny CRT > 2 sekundy)
+
+## 3. Kluczowe zasady antybiotykoterapii
+> **Zasada nr 1:** W zakażeniach dróg moczowych (ZUM) u dzieci zawsze pobierz mocz na posiew **przed** włączeniem pierwszej dawki antybiotyku!
+
+- **Angina paciorkowcowa:** Fenoksymetylopenicylina (V-Penicylina) p.o. przez pełne 10 dni.
+- **Zapalenie ucha środkowego (AOM):** Amoksycylina w wysokiej dawce (90 mg/kg mc./dobę).
+- **ZUM niepowikłany:** Cefalosporyna II/III gen. p.o. lub furazydyna (nie u noworodków).
+`,
+      mod: 'all',
+      updatedAt: Date.now() - 3600000
+    },
+    {
+      id: 'note_starter_2',
+      title: '🚨 Algorytmy stanów nagłych i dawki leków (PALS)',
+      content: NOTE_TEMPLATES.dawki,
+      mod: '5',
+      updatedAt: Date.now() - 7200000
+    }
+  ];
+}
+
+function saveNotes(notes) {
+  try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch (e) {}
+}
+
+function initNotesDrawer() {
+  const btn = $('#btnQuickNotes');
+  const drawer = $('#notesDrawer');
+  const close = $('#drawerClose');
+  const input = $('#drawerInput');
+  const preview = $('#drawerPreview');
+  const modeBtn = $('#drawerToggleMode');
+  const saveBtn = $('#drawerSaveAsNote');
+  const clearBtn = $('#drawerClear');
+  const status = $('#scratchSavedStatus');
+  if (!btn || !drawer || !input) return;
+
+  try {
+    input.value = localStorage.getItem(SCRATCH_KEY) || '';
+  } catch (e) {}
+
+  let isPreview = false;
+  const updatePreview = () => {
+    if (preview) preview.innerHTML = parseMarkdown(input.value) || '<p class="muted">Brak tekstu w brudnopisie...</p>';
+  };
+
+  btn.onclick = () => {
+    const hidden = drawer.hasAttribute('hidden');
+    if (hidden) {
+      drawer.removeAttribute('hidden');
+      input.focus();
+      updatePreview();
+    } else {
+      drawer.setAttribute('hidden', '');
+    }
+  };
+
+  if (close) close.onclick = () => drawer.setAttribute('hidden', '');
+
+  let saveT;
+  input.addEventListener('input', () => {
+    clearTimeout(saveT);
+    if (status) status.textContent = 'Zapisywanie...';
+    saveT = setTimeout(() => {
+      try { localStorage.setItem(SCRATCH_KEY, input.value); } catch (e) {}
+      if (status) status.textContent = 'Zapisano ✓';
+      updatePreview();
+    }, 300);
+  });
+
+  input.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      insertMarkdownAt(input, 'b');
+      updatePreview();
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+      e.preventDefault();
+      insertMarkdownAt(input, 'i');
+      updatePreview();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = input.selectionStart, end = input.selectionEnd;
+      input.value = input.value.slice(0, start) + '  ' + input.value.slice(end);
+      input.selectionStart = input.selectionEnd = start + 2;
+    }
+  });
+
+  if (modeBtn) {
+    modeBtn.onclick = () => {
+      isPreview = !isPreview;
+      if (isPreview) {
+        input.hidden = true;
+        preview.hidden = false;
+        modeBtn.textContent = 'Edycja';
+        updatePreview();
+      } else {
+        input.hidden = false;
+        preview.hidden = true;
+        modeBtn.textContent = 'Podgląd';
+        input.focus();
+      }
+    };
+  }
+
+  $$('[data-md]', drawer).forEach(b => {
+    b.onclick = () => {
+      insertMarkdownAt(input, b.dataset.md);
+      try { localStorage.setItem(SCRATCH_KEY, input.value); } catch (e) {}
+      updatePreview();
+    };
+  });
+
+  if (saveBtn) {
+    saveBtn.onclick = () => {
+      const text = input.value.trim();
+      if (!text) { toast('Brudnopis jest pusty!'); return; }
+      const firstLine = text.split('\n')[0].replace(/^[#\s*-]+/, '').trim();
+      const title = firstLine ? firstLine.slice(0, 50) : `Notatka z brudnopisu (${new Date().toLocaleDateString('pl-PL')})`;
+      const notes = getNotes();
+      const newNote = {
+        id: 'note_' + Date.now(),
+        title,
+        content: text,
+        mod: 'all',
+        updatedAt: Date.now()
+      };
+      notes.unshift(newNote);
+      saveNotes(notes);
+      toast('Zapisano nową notatkę w Hubie!');
+      drawer.setAttribute('hidden', '');
+      location.hash = '#/notatki?id=' + newNote.id;
+    };
+  }
+
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      if (confirm('Czy na pewno chcesz wyczyścić szybki brudnopis?')) {
+        input.value = '';
+        try { localStorage.removeItem(SCRATCH_KEY); } catch (e) {}
+        updatePreview();
+        toast('Wyczyszczono brudnopis');
+      }
+    };
+  }
+}
+
+/* Widok pełnego notatnika (#/notatki) */
+let activeNoteId = null;
+let noteViewMode = 'split'; // 'split' | 'editor' | 'preview'
+
+function viewNotes(parts, params) {
+  const notes = getNotes();
+  if (params.id && notes.some(n => n.id === params.id)) {
+    activeNoteId = params.id;
+  } else if (!activeNoteId || !notes.some(n => n.id === activeNoteId)) {
+    activeNoteId = notes[0] ? notes[0].id : null;
+  }
+
+  const activeNote = notes.find(n => n.id === activeNoteId) || {
+    id: 'note_' + Date.now(),
+    title: 'Nowa notatka',
+    content: '',
+    mod: 'all',
+    updatedAt: Date.now()
+  };
+
+  const render = () => {
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
+      <div class="eyebrow">Własne notatki</div>
+      <h2>Notatnik kliniczny Markdown</h2>
+      <p class="lead">Twórz i organizuj notatki do zaliczenia z pełnym wsparciem składni Markdown: tabelami parametrów, checklistami objawów, dawkami i blokami leków.</p>
+
+      <div class="notes-layout">
+        <!-- Lewy panel: Lista notatek -->
+        <aside class="notes-sidebar">
+          <div class="acts" style="justify-content:space-between">
+            <button class="btn pri sm" id="btnNewNote">+ Nowa notatka</button>
+            <span class="muted" style="font-size:.8rem;font-weight:700" id="noteCount">${notes.length} ${notes.length === 1 ? 'notatka' : 'notatek'}</span>
+          </div>
+          <input type="search" id="notesSearch" class="field" placeholder="Szukaj w notatkach…" style="width:100%;padding:.45rem .7rem;font-size:.85rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">
+          <div class="pillrow" style="gap:.25rem" id="noteModFilter">
+            <button class="tgl sm active" data-filter="all" style="font-size:.72rem;padding:.2rem .5rem">Wszystkie</button>
+            ${MODS.map(m => `<button class="tgl sm" data-filter="${m.id}" style="font-size:.72rem;padding:.2rem .5rem">[${m.id}]</button>`).join('')}
+          </div>
+          <div class="notes-items" id="notesList">
+            ${renderNoteItems(notes, activeNoteId)}
+          </div>
+        </aside>
+
+        <!-- Prawy panel: Edytor i podgląd -->
+        <div class="notes-editor-box">
+          <div class="note-header-row">
+            <input type="text" id="noteTitleIn" class="note-title-in" value="${esc(activeNote.title)}" placeholder="Tytuł notatki…">
+            <select id="noteModSel" class="field" style="padding:.4rem .6rem;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:.84rem">
+              <option value="all" ${activeNote.mod === 'all' ? 'selected' : ''}>Ogólne (Wszystkie moduły)</option>
+              ${MODS.map(m => `<option value="${m.id}" ${activeNote.mod === m.id ? 'selected' : ''}>Moduł [${m.id}] ${esc(m.n)}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="notes-toolbar">
+            <button type="button" data-f="b" title="Pogrubienie (Ctrl+B)"><b>B</b></button>
+            <button type="button" data-f="i" title="Kursywa (Ctrl+I)"><i>I</i></button>
+            <button type="button" data-f="h2" title="Nagłówek sekcji">H2</button>
+            <button type="button" data-f="h3" title="Podnagłówek">H3</button>
+            <button type="button" data-f="list" title="Lista punktowana">• Lista</button>
+            <button type="button" data-f="check" title="Checklista">☑ Zadanie</button>
+            <button type="button" data-f="table" title="Tabela parametrów">▦ Tabela</button>
+            <button type="button" data-f="quote" title="Cytat / uwaga">” Cytat</button>
+            <button type="button" data-f="code" title="Kod / dawka">\`Kod\`</button>
+
+            <select id="templateSel" style="padding:.25rem .5rem;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:.8rem;font-weight:700">
+              <option value="">Wstaw szablon medyczny…</option>
+              <option value="choroba">Karta jednostki chorobowej</option>
+              <option value="nagle">Różnicowanie stanów nagłych (ABCDE)</option>
+              <option value="dawki">Tabela dawek i algorytm (PALS)</option>
+              <option value="checklista">Checklista 15 modułów</option>
+            </select>
+
+            <div style="flex:1"></div>
+
+            <div class="seg" id="modeSeg">
+              <button data-m="split" aria-pressed="${noteViewMode === 'split'}">Podział</button>
+              <button data-m="editor" aria-pressed="${noteViewMode === 'editor'}">Edytor</button>
+              <button data-m="preview" aria-pressed="${noteViewMode === 'preview'}">Podgląd</button>
+            </div>
+
+            <button type="button" id="btnExportMd" class="btn sec sm" title="Pobierz plik Markdown">📥 .md</button>
+            <button type="button" id="btnCopyMd" class="btn sec sm" title="Kopiuj zawartość do schowka">📋 Kopiuj</button>
+            <button type="button" id="btnDeleteNote" class="btn sec sm" style="color:var(--red)" title="Usuń notatkę">🗑️</button>
+          </div>
+
+          <div class="notes-split mode-${noteViewMode}" id="notesSplit">
+            <div class="notes-editor-pane">
+              <textarea id="noteContentIn" placeholder="Wpisz treść notatki w formacie Markdown…">${esc(activeNote.content)}</textarea>
+            </div>
+            <div class="notes-preview-pane md-preview" id="notePreviewPane">
+              ${parseMarkdown(activeNote.content) || '<p class="muted">Podgląd notatki Markdown pojawi się tutaj…</p>'}
+            </div>
+          </div>
+          <div class="srcline" style="display:flex;justify-content:space-between">
+            <span id="noteSaveIndicator">✓ Zapisano automatycznie</span>
+            <span>Ostatnia modyfikacja: ${new Date(activeNote.updatedAt || Date.now()).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        </div>
+      </div>
+    </div></section>`;
+
+    attachEvents();
+  };
+
+  const renderNoteItems = (list, curId, filterText = '', filterMod = 'all') => {
+    let filtered = list;
+    if (filterMod !== 'all') filtered = filtered.filter(n => n.mod === filterMod);
+    if (filterText) {
+      const q = norm(filterText);
+      filtered = filtered.filter(n => norm(n.title + ' ' + n.content).includes(q));
+    }
+    if (!filtered.length) return '<p class="muted" style="font-size:.82rem;padding:.8rem;text-align:center">Brak pasujących notatek</p>';
+    return filtered.map(n => {
+      const active = n.id === curId;
+      const d = new Date(n.updatedAt || Date.now()).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+      const modTag = n.mod && n.mod !== 'all' ? `[${n.mod}] ` : '';
+      return `<button class="note-item ${active ? 'active' : ''}" data-id="${n.id}">
+        <span class="note-item-title">${modTag}${esc(n.title || 'Bez tytułu')}</span>
+        <span class="note-item-meta"><span>${d}</span><span>${(n.content || '').length} zn.</span></span>
+      </button>`;
+    }).join('');
+  };
+
+  const attachEvents = () => {
+    const listCont = $('#notesList');
+    const searchIn = $('#notesSearch');
+    const titleIn = $('#noteTitleIn');
+    const contentIn = $('#noteContentIn');
+    const modSel = $('#noteModSel');
+    const previewPane = $('#notePreviewPane');
+    const saveInd = $('#noteSaveIndicator');
+    const newBtn = $('#btnNewNote');
+    const delBtn = $('#btnDeleteNote');
+    const exportBtn = $('#btnExportMd');
+    const copyBtn = $('#btnCopyMd');
+    const tmplSel = $('#templateSel');
+    let curFilterMod = 'all';
+
+    // Przełączanie notatek
+    if (listCont) {
+      listCont.addEventListener('click', e => {
+        const item = e.target.closest('.note-item');
+        if (!item) return;
+        activeNoteId = item.dataset.id;
+        location.hash = '#/notatki?id=' + activeNoteId;
+      });
+    }
+
+    // Nowa notatka
+    if (newBtn) {
+      newBtn.onclick = () => {
+        const allNotes = getNotes();
+        const created = {
+          id: 'note_' + Date.now(),
+          title: 'Nowa notatka kliniczna',
+          content: '# Nowa notatka kliniczna\n\n- ',
+          mod: 'all',
+          updatedAt: Date.now()
+        };
+        allNotes.unshift(created);
+        saveNotes(allNotes);
+        activeNoteId = created.id;
+        toast('Utworzono nową notatkę');
+        viewNotes(parts, { id: created.id });
+      };
+    }
+
+    // Usuwanie notatki
+    if (delBtn) {
+      delBtn.onclick = () => {
+        let allNotes = getNotes();
+        if (allNotes.length <= 1) {
+          toast('Nie można usunąć ostatniej notatki');
+          return;
+        }
+        if (confirm(`Czy na pewno chcesz usunąć notatkę "${activeNote.title}"?`)) {
+          allNotes = allNotes.filter(n => n.id !== activeNote.id);
+          saveNotes(allNotes);
+          activeNoteId = allNotes[0].id;
+          toast('Notatka usunięta');
+          viewNotes(parts, { id: activeNoteId });
+        }
+      };
+    }
+
+    // Wyszukiwanie
+    if (searchIn) {
+      searchIn.addEventListener('input', () => {
+        listCont.innerHTML = renderNoteItems(getNotes(), activeNoteId, searchIn.value, curFilterMod);
+      });
+    }
+
+    // Filtrowanie po module
+    $$('#noteModFilter button').forEach(b => {
+      b.onclick = () => {
+        $$('#noteModFilter button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        curFilterMod = b.dataset.filter;
+        listCont.innerHTML = renderNoteItems(getNotes(), activeNoteId, (searchIn || {}).value || '', curFilterMod);
+      };
+    });
+
+    // Autosave edycji
+    let autoSaveT;
+    const triggerSave = () => {
+      clearTimeout(autoSaveT);
+      if (saveInd) saveInd.textContent = 'Zapisywanie…';
+      autoSaveT = setTimeout(() => {
+        const allNotes = getNotes();
+        const idx = allNotes.findIndex(n => n.id === activeNote.id);
+        if (idx !== -1) {
+          allNotes[idx].title = titleIn.value.trim() || 'Bez tytułu';
+          allNotes[idx].content = contentIn.value;
+          allNotes[idx].mod = modSel.value;
+          allNotes[idx].updatedAt = Date.now();
+          saveNotes(allNotes);
+          if (saveInd) saveInd.textContent = '✓ Zapisano automatycznie';
+          listCont.innerHTML = renderNoteItems(allNotes, activeNoteId, (searchIn || {}).value || '', curFilterMod);
+        }
+      }, 400);
+    };
+
+    if (titleIn) titleIn.addEventListener('input', triggerSave);
+    if (modSel) modSel.addEventListener('change', triggerSave);
+
+    if (contentIn) {
+      contentIn.addEventListener('input', () => {
+        if (previewPane) previewPane.innerHTML = parseMarkdown(contentIn.value) || '<p class="muted">Podgląd notatki Markdown…</p>';
+        triggerSave();
+      });
+
+      contentIn.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+          e.preventDefault();
+          insertMarkdownAt(contentIn, 'b');
+          if (previewPane) previewPane.innerHTML = parseMarkdown(contentIn.value);
+          triggerSave();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+          e.preventDefault();
+          insertMarkdownAt(contentIn, 'i');
+          if (previewPane) previewPane.innerHTML = parseMarkdown(contentIn.value);
+          triggerSave();
+        } else if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = contentIn.selectionStart, end = contentIn.selectionEnd;
+          contentIn.value = contentIn.value.slice(0, start) + '  ' + contentIn.value.slice(end);
+          contentIn.selectionStart = contentIn.selectionEnd = start + 2;
+        }
+      });
+    }
+
+    // Pasek narzędzi
+    $$('.notes-toolbar button[data-f]').forEach(b => {
+      b.onclick = () => {
+        insertMarkdownAt(contentIn, b.dataset.f);
+        if (previewPane) previewPane.innerHTML = parseMarkdown(contentIn.value);
+        triggerSave();
+      };
+    });
+
+    // Szablony
+    if (tmplSel) {
+      tmplSel.addEventListener('change', () => {
+        const val = tmplSel.value;
+        if (!val || !NOTE_TEMPLATES[val]) return;
+        if (contentIn.value.trim() && !confirm('Czy na pewno wstawić szablon na końcu notatki?')) {
+          tmplSel.value = '';
+          return;
+        }
+        contentIn.value = (contentIn.value ? contentIn.value + '\n\n' : '') + NOTE_TEMPLATES[val];
+        tmplSel.value = '';
+        if (previewPane) previewPane.innerHTML = parseMarkdown(contentIn.value);
+        triggerSave();
+        toast('Wstawiono szablon notatki');
+      });
+    }
+
+    // Przełącznik trybu widoku
+    $$('#modeSeg button').forEach(b => {
+      b.onclick = () => {
+        noteViewMode = b.dataset.m;
+        $$('#modeSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+        const split = $('#notesSplit');
+        if (split) {
+          split.className = `notes-split mode-${noteViewMode}`;
+        }
+      };
+    });
+
+    // Eksport do pliku .md
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const safeTitle = (activeNote.title || 'notatka').toLowerCase().replace(/[^a-z0-9_-]+/gi, '-');
+        downloadFile(`${safeTitle}.md`, contentIn.value);
+        toast(`Pobrano plik ${safeTitle}.md`);
+      };
+    }
+
+    // Kopiowanie Markdown
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(contentIn.value);
+          toast('Skopiowano treść Markdown do schowka');
+        } catch (e) {
+          contentIn.select();
+          toast('Zaznaczono treść, skopiuj ręcznie');
+        }
+      };
+    }
+  };
+
+  render();
+}
+
+/* ---------- SYMULACJA EGZAMINU (MOCK EXAM) ---------- */
+let EXAM_CONF = {
+  count: 50,
+  timeMode: '1min',
+  customMinutes: 50,
+  banks: new Set(Object.keys(BANKS)),
+  mods: new Set(MODS.map(m => m.id)),
+  shuffleQ: true
+};
+
+let EXAM_SESSION = null;
+
+function getExamQuestionsPool() {
+  return Q.filter(q => {
+    if (EXAM_CONF.banks.size && !EXAM_CONF.banks.has(q.bank)) return false;
+    if (EXAM_CONF.mods.size && !q.mods.some(m => EXAM_CONF.mods.has(m))) return false;
+    return true;
+  });
+}
+
+function viewExam(parts, params) {
+  if (params && params.id) {
+    const report = (S.examHistory || []).find(x => x.id === params.id);
+    if (report) return renderExamReport(report, true);
+    toast('Nie znaleziono egzaminu w historii');
+  }
+
+  if (EXAM_SESSION && !EXAM_SESSION.finished) {
+    return renderActiveExam();
+  }
+
+  if (EXAM_SESSION && EXAM_SESSION.finished && EXAM_SESSION.report) {
+    return renderExamReport(EXAM_SESSION.report, false);
+  }
+
+  renderExamSetup();
+}
+
+function renderExamSetup() {
+  const pool = getExamQuestionsPool();
+  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:920px">
+    <div class="eyebrow">Symulator egzaminu</div>
+    <h2>Egzamin próbny z pediatrii</h2>
+    <p class="lead">Sprawdź swoją wiedzę w warunkach zbliżonych do oficjalnego zaliczenia: licznik czasu, brak podglądu poprawnych odpowiedzi w trakcie, nawigacja po siatce pytań z flagami „do sprawdzenia” oraz oficjalny próg zdawalności 60%.</p>
+
+    <!-- Kafelki szybkich presetów -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.8rem">
+      <div class="card" style="cursor:pointer;border:2px solid transparent" data-preset="quick">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">⚡ Szybki test</div>
+        <b>20 pytań · 20 minut</b>
+        <p class="srcline" style="margin-top:.3rem">Krótka weryfikacja wiedzy z losowych modułów.</p>
+      </div>
+      <div class="card" style="cursor:pointer;border:2px solid var(--teal);background:var(--teal-xl)" data-preset="standard">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">🎓 Egzamin standardowy</div>
+        <b>50 pytań · 50 minut</b>
+        <p class="srcline" style="margin-top:.3rem">Zrównoważony przekrój wszystkich 15 modułów.</p>
+      </div>
+      <div class="card" style="cursor:pointer;border:2px solid transparent" data-preset="full">
+        <div style="font-size:1.4rem;margin-bottom:.3rem">📚 Pełny maraton</div>
+        <b>100 pytań · 100 minut</b>
+        <p class="srcline" style="margin-top:.3rem">Maksymalny test wytrzymałości i wiedzy.</p>
+      </div>
+    </div>
+
+    <!-- Konfiguracja zaawansowana -->
+    <div class="tool">
+      <div class="frow">
+        <span class="flab">Liczba pytań</span>
+        <div class="seg" id="exN">
+          <button data-n="20" aria-pressed="${EXAM_CONF.count === 20}">20</button>
+          <button data-n="30" aria-pressed="${EXAM_CONF.count === 30}">30</button>
+          <button data-n="50" aria-pressed="${EXAM_CONF.count === 50}">50</button>
+          <button data-n="100" aria-pressed="${EXAM_CONF.count === 100}">100</button>
+          <button data-n="0" aria-pressed="${EXAM_CONF.count === 0}">Wszystkie (${pool.length})</button>
+        </div>
+      </div>
+
+      <div class="frow">
+        <span class="flab">Czas trwania</span>
+        <div class="seg" id="exTime">
+          <button data-t="1min" aria-pressed="${EXAM_CONF.timeMode === '1min'}">1 min / pytanie</button>
+          <button data-t="1.5min" aria-pressed="${EXAM_CONF.timeMode === '1.5min'}">1.5 min / pytanie</button>
+          <button data-t="45s" aria-pressed="${EXAM_CONF.timeMode === '45s'}">45 s / pytanie</button>
+          <button data-t="unlimited" aria-pressed="${EXAM_CONF.timeMode === 'unlimited'}">Bez limitu</button>
+        </div>
+      </div>
+
+      <div class="frow">
+        <span class="flab">Banki pytań</span>
+        <div class="pillrow" id="exBanks">
+          ${Object.keys(BANKS).map(b => `<button class="tgl" data-bank="${b}" aria-pressed="${EXAM_CONF.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="frow">
+        <span class="flab">Moduły kursu</span>
+        <div style="flex:1">
+          <div class="acts" style="margin-bottom:.5rem">
+            <button class="btn sec sm" id="btnSelectAllMods" style="font-size:.76rem;padding:.2rem .6rem">Zaznacz wszystkie</button>
+            <button class="btn sec sm" id="btnDeselectAllMods" style="font-size:.76rem;padding:.2rem .6rem">Odznacz wszystkie</button>
+          </div>
+          <div class="pillrow" id="exMods">
+            ${MODS.map(m => `<button class="tgl" data-mod="${m.id}" aria-pressed="${EXAM_CONF.mods.has(m.id)}">[${m.id}] ${esc(SHORT[m.id] || m.n)}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="frow" style="justify-content:space-between;border-top:1px solid var(--line-2);padding-top:1.1rem;margin-top:.6rem">
+        <div>
+          <span id="exPoolInfo" style="font-weight:800;font-size:1.05rem"></span>
+          <div class="srcline" id="exEstTime">Szacowany czas: ~50 minut</div>
+        </div>
+        <button class="btn pri" id="btnStartExam" style="font-size:1.05rem;padding:.8rem 1.6rem">Rozpocznij egzamin próbny →</button>
+      </div>
+    </div>
+  </div></section>`;
+
+  const updatePoolInfo = () => {
+    const curPool = getExamQuestionsPool();
+    const count = EXAM_CONF.count === 0 ? curPool.length : Math.min(EXAM_CONF.count, curPool.length);
+    $('#exPoolInfo').textContent = curPool.length ? `Dostępna pula: ${curPool.length} pytań (do testu: ${count})` : 'Pula pusta! Zaznacz przynajmniej jeden bank i moduł.';
+    $('#btnStartExam').disabled = !curPool.length;
+
+    let timeText = 'Bez limitu czasu';
+    if (EXAM_CONF.timeMode === '1min') timeText = `Limit czasu: ${count} min (1 min/pytanie)`;
+    else if (EXAM_CONF.timeMode === '1.5min') timeText = `Limit czasu: ${Math.round(count * 1.5)} min (1.5 min/pytanie)`;
+    else if (EXAM_CONF.timeMode === '45s') timeText = `Limit czasu: ${Math.round(count * 0.75)} min (45 s/pytanie)`;
+    $('#exEstTime').textContent = timeText;
+  };
+
+  // Presety
+  $$('[data-preset]').forEach(card => {
+    card.onclick = () => {
+      const p = card.dataset.preset;
+      if (p === 'quick') { EXAM_CONF.count = 20; EXAM_CONF.timeMode = '1min'; }
+      else if (p === 'standard') { EXAM_CONF.count = 50; EXAM_CONF.timeMode = '1min'; }
+      else if (p === 'full') { EXAM_CONF.count = 100; EXAM_CONF.timeMode = '1min'; }
+      $$('#exN button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === EXAM_CONF.count));
+      $$('#exTime button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === EXAM_CONF.timeMode));
+      updatePoolInfo();
+    };
+  });
+
+  // Liczba pytań
+  $('#exN').onclick = e => {
+    const b = e.target.closest('[data-n]');
+    if (!b) return;
+    EXAM_CONF.count = +b.dataset.n;
+    $$('#exN button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    updatePoolInfo();
+  };
+
+  // Czas
+  $('#exTime').onclick = e => {
+    const b = e.target.closest('[data-t]');
+    if (!b) return;
+    EXAM_CONF.timeMode = b.dataset.t;
+    $$('#exTime button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    updatePoolInfo();
+  };
+
+  // Banki
+  $('#exBanks').onclick = e => {
+    const b = e.target.closest('[data-bank]');
+    if (!b) return;
+    const bk = b.dataset.bank;
+    EXAM_CONF.banks.has(bk) ? EXAM_CONF.banks.delete(bk) : EXAM_CONF.banks.add(bk);
+    b.setAttribute('aria-pressed', EXAM_CONF.banks.has(bk));
+    updatePoolInfo();
+  };
+
+  // Moduły
+  $('#exMods').onclick = e => {
+    const b = e.target.closest('[data-mod]');
+    if (!b) return;
+    const m = b.dataset.mod;
+    EXAM_CONF.mods.has(m) ? EXAM_CONF.mods.delete(m) : EXAM_CONF.mods.add(m);
+    b.setAttribute('aria-pressed', EXAM_CONF.mods.has(m));
+    updatePoolInfo();
+  };
+
+  $('#btnSelectAllMods').onclick = () => {
+    MODS.forEach(m => EXAM_CONF.mods.add(m.id));
+    $$('#exMods button').forEach(b => b.setAttribute('aria-pressed', 'true'));
+    updatePoolInfo();
+  };
+
+  $('#btnDeselectAllMods').onclick = () => {
+    EXAM_CONF.mods.clear();
+    $$('#exMods button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    updatePoolInfo();
+  };
+
+  $('#btnStartExam').onclick = () => startExam();
+
+  updatePoolInfo();
+}
+
+function startExam() {
+  let pool = getExamQuestionsPool();
+  if (!pool.length) { toast('Brak pytań spełniających kryteria'); return; }
+  if (EXAM_CONF.shuffleQ) pool = shuffle(pool);
+  const count = EXAM_CONF.count === 0 ? pool.length : Math.min(EXAM_CONF.count, pool.length);
+  const list = pool.slice(0, count);
+
+  let totalSec = null;
+  if (EXAM_CONF.timeMode === '1min') totalSec = count * 60;
+  else if (EXAM_CONF.timeMode === '1.5min') totalSec = Math.round(count * 90);
+  else if (EXAM_CONF.timeMode === '45s') totalSec = Math.round(count * 45);
+
+  EXAM_SESSION = {
+    id: 'exam_' + Date.now(),
+    list,
+    i: 0,
+    userAnswers: {},
+    flagged: new Set(),
+    startedAt: Date.now(),
+    totalSec,
+    remainingSec: totalSec,
+    timer: null,
+    finished: false,
+    report: null
+  };
+
+  if (totalSec) {
+    EXAM_SESSION.timer = setInterval(() => {
+      if (!EXAM_SESSION || EXAM_SESSION.finished) return;
+      EXAM_SESSION.remainingSec--;
+      updateExamTimerUI();
+      if (EXAM_SESSION.remainingSec <= 0) {
+        clearInterval(EXAM_SESSION.timer);
+        toast('Czas egzaminu dobiegł końca! Przechodzę do podsumowania...');
+        finishExam();
+      }
+    }, 1000);
+  }
+
+  renderActiveExam();
+}
+
+function updateExamTimerUI() {
+  const el = $('#examTimer');
+  if (!el || !EXAM_SESSION) return;
+  const rem = EXAM_SESSION.remainingSec;
+  if (rem == null) {
+    el.textContent = '⏱️ Bez limitu';
+    return;
+  }
+  const m = Math.floor(Math.max(0, rem) / 60);
+  const s = Math.max(0, rem) % 60;
+  el.textContent = `⏱️ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  el.classList.toggle('warn', rem <= 300 && rem > 60);
+  el.classList.toggle('danger', rem <= 60);
+}
+
+function renderActiveExam() {
+  const es = EXAM_SESSION;
+  if (!es || es.finished) return renderExamSetup();
+  const q = es.list[es.i];
+  const total = es.list.length;
+  const answeredCount = Object.keys(es.userAnswers).filter(k => es.userAnswers[k] && es.userAnswers[k].size).length;
+  const isFlagged = es.flagged.has(q.id);
+  const currentSel = es.userAnswers[q.id] || new Set();
+  const multi = q.keys.length > 1;
+
+  main.innerHTML = `
+  <!-- Pasek górny egzaminu -->
+  <div class="exam-bar">
+    <div class="wrap exam-bar-inner">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <span class="exam-timer" id="examTimer">⏱️ --:--</span>
+        <span style="font-weight:700;font-size:.9rem;color:var(--ink-2)">Pytanie <b>${es.i + 1}</b> z ${total}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <button class="btn-flag ${isFlagged ? 'active' : ''}" id="btnExamFlag">
+          <span>🚩</span><span>${isFlagged ? 'Oznaczone' : 'Oznacz flagą'}</span>
+        </button>
+        <button class="btn sec sm" id="btnExamQuit" style="color:var(--red)">Zakończ egzamin</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="blk" style="border:0;padding-top:0"><div class="wrap qz">
+    <!-- Pasek postępu odpowiedzi -->
+    <div class="qprog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${answeredCount}">
+      <i style="width:${pct(answeredCount, total)}%"></i>
+    </div>
+    <div class="srcline" style="display:flex;justify-content:space-between;margin-bottom:.8rem">
+      <span>Odpowiedziano: <b>${answeredCount}</b> z ${total}</span>
+      <span>Oznaczone do weryfikacji: <b>${es.flagged.size}</b></span>
+    </div>
+
+    <!-- Siatka pytań 1..N -->
+    <div class="exam-pill-grid" id="examGrid">
+      ${es.list.map((item, idx) => {
+        const hasAns = es.userAnswers[item.id] && es.userAnswers[item.id].size;
+        const fl = es.flagged.has(item.id);
+        const cur = idx === es.i;
+        return `<button class="exam-q-pill ${cur ? 'active' : ''} ${hasAns ? 'answered' : ''} ${fl ? 'flagged' : ''}" data-idx="${idx}">${idx + 1}</button>`;
+      }).join('')}
+    </div>
+
+    <!-- Karta pytania -->
+    <div class="qbox">
+      <div class="tags" style="display:flex;gap:.35rem;flex-wrap:wrap">
+        ${modChips(q)}
+        <span class="chip">${esc(ASHORT[q.at])}</span>
+        ${multi ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:var(--amber)">Wielokrotny wybór</span>' : ''}
+      </div>
+
+      <div class="stemL">${escB(q.stem)}</div>
+
+      <div class="opts" id="examOpts">
+        ${q.opts.map((o, idx) => {
+          const isSel = currentSel.has(idx);
+          return `<button class="opt ${isSel ? 'sel' : ''}" data-i="${idx}">
+            <span class="l">${L[idx]}</span>
+            <span>${esc(o)}</span>
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div class="acts" style="margin-top:1.5rem;justify-content:space-between">
+        <button class="btn sec" id="btnPrevQ" ${es.i === 0 ? 'disabled' : ''}>← Poprzednie</button>
+        <span class="muted" style="font-size:.84rem;font-weight:700">Skróty: [←] [→] | [F] Flaga</span>
+        <button class="btn pri" id="btnNextQ">${es.i + 1 < total ? 'Następne →' : 'Zakończ i podsumuj →'}</button>
+      </div>
+    </div>
+  </div></section>`;
+
+  updateExamTimerUI();
+
+  // Nawigacja siatką
+  $('#examGrid').onclick = e => {
+    const pill = e.target.closest('[data-idx]');
+    if (!pill) return;
+    es.i = +pill.dataset.idx;
+    renderActiveExam();
+  };
+
+  // Zaznaczanie opcji odpowiedzi
+  $('#examOpts').onclick = e => {
+    const optBtn = e.target.closest('[data-i]');
+    if (!optBtn) return;
+    const idx = +optBtn.dataset.i;
+    let userSet = es.userAnswers[q.id];
+    if (!userSet) userSet = es.userAnswers[q.id] = new Set();
+
+    if (multi) {
+      userSet.has(idx) ? userSet.delete(idx) : userSet.add(idx);
+    } else {
+      userSet.clear();
+      userSet.add(idx);
+    }
+    renderActiveExam();
+  };
+
+  // Flaga
+  $('#btnExamFlag').onclick = () => {
+    es.flagged.has(q.id) ? es.flagged.delete(q.id) : es.flagged.add(q.id);
+    renderActiveExam();
+  };
+
+  // Poprzednie / Następne
+  $('#btnPrevQ').onclick = () => {
+    if (es.i > 0) {
+      es.i--;
+      renderActiveExam();
+      window.scrollTo(0, 0);
+    }
+  };
+
+  $('#btnNextQ').onclick = () => {
+    if (es.i + 1 < total) {
+      es.i++;
+      renderActiveExam();
+      window.scrollTo(0, 0);
+    } else {
+      confirmFinishExam();
+    }
+  };
+
+  // Zakończenie egzaminu
+  $('#btnExamQuit').onclick = () => confirmFinishExam();
+
+  function confirmFinishExam() {
+    const unanswered = total - Object.keys(es.userAnswers).filter(k => es.userAnswers[k] && es.userAnswers[k].size).length;
+    const msg = unanswered > 0
+      ? `Pozostało jeszcze ${unanswered} pytań bez odpowiedzi oraz ${es.flagged.size} oznaczonych flagą.\n\nCzy na pewno chcesz zakończyć egzamin i poznać wynik?`
+      : `Odpowiedziałeś na wszystkie pytania (${total}).\n\nCzy na pewno chcesz zakończyć egzamin i poznać wynik?`;
+    if (confirm(msg)) {
+      finishExam();
+    }
+  }
+}
+
+// Obsługa klawiatury dla egzaminu
+document.addEventListener('keydown', e => {
+  if (!EXAM_SESSION || EXAM_SESSION.finished || current.name !== 'egzamin') return;
+  const tag = (document.activeElement || {}).tagName || '';
+  if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    if (EXAM_SESSION.i > 0) { EXAM_SESSION.i--; renderActiveExam(); }
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    if (EXAM_SESSION.i + 1 < EXAM_SESSION.list.length) { EXAM_SESSION.i++; renderActiveExam(); }
+  } else if (e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    const q = EXAM_SESSION.list[EXAM_SESSION.i];
+    EXAM_SESSION.flagged.has(q.id) ? EXAM_SESSION.flagged.delete(q.id) : EXAM_SESSION.flagged.add(q.id);
+    renderActiveExam();
+  }
+});
+
+function finishExam() {
+  if (!EXAM_SESSION) return;
+  if (EXAM_SESSION.timer) clearInterval(EXAM_SESSION.timer);
+
+  const es = EXAM_SESSION;
+  let score = 0;
+  const byMod = {};
+  const wrongQIds = [];
+
+  es.list.forEach(q => {
+    const userSet = es.userAnswers[q.id] || new Set();
+    const isCorrect = userSet.size === q.keys.length && q.keys.every(k => userSet.has(k));
+    if (isCorrect) score++;
+    else wrongQIds.push(q.id);
+
+    const m = q.pm || q.mods[0] || '1';
+    byMod[m] = byMod[m] || { total: 0, correct: 0 };
+    byMod[m].total++;
+    if (isCorrect) byMod[m].correct++;
+  });
+
+  const total = es.list.length;
+  const pctScore = pct(score, total);
+  const passed = pctScore >= 60;
+  const durationSec = Math.round((Date.now() - es.startedAt) / 1000);
+
+  const report = {
+    id: es.id,
+    date: new Date().toISOString(),
+    score,
+    total,
+    pct: pctScore,
+    passed,
+    durationSec,
+    byMod,
+    wrongQIds,
+    flaggedQIds: [...es.flagged],
+    qIds: es.list.map(q => q.id),
+    userAnswers: Object.fromEntries(Object.entries(es.userAnswers).map(([k, v]) => [k, [...v]]))
+  };
+
+  S.examHistory = Array.isArray(S.examHistory) ? S.examHistory : [];
+  S.examHistory.unshift(report);
+  if (S.examHistory.length > 40) S.examHistory.pop();
+  save();
+
+  es.finished = true;
+  es.report = report;
+
+  renderExamReport(report, false);
+}
+
+function renderExamReport(rep, isArchive = false) {
+  const total = rep.total;
+  const score = rep.score;
+  const p = rep.pct;
+  const passed = rep.passed;
+  const wrongCount = rep.wrongQIds.length;
+  const flaggedCount = rep.flaggedQIds.length;
+  const mins = Math.floor(rep.durationSec / 60);
+  const secs = rep.durationSec % 60;
+  const timeStr = `${mins} min ${secs} s`;
+  const dateStr = new Date(rep.date).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' });
+
+  // Pytania egzaminu
+  const questions = rep.qIds.map(id => qById[id]).filter(Boolean);
+  let reviewFilter = 'all'; // 'all' | 'wrong' | 'flagged' | 'correct'
+
+  const renderContent = () => {
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:920px">
+      <div class="eyebrow">${isArchive ? 'Archiwalny wynik egzaminu' : 'Podsumowanie egzaminu'}</div>
+      <h2>${passed ? '🎉 Gratulacje! Egzamin zaliczony' : '⚠️ Egzamin niezaliczony'}</h2>
+      <p class="lead">${isArchive ? `Podejście z dnia ${dateStr}.` : 'Oficjalny próg zdawalności wynosi 60%. Poniżej znajduje się szczegółowa diagnoza mocnych i słabych modułów oraz pełne omówienie pytań.'}</p>
+
+      <!-- Duża karta wyniku -->
+      <div class="exam-summary-card">
+        <div style="text-align:center">
+          <div class="big" style="color:${passed ? 'var(--green)' : 'var(--red)'}">${p}%</div>
+          <div>${passed ? '<span class="exam-badge-pass">Zdany (≥60%)</span>' : '<span class="exam-badge-fail">Niezaliczony (<60%)</span>'}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
+          <div><div class="muted" style="font-size:.82rem;font-weight:700">Zdobyte punkty</div><b style="font-size:1.3rem">${score} / ${total}</b></div>
+          <div><div class="muted" style="font-size:.82rem;font-weight:700">Czas rozwiązywania</div><b style="font-size:1.3rem">${timeStr}</b></div>
+          <div><div class="muted" style="font-size:.82rem;font-weight:700">Błędne odpowiedzi</div><b style="font-size:1.3rem;color:var(--red)">${wrongCount}</b></div>
+          <div><div class="muted" style="font-size:.82rem;font-weight:700">Oznaczone flagą</div><b style="font-size:1.3rem;color:var(--amber)">${flaggedCount}</b></div>
+        </div>
+      </div>
+
+      <!-- Akcje główne -->
+      <div class="acts" style="margin:1.6rem 0">
+        ${wrongCount ? `<button class="btn pri" id="btnTrainWrong">🎯 Trening z błędnych pytań (${wrongCount})</button>` : ''}
+        <button class="btn sec" id="btnSaveToNotes">📝 Zapisz błędy do Notatnika</button>
+        <button class="btn sec" id="btnNewExam">🔄 Nowy egzamin</button>
+        <a class="btn sec" href="#/postep">Historia i postęp</a>
+      </div>
+
+      <!-- Diagnoza wg modułów -->
+      <h3 style="margin:2.4rem 0 .4rem">Diagnoza gotowości wg modułów</h3>
+      <p class="muted" style="margin-bottom:.9rem">Zwróć szczególną uwagę na moduły z wynikiem poniżej 60% – to one decydują o zdaniu egzaminu.</p>
+      <div class="card" style="padding:1.2rem">
+        <div class="mod-diagnostic-list">
+          ${Object.keys(rep.byMod).sort((a, b) => IDX[a] - IDX[b]).map(mId => {
+            const data = rep.byMod[mId];
+            const modPct = pct(data.correct, data.total);
+            const isModPass = modPct >= 60;
+            const g = gOf(mId).color;
+            return `<div class="mod-diag-row">
+              <div style="display:flex;align-items:center;gap:.45rem">
+                <span class="chip m" style="color:${g}">[${mId}]</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(SHORT[mId] || mId)}</span>
+              </div>
+              <div class="meter">
+                <i style="width:${modPct}%;background:${isModPass ? 'var(--green)' : 'var(--red)'}"></i>
+              </div>
+              <div style="text-align:right">
+                <span class="mono" style="color:${isModPass ? 'var(--green)' : 'var(--red)'}">${modPct}%</span>
+                <small class="muted" style="margin-left:.3rem">(${data.correct}/${data.total})</small>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Przegląd pytań -->
+      <h3 style="margin:2.6rem 0 .4rem">Przegląd pytań i klucz odpowiedzi</h3>
+      <p class="muted" style="margin-bottom:.9rem">Przeanalizuj swoje odpowiedzi w porównaniu z oficjalnym kluczem i wytycznymi klinicznymi.</p>
+
+      <div class="seg" id="reviewFilterSeg" style="margin-bottom:1.2rem">
+        <button data-rf="all" aria-pressed="${reviewFilter === 'all'}">Wszystkie (${total})</button>
+        <button data-rf="wrong" aria-pressed="${reviewFilter === 'wrong'}" style="color:var(--red)">Tylko błędne (${wrongCount})</button>
+        <button data-rf="flagged" aria-pressed="${reviewFilter === 'flagged'}">Oznaczone flagą (${flaggedCount})</button>
+        <button data-rf="correct" aria-pressed="${reviewFilter === 'correct'}" style="color:var(--green)">Poprawne (${score})</button>
+      </div>
+
+      <div id="reviewCardsList">
+        ${renderReviewCards(questions, rep, reviewFilter)}
+      </div>
+    </div></section>`;
+
+    attachReportEvents();
+  };
+
+  const renderReviewCards = (list, reportData, filter) => {
+    let filtered = list;
+    if (filter === 'wrong') filtered = filtered.filter(q => reportData.wrongQIds.includes(q.id));
+    else if (filter === 'flagged') filtered = filtered.filter(q => reportData.flaggedQIds.includes(q.id));
+    else if (filter === 'correct') filtered = filtered.filter(q => !reportData.wrongQIds.includes(q.id));
+
+    if (!filtered.length) {
+      return '<div class="card" style="padding:1.6rem;text-align:center"><p class="muted">Brak pytań w tym filtrze.</p></div>';
+    }
+
+    return filtered.map((q, idx) => {
+      const userSel = reportData.userAnswers[q.id] || [];
+      const isCorrect = userSel.length === q.keys.length && q.keys.every(k => userSel.includes(k));
+      const isFlagged = reportData.flaggedQIds.includes(q.id);
+
+      return `<div class="exam-review-card" style="border-left:5px solid ${isCorrect ? 'var(--green)' : 'var(--red)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
+          <div class="tags" style="display:flex;gap:.35rem;align-items:center">
+            <span class="chip" style="font-weight:800;background:${isCorrect ? 'var(--green-l)' : 'var(--red-l)'};color:${isCorrect ? 'var(--green)' : 'var(--red)'}">
+              ${isCorrect ? '✓ Poprawna' : '✗ Błędna'}
+            </span>
+            ${isFlagged ? '<span class="chip" style="background:var(--amber-l);color:var(--amber)">🚩 Flaga</span>' : ''}
+            ${modChips(q)}
+            <span class="chip">${esc(ASHORT[q.at])}</span>
+            ${confChip(q.conf)}
+          </div>
+          <a class="btn sec sm" href="${atlasHref(q)}" target="_blank" style="font-size:.78rem">Temat w atlasie ↗</a>
+        </div>
+
+        <div class="stemL" style="font-size:1.15rem;margin:.5rem 0 .9rem">${escB(q.stem)}</div>
+
+        <div style="margin-bottom:1rem">
+          ${q.opts.map((opt, optIdx) => {
+            const isUserChoice = userSel.includes(optIdx);
+            const isKey = q.keys.includes(optIdx);
+            let cls = 'opt-dim';
+            let badge = '';
+
+            if (isKey && isUserChoice) {
+              cls = 'opt-correct';
+              badge = '<b style="color:var(--green);font-size:.8rem;margin-left:auto">✓ Twoja odpowiedź (poprawna)</b>';
+            } else if (isKey && !isUserChoice) {
+              cls = 'opt-correct';
+              badge = '<b style="color:var(--green);font-size:.8rem;margin-left:auto">✓ Prawidłowa odpowiedź</b>';
+            } else if (!isKey && isUserChoice) {
+              cls = 'opt-wrong';
+              badge = '<b style="color:var(--red);font-size:.8rem;margin-left:auto">✗ Twoja odpowiedź</b>';
+            }
+
+            return `<div class="opt-review ${cls}">
+              <span class="l" style="font-weight:800;min-width:20px">${L[optIdx]}</span>
+              <span>${esc(opt)}</span>
+              ${badge}
+            </div>`;
+          }).join('')}
+        </div>
+
+        ${explain(q)}
+      </div>`;
+    }).join('');
+  };
+
+  const attachReportEvents = () => {
+    // Filtr zakładek
+    $$('#reviewFilterSeg button').forEach(b => {
+      b.onclick = () => {
+        reviewFilter = b.dataset.rf;
+        $$('#reviewFilterSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+        $('#reviewCardsList').innerHTML = renderReviewCards(questions, rep, reviewFilter);
+      };
+    });
+
+    // Trening z błędów
+    const btnTrain = $('#btnTrainWrong');
+    if (btnTrain) {
+      btnTrain.onclick = () => {
+        const ids = rep.wrongQIds;
+        location.hash = '#/trening';
+        setTimeout(() => startSession(ids), 50);
+      };
+    }
+
+    // Zapisz do notatek
+    const btnNote = $('#btnSaveToNotes');
+    if (btnNote) {
+      btnNote.onclick = () => {
+        const wrongQs = rep.wrongQIds.map(id => qById[id]).filter(Boolean);
+        const md = `# Podsumowanie błędów egzaminu (${new Date(rep.date).toLocaleDateString('pl-PL')})
+**Wynik:** ${rep.pct}% (${rep.score}/${rep.total}) · Status: ${rep.passed ? 'ZDANY' : 'NIEZDANY'}
+**Czas:** ${timeStr}
+
+## Błędne pytania do powtórzenia (${wrongQs.length}):
+
+${wrongQs.map((q, idx) => `### ${idx + 1}. [${q.pm || 'Moduł'}] ${q.stem.slice(0, 90)}...
+- **Prawidłowa odpowiedź:** ${q.keys.map(k => `${L[k]}: ${q.opts[k]}`).join('; ')}
+- **Wyjaśnienie:** ${q.why || q.tip || 'Brak omówienia'}
+`).join('\n---\n\n')}
+`;
+        const notes = getNotes();
+        const note = {
+          id: 'note_' + Date.now(),
+          title: `Błędy z egzaminu (${rep.pct}%, ${new Date(rep.date).toLocaleDateString('pl-PL')})`,
+          content: md,
+          mod: 'all',
+          updatedAt: Date.now()
+        };
+        notes.unshift(note);
+        saveNotes(notes);
+        toast('Utworzono notatkę z błędnymi pytaniami!');
+        location.hash = '#/notatki?id=' + note.id;
+      };
+    }
+
+    // Nowy egzamin
+    const btnNew = $('#btnNewExam');
+    if (btnNew) {
+      btnNew.onclick = () => {
+        EXAM_SESSION = null;
+        location.hash = '#/egzamin';
+        renderExamSetup();
+      };
+    }
+  };
+
+  renderContent();
+}
+
+/* ---------- TRENING ---------- */
 function viewTrening(parts, params) {
   if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank) {
     C.at = new Set((params.at || '').split(',').filter(Boolean)); C.mods = new Set((params.mods || '').split(',').filter(Boolean));
@@ -1155,6 +2528,11 @@ function viewProgress() {
         <div><div class="meter"><i style="width:${pct(st.att, st.total)}%;opacity:.35"></i><i style="width:${pct(st.ok, st.total)}%;position:absolute;left:0;top:0"></i></div><div class="meterl"><span>${st.ok} poprawnych · ${st.wrong} błędnych</span><span>${st.att}/${st.total}</span></div></div>
         <div class="acts"><label class="chk"><input type="checkbox" data-done="${m.id}" ${S.done[m.id] ? 'checked' : ''}> opanowany</label><a class="btn sec sm" href="#/atlas/${m.at}/${m.a}">Atlas</a><a class="btn ${st.wrong ? 'pri' : 'sec'} sm" href="#/trening?mods=${m.id}${st.wrong ? '&wrong=1' : ''}">${st.wrong ? 'Błędne' : 'Trening'}</a></div></div>`;
     }).join('')}</div>
+
+    <h3 style="margin:2.4rem 0 .3rem">Historia egzaminów próbnych</h3>
+    <p class="muted" style="margin-bottom:.7rem">Podejścia do pełnej symulacji egzaminu z progiem zdawalności 60%.</p>
+    ${renderExamHistorySection()}
+
     <h3 style="margin:2.2rem 0 .3rem">Motyw graficzny (Dark Mode)</h3>
     <p class="muted" style="margin-bottom:.7rem">Wybierz motyw dla całego Hubu i czytnika atlasów.</p>
     <div class="seg" id="themeSeg">
@@ -1167,6 +2545,87 @@ function viewProgress() {
     <textarea class="code" id="bk" aria-label="Kod kopii zapasowej"></textarea>
     <div class="acts" style="margin-top:.6rem"><button class="btn sec sm" id="bkGen">Wygeneruj kod</button><button class="btn sec sm" id="bkCopy">Kopiuj</button><button class="btn dark sm" id="bkLoad">Wczytaj z kodu</button><button class="btn sec sm" id="bkReset" style="color:var(--red)">Zeruj postęp</button></div>
   </div></section>`;
+
+  function renderExamHistorySection() {
+    const h = S.examHistory || [];
+    if (!h.length) {
+      return `<div class="card" style="padding:1.4rem;text-align:center">
+        <p class="muted" style="margin-bottom:.6rem">Brak zarejestrowanych podejść do symulacji egzaminu.</p>
+        <a class="btn pri sm" href="#/egzamin">Rozpocznij pierwszy egzamin próbny →</a>
+      </div>`;
+    }
+    const avg = Math.round(h.reduce((acc, x) => acc + x.pct, 0) / h.length);
+    const passedCount = h.filter(x => x.passed).length;
+    const best = Math.max(...h.map(x => x.pct));
+
+    return `<div class="card" style="padding:1.2rem;margin-bottom:.8rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.1rem;padding-bottom:1rem;border-bottom:1px solid var(--line-2)">
+        <div><div class="muted" style="font-size:.76rem;font-weight:700">Podejścia</div><b style="font-size:1.4rem">${h.length}</b></div>
+        <div><div class="muted" style="font-size:.76rem;font-weight:700">Średni wynik</div><b style="font-size:1.4rem">${avg}%</b></div>
+        <div><div class="muted" style="font-size:.76rem;font-weight:700">Najlepszy wynik</div><b style="font-size:1.4rem;color:var(--green)">${best}%</b></div>
+        <div><div class="muted" style="font-size:.76rem;font-weight:700">Zdane / Niezdane</div><b style="font-size:1.4rem">${passedCount} / ${h.length - passedCount}</b></div>
+      </div>
+      <div style="display:grid;gap:.55rem">
+        ${h.map(item => {
+          const d = new Date(item.date).toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' });
+          const m = Math.floor(item.durationSec / 60);
+          const s = item.durationSec % 60;
+          return `<div class="prow" style="padding:.6rem .8rem;align-items:center">
+            <span class="nb" style="background:${item.passed ? 'var(--green)' : 'var(--red)'};font-size:.85rem">${item.pct}%</span>
+            <div>
+              <b>${item.passed ? 'ZDANY' : 'NIEZDANY'} (${item.score}/${item.total} pkt)</b>
+              <small>${d} · czas: ${m}m ${s}s · ${item.wrongQIds.length} błędów</small>
+            </div>
+            <div></div>
+            <div class="acts">
+              <a class="btn sec sm" href="#/egzamin?id=${item.id}">Raport</a>
+              ${item.wrongQIds.length ? `<button class="btn pri sm" data-retry-exam="${item.id}">Błędy</button>` : ''}
+              <button class="btn sec sm" data-del-exam="${item.id}" style="color:var(--red);padding:.3rem .55rem" title="Usuń próbę">✕</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="acts" style="margin-top:.9rem;justify-content:flex-end">
+        <button class="btn sec sm" id="btnClearExamHistory" style="color:var(--red)">Wyczyść historię egzaminów</button>
+      </div>
+    </div>`;
+  }
+
+  // Akcje historii egzaminów
+  $$('[data-del-exam]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.delExam;
+      if (confirm('Czy na pewno chcesz usunąć to podejście do egzaminu?')) {
+        S.examHistory = (S.examHistory || []).filter(x => x.id !== id);
+        save();
+        toast('Usunięto podejście z historii');
+        viewProgress();
+      }
+    };
+  });
+
+  $$('[data-retry-exam]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.retryExam;
+      const ex = (S.examHistory || []).find(x => x.id === id);
+      if (ex && ex.wrongQIds.length) {
+        location.hash = '#/trening';
+        setTimeout(() => startSession(ex.wrongQIds), 50);
+      }
+    };
+  });
+
+  const clearExBtn = $('#btnClearExamHistory');
+  if (clearExBtn) {
+    clearExBtn.onclick = () => {
+      if (confirm('Czy na pewno wyczyścić całą historię egzaminów próbnych?')) {
+        S.examHistory = [];
+        save();
+        toast('Historia egzaminów wyczyszczona');
+        viewProgress();
+      }
+    };
+  }
   const tseg = $('#themeSeg');
   if (tseg) {
     tseg.addEventListener('click', e => {
@@ -1193,7 +2652,16 @@ function renderFooter() {
 /* ---------- PALETA ---------- */
 const pal = $('#pal'), palIn = $('#palIn'), palList = $('#palList');
 let palItems = [], palCur = 0;
-const VIEWS = [['Start', '#/'], ['Atlasy', '#/atlasy'], ['Trening mieszany', '#/trening'], ['Baza pytań', '#/pytania'], ['Mapa powiązań', '#/polaczenia'], ['Postęp i kopia zapasowa', '#/postep']];
+const VIEWS = [
+  ['Start', '#/'],
+  ['Atlasy', '#/atlasy'],
+  ['Trening mieszany', '#/trening'],
+  ['Egzamin próbny', '#/egzamin'],
+  ['Baza pytań', '#/pytania'],
+  ['Notatki Markdown', '#/notatki'],
+  ['Mapa powiązań', '#/polaczenia'],
+  ['Postęp i historia', '#/postep']
+];
 const ALL = [
   ...VIEWS.map(v => ({ k: 'Widok', t: v[0], h: v[1], n: norm(v[0]) })),
   ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
@@ -1294,5 +2762,6 @@ function initTheme() {
 
 initTheme();
 initPWA();
+initNotesDrawer();
 route();
 })();

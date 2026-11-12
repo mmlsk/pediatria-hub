@@ -25,7 +25,9 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
       <li><a href="#/" data-r="start">Start</a></li>
       <li><a href="#/atlasy" data-r="atlasy">Atlasy</a></li>
       <li><a href="#/trening" data-r="trening">Trening</a></li>
+      <li><a href="#/egzamin" data-r="egzamin">Egzamin</a></li>
       <li><a href="#/pytania" data-r="pytania">Pytania</a></li>
+      <li><a href="#/notatki" data-r="notatki">Notatki</a></li>
       <li><a href="#/polaczenia" data-r="polaczenia">Połączenia</a></li>
       <li><a href="#/postep" data-r="postep">Postęp</a></li>
     </ul>
@@ -41,6 +43,44 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
   <ul id="palList" role="listbox"></ul>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Podręczny notatnik (Quick Notes Drawer & FAB) -->
+<button class="fab-notes" id="btnQuickNotes" aria-label="Otwórz szybki brudnopis" title="Szybki brudnopis (Markdown)">
+  <span class="fab-icon">📝</span>
+  <span class="fab-label">Brudnopis</span>
+</button>
+
+<aside class="drawer-notes" id="notesDrawer" aria-label="Szybki notatnik Markdown" hidden>
+  <div class="drawer-header">
+    <div class="drawer-title">
+      <span>📝 Szybki brudnopis</span>
+      <span class="chip-sm" id="scratchSavedStatus">Zapisano</span>
+    </div>
+    <div class="drawer-actions">
+      <a href="#/notatki" class="btn-icon" id="drawerOpenFull" title="Otwórz pełny notatnik">↗</a>
+      <button class="btn-icon" id="drawerClose" aria-label="Zamknij brudnopis">✕</button>
+    </div>
+  </div>
+  <div class="drawer-toolbar">
+    <button type="button" data-md="b" title="Pogrubienie (Ctrl+B)"><b>B</b></button>
+    <button type="button" data-md="i" title="Kursywa (Ctrl+I)"><i>I</i></button>
+    <button type="button" data-md="h2" title="Nagłówek">H2</button>
+    <button type="button" data-md="list" title="Lista punktowana">•</button>
+    <button type="button" data-md="check" title="Lista zadań">☑</button>
+    <button type="button" data-md="table" title="Tabela">▦</button>
+    <div style="flex:1"></div>
+    <button type="button" id="drawerToggleMode" class="btn-sm-text">Podgląd</button>
+  </div>
+  <div class="drawer-body">
+    <textarea id="drawerInput" placeholder="Szybkie notatki, dawki, objawy, pułapki (Markdown)..."></textarea>
+    <div id="drawerPreview" class="md-preview" hidden></div>
+  </div>
+  <div class="drawer-footer">
+    <button type="button" class="btn sec sm" id="drawerSaveAsNote">Zapisz do notatek</button>
+    <button type="button" class="btn sec sm" id="drawerClear" style="color:var(--red)">Wyczyść</button>
+  </div>
+</aside>
+
 <script src="js/meta.js"></script>
 <script src="js/questions.js"></script>
 <script src="js/app.js"></script>
