@@ -343,7 +343,7 @@ function route() {
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
   $$('#menu a').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
-  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, kalkulator: viewCalculator, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
+  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, kalkulator: viewCalculator, szczepienia: viewVaccines, badania: viewDiagnostics, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
   if (!v) { location.hash = '#/'; return; }
@@ -3419,6 +3419,797 @@ function viewCalculator(parts, params) {
   render();
 }
 
+/* ---------- PRZEWODNIK PO KALENDARZU SZCZEPIEŃ (PSO) ---------- */
+const PSO_SCHEDULE = [
+  {
+    ageId: 'birth',
+    age: 'W 1. dobie życia (pierwsze 24 h)',
+    desc: 'Przed wypisem ze szpitala po urodzeniu',
+    vaccines: [
+      { name: 'WZW B (1. dawka)', type: 'killed', form: 'rekombinowana (antygen HBs)', route: 'i.m. w przednio-boczne udo', mand: true, desc: 'Ochrona przed wirusowym zapaleniem wątroby typu B. Noworodki matek HBsAg(+) otrzymują dodatkowo immunoglobulinę anty-HBs (HBIG).' },
+      { name: 'Gruźlica (BCG)', type: 'live', form: 'żywe prątki atenuowane M. bovis', route: 'śródskórnie (i.d.) w lewe ramię', mand: true, desc: 'Chroni przed ciężkimi, rozsianymi postaciami gruźlicy (gruźlicze ZOMR, prosówka). Po 2–4 tyg. powstaje naciek, potem krostka i owrzodzenie z pozostawieniem blizny.' }
+    ]
+  },
+  {
+    ageId: '2m',
+    age: '2. miesiąc życia (7.–8. tydzień)',
+    desc: 'Rozpoczęcie szczepień w POZ (po ukończeniu 6. tyg.)',
+    vaccines: [
+      { name: 'DTP (1. dawka)', type: 'killed', form: 'błonica, tężec, krztusiec (DTPw lub DTaP)', route: 'i.m. w udo', mand: true, desc: 'Wcześniaki bezwzględnie otrzymują szczepionkę bezkomórkową DTaP lub 5w1/6w1.' },
+      { name: 'Hib (1. dawka)', type: 'killed', form: 'skoniugowana Haemophilus influenzae b', route: 'i.m. w udo', mand: true, desc: 'Chroni przed nagłośniowym zapaleniem krtani, sepsą i ZOMR wywołanym przez Hib.' },
+      { name: 'Pneumokoki (PCV, 1. dawka)', type: 'killed', form: 'skoniugowana (PCV-10 / PCV-13)', route: 'i.m. w udo', mand: true, desc: 'Chroni przed inwazyjną chorobą pneumokokową (IChP), zapaleniem płuc i AOM.' },
+      { name: 'Rotawirusy (1. dawka)', type: 'live', form: 'żywa doustna (RV)', route: 'doustnie (p.o.)', mand: true, desc: 'Darmowa dla wszystkich niemowląt! Pierwszą dawkę należy podać przed ukończeniem 12. tyg. życia.' },
+      { name: 'WZW B (2. dawka)', type: 'killed', form: 'rekombinowana', route: 'i.m. w udo', mand: true, desc: 'Podawana 1 miesiąc po pierwszej dawce (lub jako składnik szczepionki 6w1).' }
+    ]
+  },
+  {
+    ageId: '3-4m',
+    age: '3.–4. miesiąc życia',
+    desc: 'Po 6–8 tygodniach od poprzedniego szczepienia',
+    vaccines: [
+      { name: 'DTP (2. dawka)', type: 'killed', form: 'błonica, tężec, krztusiec', route: 'i.m.', mand: true, desc: 'Kontynuacja schematu podstawowego.' },
+      { name: 'Hib (2. dawka)', type: 'killed', form: 'skoniugowana Hib', route: 'i.m.', mand: true, desc: 'Druga dawka schematu pierwotnego.' },
+      { name: 'Polio (IPV, 1. dawka)', type: 'killed', form: 'inaktywowana szczepionka Salka (IPV)', route: 'i.m. / s.c.', mand: true, desc: 'W Polsce stosuje się wyłącznie bezpieczną szczepionkę zabitą (IPV). Żywa OPV nie jest już stosowana!' },
+      { name: 'Rotawirusy (2. dawka)', type: 'live', form: 'żywa doustna (RV)', route: 'doustnie', mand: true, desc: 'Odstęp min. 4 tygodnie od 1. dawki. Cały cykl należy ukończyć przed 24. lub 32. tyg. życia.' }
+    ]
+  },
+  {
+    ageId: '5-6m',
+    age: '5.–6. miesiąc życia',
+    desc: 'Po kolejnych 6–8 tygodniach',
+    vaccines: [
+      { name: 'DTP (3. dawka)', type: 'killed', form: 'błonica, tężec, krztusiec', route: 'i.m.', mand: true, desc: 'Trzecia dawka szczepienia pierwotnego.' },
+      { name: 'Hib (3. dawka)', type: 'killed', form: 'skoniugowana Hib', route: 'i.m.', mand: true, desc: 'Trzecia dawka szczepienia pierwotnego.' },
+      { name: 'Polio (IPV, 2. dawka)', type: 'killed', form: 'inaktywowana IPV', route: 'i.m.', mand: true, desc: 'Druga dawka szczepionki przeciw poliomyelitis.' },
+      { name: 'Pneumokoki (PCV, 2. dawka)', type: 'killed', form: 'skoniugowana PCV', route: 'i.m.', mand: true, desc: 'Druga dawka schematu 2+1.' },
+      { name: 'Rotawirusy (3. dawka)', type: 'live', form: 'doustna', route: 'doustnie', mand: false, desc: 'Tylko w schemacie 3-dawkowym (RotaTeq).' }
+    ]
+  },
+  {
+    ageId: '7m',
+    age: '7. miesiąc życia',
+    desc: 'Po 6 miesiącach od 1. dawki WZW B',
+    vaccines: [
+      { name: 'WZW B (3. dawka)', type: 'killed', form: 'rekombinowana', route: 'i.m.', mand: true, desc: 'Zakończenie schematu podstawowego WZW B (0-1-6 miesięcy).' }
+    ]
+  },
+  {
+    ageId: '13-15m',
+    age: '13.–15. miesiąc życia',
+    desc: 'Początek 2. roku życia – kluczowe szczepienie MMR',
+    vaccines: [
+      { name: 'Odra, Świnka, Różyczka (MMR, 1. dawka)', type: 'live', form: 'żywa atenuowana (MMR)', route: 's.c. / i.m.', mand: true, desc: 'Szczepionka skojarzona żywa. Ważne: odstęp od innych szczepionek żywych min. 4 tygodnie!' },
+      { name: 'Pneumokoki (PCV, 3. dawka)', type: 'killed', form: 'uzupełniająca (booster)', route: 'i.m.', mand: true, desc: 'Dawka uzupełniająca zamykająca schemat 2+1 u niemowląt.' },
+      { name: 'Ospa wietrzna (zalecana / bezpłatna dla żłobków)', type: 'live', form: 'żywa atenuowana', route: 's.c.', mand: false, desc: 'Zalecana dla wszystkich dzieci od 9. m.ż., bezpłatna dla dzieci uczęszczających do żłobka / klubu dziecięcego.' },
+      { name: 'Meningokoki B (Bexsero) i ACWY', type: 'killed', form: 'białkowa / skoniugowana', route: 'i.m.', mand: false, desc: 'Szczepienie wysoce zalecane od 2. m.ż. przeciw sepsie i ZOMR meningokokowemu.' }
+    ]
+  },
+  {
+    ageId: '16-18m',
+    age: '16.–18. miesiąc życia',
+    desc: 'Dawki uzupełniające schematu niemowlęcego',
+    vaccines: [
+      { name: 'DTP (4. dawka uzupełniająca)', type: 'killed', form: 'błonica, tężec, krztusiec', route: 'i.m.', mand: true, desc: 'Koniec cyklu pierwotnego DTP.' },
+      { name: 'Polio (IPV, 3. dawka uzupełniająca)', type: 'killed', form: 'IPV', route: 'i.m.', mand: true, desc: 'Koniec cyklu pierwotnego IPV.' },
+      { name: 'Hib (4. dawka uzupełniająca)', type: 'killed', form: 'skoniugowana Hib', route: 'i.m.', mand: true, desc: 'Koniec cyklu pierwotnego Hib.' }
+    ]
+  },
+  {
+    ageId: '6y',
+    age: '6. rok życia',
+    desc: 'Przed pójściem do szkoły',
+    vaccines: [
+      { name: 'DTaP (1. dawka przypominająca)', type: 'killed', form: 'bezkomórkowy krztusiec (DTaP)', route: 'i.m.', mand: true, desc: 'Pierwsze szczepienie przypominające przeciw krztuścowi, błonicy i tężcowi.' },
+      { name: 'MMR (2. dawka przypominająca)', type: 'live', form: 'żywa atenuowana', route: 's.c. / i.m.', mand: true, desc: 'Druga dawka MMR zapewniająca wieloletnią odporność populacyjną.' }
+    ]
+  },
+  {
+    ageId: '14y',
+    age: '14. rok życia',
+    desc: 'Szkoła podstawowa / nastolatki',
+    vaccines: [
+      { name: 'dTap (przypominająca z obniżoną dawką)', type: 'killed', form: 'błonica, tężec, krztusiec małe litery (dTap)', route: 'i.m.', mand: true, desc: 'Obniżona zawartość toksoidu błoniczego i krztuścowego w celu uniknięcia odczynów miejscowych.' },
+      { name: 'HPV (Wirus brodawczaka ludzkiego)', type: 'killed', form: 'VLP 2-walentna lub 9-walentna', route: 'i.m.', mand: false, desc: 'Program powszechny dla dziewcząt i chłopców (12–13 lat, bezpłatny).' }
+    ]
+  },
+  {
+    ageId: '19y',
+    age: '19. rok życia',
+    desc: 'Zakończenie obowiązku szczepień wieku rozwojowego',
+    vaccines: [
+      { name: 'dT (tężec, błonica)', type: 'killed', form: 'toksoid tężcowy i błoniczy', route: 'i.m.', mand: true, desc: 'Ostatnie obowiązkowe szczepienie w PSO. Zaleca się dawki przypominające dT lub dTap co 10 lat u dorosłych!' }
+    ]
+  }
+];
+
+let VACC_FILTER = 'all'; // 'all' | 'mand' | 'rec' | 'live' | 'killed'
+
+function viewVaccines(parts, params) {
+  const render = () => {
+    let filteredList = PSO_SCHEDULE.map(node => {
+      const vFiltered = node.vaccines.filter(v => {
+        if (VACC_FILTER === 'mand') return v.mand;
+        if (VACC_FILTER === 'rec') return !v.mand;
+        if (VACC_FILTER === 'live') return v.type === 'live';
+        if (VACC_FILTER === 'killed') return v.type === 'killed';
+        return true;
+      });
+      return { ...node, vaccines: vFiltered };
+    }).filter(node => node.vaccines.length > 0);
+
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
+      <div class="eyebrow">Program Szczepień Ochronnych (PSO)</div>
+      <h2>Kalendarz szczepień & Przewodnik wakcynologiczny</h2>
+      <p class="lead">Interaktywny kalendarz szczepień w Polsce: pełna oś czasu od 1. doby do 19. r.ż., podział na szczepionki żywe i inaktywowane, zasady odstępów oraz symulator nadrabiania opóźnień (catch-up).</p>
+
+      <!-- Złote zasady PSO i pułapki -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.6rem">
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <div style="font-weight:800;color:var(--amber);margin-bottom:.3rem">⚡ Zasada 4 tygodni (szczepionki żywe)</div>
+          <p class="srcline">Dwie szczepionki żywe (np. BCG, MMR, Ospa, Rota) należy podać <b>tego samego dnia</b> w różne miejsca ALBO z zachowaniem <b>odstępu min. 4 tygodni</b>. Między szczepionkami zabitymi lub między żywą a zabitą odstęp jest dowolny.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--teal)">
+          <div style="font-weight:800;color:var(--teal);margin-bottom:.3rem">👶 Szczepienia wcześniaków</div>
+          <p class="srcline">Wcześniaki szczepimy wg <b>wieku metrykalnego</b> (chronologicznego od urodzenia, a NIE skorygowanego!), pod warunkiem stabilnego stanu klinicznego. Bezwzględnie kwalifikują się do bezkomórkowego krztuśca (DTaP) lub 6w1.</p>
+        </div>
+        <div class="card" style="border-left:4px solid var(--red)">
+          <div style="font-weight:800;color:var(--red);margin-bottom:.3rem">⚠️ Fałszywe przeciwwskazania (Pułapki!)</div>
+          <p class="srcline">Łagodna infekcja kataralna, stan podgorączkowy < 38.5°C, ząbkowanie, stabilna alergia, antybiotykoterapia doustna, żółtaczka fizjologiczna – <b>NIE są</b> przeciwwskazaniem do szczepienia!</p>
+        </div>
+      </div>
+
+      <!-- Filtry osi czasu -->
+      <div class="seg" id="vaccFilterSeg" style="margin-bottom:1.4rem">
+        <button data-vf="all" aria-pressed="${VACC_FILTER === 'all'}">Wszystkie (${PSO_SCHEDULE.reduce((acc, n) => acc + n.vaccines.length, 0)})</button>
+        <button data-vf="mand" aria-pressed="${VACC_FILTER === 'mand'}">Tylko Obowiązkowe</button>
+        <button data-vf="rec" aria-pressed="${VACC_FILTER === 'rec'}">Zalecane (Ospa, Men, HPV)</button>
+        <button data-vf="live" aria-pressed="${VACC_FILTER === 'live'}" style="color:var(--amber)">Żywe atenuowane</button>
+        <button data-vf="killed" aria-pressed="${VACC_FILTER === 'killed'}" style="color:var(--blue)">Inaktywowane (zabite)</button>
+      </div>
+
+      <!-- Oś czasu PSO -->
+      <div class="pso-container">
+        <div class="timeline-pso">
+          ${filteredList.map(item => `
+            <div class="pso-node">
+              <span class="pso-dot"></span>
+              <div class="pso-card">
+                <div class="pso-header">
+                  <div>
+                    <span class="pso-age">${esc(item.age)}</span>
+                    <span class="muted" style="margin-left:.6rem;font-size:.85rem">${esc(item.desc)}</span>
+                  </div>
+                </div>
+                <div class="pso-vaccines-grid">
+                  ${item.vaccines.map(v => `
+                    <div class="vaccine-item" style="border-top:3px solid ${v.type === 'live' ? 'var(--amber)' : 'var(--blue)'}">
+                      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem">
+                        <b style="font-size:.92rem;color:var(--ink)">${esc(v.name)}</b>
+                        <span class="${v.type === 'live' ? 'v-type-live' : 'v-type-killed'}">${v.type === 'live' ? 'ŻYWA' : 'ZABITA'}</span>
+                      </div>
+                      <div class="srcline" style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        <span>💉 ${esc(v.route)}</span>
+                        <span>🏷️ ${esc(v.form)}</span>
+                        ${v.mand ? '<span style="color:var(--green);font-weight:700">✓ Obowiązkowa</span>' : '<span style="color:var(--teal);font-weight:700">★ Zalecana</span>'}
+                      </div>
+                      <p class="srcline" style="margin-top:.2rem;color:var(--ink-2)">${esc(v.desc)}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Symulator nadrabiania opóźnień (Catch-up Planner) -->
+      <h3 style="margin:2.8rem 0 .4rem">Symulator nadrabiania opóźnień szczepień (Catch-up schedule)</h3>
+      <p class="muted" style="margin-bottom:1rem">Dziecko zgłasza się z opóźnionymi szczepieniami? Wybierz przypadek lub wiek, aby poznać optymalny schemat wizyt.</p>
+
+      <div class="card" style="padding:1.4rem">
+        <div class="acts" style="margin-bottom:1.2rem">
+          <span class="flab">Przypadek:</span>
+          <button class="btn sec sm" data-cup="15m-none">Dziecko 15 m.ż. (nieszczepione od urodzenia)</button>
+          <button class="btn sec sm" data-cup="2y-delayed">Dziecko 2 lata (brak szczepień po 6. m.ż.)</button>
+          <button class="btn sec sm" data-cup="5y-no-mmr">Dziecko 5 lat (brak MMR i PCV)</button>
+          <button class="btn sec sm" data-cup="preemie">Wcześniak urodzony w 30. hbd</button>
+        </div>
+        <div id="catchupResultBox" style="background:var(--bg);border-radius:10px;padding:1.2rem;border:1px solid var(--line-2)">
+          <p class="muted">Wybierz jeden z powyższych scenariuszy, aby wygenerować schemat nadrabiania dawek.</p>
+        </div>
+      </div>
+    </div></section>`;
+
+    attachEvents();
+  };
+
+  const attachEvents = () => {
+    // Filtry
+    $$('#vaccFilterSeg button').forEach(b => {
+      b.onclick = () => {
+        VACC_FILTER = b.dataset.vf;
+        render();
+      };
+    });
+
+    // Symulator Catch-up
+    $$('[data-cup]').forEach(btn => {
+      btn.onclick = () => {
+        $$('[data-cup]').forEach(x => x.classList.remove('pri'));
+        btn.classList.add('pri');
+        const sc = btn.dataset.cup;
+        let html = '';
+        if (sc === '15m-none') {
+          html = `<h4 style="color:var(--teal);margin-bottom:.6rem">Plan nadrabiania dla dziecka 15-miesięcznego bez szczepień:</h4>
+          <div style="display:grid;gap:.8rem;font-size:.88rem">
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 1</span>
+              <div>
+                <b>Dzień 0 (Dziś): DTaP-IPV-Hib + WZW B + PCV (1. dawka) + MMR (1. dawka)</b>
+                <small>MMR można podać jednocześnie z zabitymi w osobne kończyny! BCG odraczamy do próby tuberkulinowej (RT23) ze względu na wiek > 12 m.ż.</small>
+              </div>
+            </div>
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 2</span>
+              <div>
+                <b>Po 4 tygodniach: DTaP-IPV-Hib (2. dawka) + WZW B (2. dawka) + PCV (2. dawka)</b>
+                <small>Zachowany odstęp 4 tyg. dla szczepionek zabitych.</small>
+              </div>
+            </div>
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 3</span>
+              <div>
+                <b>Po 6 miesiącach od 1. dawki: WZW B (3. dawka) + DTaP-IPV-Hib (3. dawka)</b>
+                <small>Zamknięcie cyklu podstawowego.</small>
+              </div>
+            </div>
+          </div>`;
+        } else if (sc === '2y-delayed') {
+          html = `<h4 style="color:var(--teal);margin-bottom:.6rem">Plan nadrabiania dla dziecka 2-letniego z przerwą po 6. m.ż.:</h4>
+          <div style="display:grid;gap:.8rem;font-size:.88rem">
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 1</span>
+              <div>
+                <b>Dziś: MMR (1. dawka) + PCV (uzupełniająca) + WZW B (3. dawka zamykająca)</b>
+                <small><b>Złota zasada:</b> Nie zaczynamy cyklu szczepień od nowa! Liczą się dawki już podane w niemowlęctwie.</small>
+              </div>
+            </div>
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 2</span>
+              <div>
+                <b>Po 6–8 tygodniach: DTaP-IPV-Hib (4. dawka uzupełniająca)</b>
+                <small>Uzupełnienie brakującej 4. dawki z 16.–18. m.ż.</small>
+              </div>
+            </div>
+          </div>`;
+        } else if (sc === '5y-no-mmr') {
+          html = `<h4 style="color:var(--teal);margin-bottom:.6rem">Plan dla dziecka 5-letniego (brak MMR i PCV):</h4>
+          <div style="display:grid;gap:.8rem;font-size:.88rem">
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 1</span>
+              <div>
+                <b>Dziś: MMR (1. dawka) + PCV (1 dawka u dzieci >2 r.ż. zwykle wystarcza jako uzupełniająca)</b>
+                <small>Zaszczepić natychmiast przed pójściem do przedszkola/szkoły.</small>
+              </div>
+            </div>
+            <div class="prow" style="background:var(--surface)">
+              <span class="nb">Wizyta 2</span>
+              <div>
+                <b>W 6. roku życia: MMR (2. dawka) + DTaP (przypominająca 6 r.ż.)</b>
+                <small>Zachowany odstęp min. 4 tygodni od pierwszej dawki MMR.</small>
+              </div>
+            </div>
+          </div>`;
+        } else if (sc === 'preemie') {
+          html = `<h4 style="color:var(--teal);margin-bottom:.6rem">Zasady szczepień wcześniaka urodzonego w 30. hbd:</h4>
+          <div style="display:grid;gap:.8rem;font-size:.88rem">
+            <div class="card" style="background:var(--surface)">
+              <ul style="padding-left:1.2rem;line-height:1.6">
+                <li><b>Wiek metrykalny:</b> Wcześniak bezwzględnie otrzymuje szczepienia wg daty urodzenia, a nie wieku skorygowanego!</li>
+                <li><b>WZW B i BCG:</b> WZW B w 1. dobie bez względu na wagę. Jeśli waga < 2000 g, dawka w 1. dobie nie liczy się do cyklu (schemat 0-1-2-6 m.). BCG podaje się po osiągnięciu masy ciała ≥ 2000 g!</li>
+                <li><b>Szczepionki bezkomórkowe:</b> Wcześniaki bezpłatnie otrzymują szczepionkę DTaP (lub refundowane 6w1/5w1) ze względu na ryzyko powikłań po pełnokomórkowym krztuścu.</li>
+                <li><b>Pneumokoki:</b> Bezwzględnie w schemacie 3+1 (3 dawki pierwotne + 1 uzupełniająca).</li>
+              </ul>
+            </div>
+          </div>`;
+        }
+        $('#catchupResultBox').innerHTML = html;
+      };
+    });
+  };
+
+  render();
+}
+
+/* ---------- ATLAS BADAŃ LABORATORYJNYCH I OBRAZOWYCH ---------- */
+let DIAG_TAB = 'pmr'; // 'pmr' | 'gas' | 'urine' | 'cbc' | 'imaging'
+
+function viewDiagnostics(parts, params) {
+  if (params && params.tab && ['pmr', 'gas', 'urine', 'cbc', 'imaging'].includes(params.tab)) {
+    DIAG_TAB = params.tab;
+  }
+
+  const render = () => {
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:960px">
+      <div class="eyebrow">Diagnostyka laboratoryjna & Obrazowa</div>
+      <h2>Atlas badań & Lab Trainer</h2>
+      <p class="lead">Interaktywny interpretator wyników badań w pediatrii: płyn mózgowo-rdzeniowy, gazometria z luką anionową, osad moczu, algorytm anemii oraz kluczowe objawy USG/RTG w stanach nagłych.</p>
+
+      <!-- Nawigacja zakładek -->
+      <div class="calc-tab-nav" id="diagTabNav">
+        <button class="calc-tab-btn ${DIAG_TAB === 'pmr' ? 'active' : ''}" data-dtab="pmr">🧠 Płyn mózgowo-rdzeniowy (PMR)</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'gas' ? 'active' : ''}" data-dtab="gas">🫁 Gazometria & Luka Anionowa</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'urine' ? 'active' : ''}" data-dtab="urine">🧪 Badanie i Osad Moczu</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'cbc' ? 'active' : ''}" data-dtab="cbc">🩸 Morfologia & Anemie</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'imaging' ? 'active' : ''}" data-dtab="imaging">📸 Obrazowanie USG / RTG</button>
+      </div>
+
+      <!-- Treść zakładki -->
+      <div id="diagTabContent">
+        ${renderDiagContent(DIAG_TAB)}
+      </div>
+
+      <!-- Mini-Quiz Diagnostyczny -->
+      <h3 style="margin:2.8rem 0 .4rem">Mini-quiz: Rozpoznaj pacjenta po badaniu</h3>
+      <p class="muted" style="margin-bottom:.9rem">Sprawdź swoją czujność kliniczną na typowych zagadkach egzaminacyjnych.</p>
+      <div class="card" id="labQuizContainer" style="padding:1.4rem">
+        ${renderLabQuiz()}
+      </div>
+    </div></section>`;
+
+    attachEvents();
+  };
+
+  const renderDiagContent = tab => {
+    switch (tab) {
+      case 'pmr': return renderDiagPMR();
+      case 'gas': return renderDiagGas();
+      case 'urine': return renderDiagUrine();
+      case 'cbc': return renderDiagCBC();
+      case 'imaging': return renderDiagImaging();
+      default: return renderDiagPMR();
+    }
+  };
+
+  /* 1. PMR */
+  const renderDiagPMR = () => {
+    return `<div class="lab-calc-box">
+      <div class="acts" style="justify-content:space-between;margin-bottom:1rem">
+        <div>
+          <h3 style="font-size:1.25rem">Kalkulator i Różnicownik PMR</h3>
+          <span class="muted" style="font-size:.82rem">Wpisz parametry lub wybierz gotowy profil pacjenta.</span>
+        </div>
+        <div class="acts">
+          <span class="srcline" style="font-weight:700">Wklej profil:</span>
+          <button class="btn sec sm" data-pmr-set="bact">ZOMR Ropne (Bakteryjne)</button>
+          <button class="btn sec sm" data-pmr-set="viral">ZOMR Wirusowe</button>
+          <button class="btn sec sm" data-pmr-set="tb">ZOMR Gruźlicze</button>
+          <button class="btn sec sm" data-pmr-set="norm">PMR Prawidłowy</button>
+        </div>
+      </div>
+
+      <div class="lab-inputs-grid">
+        <div class="lab-input-group">
+          <label>Cytoza (/µl) [norma < 5]</label>
+          <input type="number" id="pmrCytoza" value="1800">
+        </div>
+        <div class="lab-input-group">
+          <label>Granulocyty (%)</label>
+          <input type="number" id="pmrNeutro" min="0" max="100" value="85">
+        </div>
+        <div class="lab-input-group">
+          <label>Białko w PMR (mg/dl) [15–45]</label>
+          <input type="number" id="pmrProtein" value="180">
+        </div>
+        <div class="lab-input-group">
+          <label>Glukoza w PMR (mg/dl)</label>
+          <input type="number" id="pmrGlc" value="18">
+        </div>
+        <div class="lab-input-group">
+          <label>Glikemia w surowicy (mg/dl)</label>
+          <input type="number" id="pmrSerumGlc" value="95">
+        </div>
+      </div>
+
+      <div id="pmrVerdict"></div>
+    </div>
+
+    <!-- Tabela różnicująca PMR -->
+    <div class="card" style="padding:1.2rem">
+      <h4 style="margin-bottom:.6rem">Oficjalna tabela różnicowania płynu mózgowo-rdzeniowego (PMR):</h4>
+      <div style="overflow-x:auto">
+        <table class="md-preview table" style="width:100%;font-size:.85rem">
+          <thead>
+            <tr>
+              <th>Cecha</th>
+              <th>Norma (starsze dziecko)</th>
+              <th>ZOMR Bakteryjne (ropne)</th>
+              <th>ZOMR Wirusowe (aseptyczne)</th>
+              <th>ZOMR Gruźlicze</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Wygląd</b></td>
+              <td>Wodojasny, przejrzysty</td>
+              <td>Mętny / ropny</td>
+              <td>Przejrzysty / opalizujący</td>
+              <td>Opalizujący (siateczka włóknikowa!)</td>
+            </tr>
+            <tr>
+              <td><b>Cytoza (/µl)</b></td>
+              <td>< 5 (noworodek < 20)</td>
+              <td>Bardzo wysoka (1000–10 000+)</td>
+              <td>Podwyższona (50–500)</td>
+              <td>Podwyższona (100–500)</td>
+            </tr>
+            <tr>
+              <td><b>Przewaga komórek</b></td>
+              <td>Limfocyty (100%)</td>
+              <td><b>Granulocyty wielojądrzaste (>75–80%)</b></td>
+              <td><b>Limfocyty / jednojądrzaste</b></td>
+              <td><b>Limfocyty</b> (początkowo neutrofile)</td>
+            </tr>
+            <tr>
+              <td><b>Białko (mg/dl)</b></td>
+              <td>15–45 mg/dl</td>
+              <td>Wysokie (100–500 mg/dl)</td>
+              <td>Nieznacznie podwyższone (50–100)</td>
+              <td><b>Ekstremalnie wysokie (>500 mg/dl!)</b></td>
+            </tr>
+            <tr>
+              <td><b>Glukoza (PMR/krew)</b></td>
+              <td>> 0.6 (60% glikemii)</td>
+              <td><b>Obniżona (< 0.4, często < 0.2)</b></td>
+              <td><b>Prawidłowa (> 0.5–0.6)</b></td>
+              <td><b>Bardzo niska (< 0.3)</b></td>
+            </tr>
+            <tr>
+              <td><b>Kluczowe leczenie</b></td>
+              <td>–</td>
+              <td>Ceftriakson + Wankomycyna + Deksametazon</td>
+              <td>Objawowe / Acyklowir (HSV/VZV)</td>
+              <td>4 leki przeciwprątkowe (RIPE) + GKS</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  };
+
+  /* 2. Gazometria */
+  const renderDiagGas = () => {
+    return `<div class="lab-calc-box">
+      <div class="acts" style="justify-content:space-between;margin-bottom:1rem">
+        <div>
+          <h3 style="font-size:1.25rem">Kalkulator Gazometrii & Luki Anionowej (AG)</h3>
+          <span class="muted" style="font-size:.82rem">Automatyczna ocena zaburzeń RKZ i luki anionowej w surowicy.</span>
+        </div>
+        <div class="acts">
+          <span class="srcline" style="font-weight:700">Przypadki:</span>
+          <button class="btn sec sm" data-gas-set="dka">DKA (Ketoza cukrzycowa)</button>
+          <button class="btn sec sm" data-gas-set="diarrhea">Odwodnienie biegunkowe</button>
+          <button class="btn sec sm" data-gas-set="asthma">Ostra astma (zmęczenie)</button>
+          <button class="btn sec sm" data-gas-set="pyloric">Zwężenie odźwiernika (PS)</button>
+        </div>
+      </div>
+
+      <div class="lab-inputs-grid">
+        <div class="lab-input-group">
+          <label>pH krwi [7.35–7.45]</label>
+          <input type="number" id="gasPh" step="0.01" value="7.18">
+        </div>
+        <div class="lab-input-group">
+          <label>pCO2 (mmHg) [35–45]</label>
+          <input type="number" id="gasPco2" value="22">
+        </div>
+        <div class="lab-input-group">
+          <label>HCO3- (mmol/l) [22–26]</label>
+          <input type="number" id="gasHco3" value="8">
+        </div>
+        <div class="lab-input-group">
+          <label>Sód Na+ (mmol/l) [135–145]</label>
+          <input type="number" id="gasNa" value="136">
+        </div>
+        <div class="lab-input-group">
+          <label>Chlorki Cl- (mmol/l) [98–106]</label>
+          <input type="number" id="gasCl" value="98">
+        </div>
+      </div>
+
+      <div id="gasVerdict"></div>
+    </div>`;
+  };
+
+  /* 3. Mocz */
+  const renderDiagUrine = () => {
+    return `<div class="card" style="padding:1.4rem">
+      <h3 style="font-size:1.25rem;margin-bottom:.4rem">Badanie Ogólne i Osad Moczu w Nefrologii Dziecięcej</h3>
+      <p class="muted" style="margin-bottom:1.2rem">Różnicowanie kłębuszkowych i cewkowych zapaleń nerek na podstawie wałeczków i białkomoczu.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.6rem">
+        <div class="card" style="border-left:4px solid var(--red)">
+          <b style="color:var(--red);font-size:1.05rem">Wałeczki erytrocytarne & Krwinkomocz dysmorficzny</b>
+          <p class="srcline" style="margin:.4rem 0">Patognomoniczne dla <b>kłębuszkowego zapalenia nerek (KZN)</b>, np. ostrego poinfekcyjnego (APSGN) lub nefropatii IgA.</p>
+          <span class="chip" style="background:var(--red-l);color:var(--red)">Zespół nefrytyczny</span>
+        </div>
+        <div class="card" style="border-left:4px solid var(--amber)">
+          <b style="color:var(--amber);font-size:1.05rem">Wałeczki leukocytarne</b>
+          <p class="srcline" style="margin:.4rem 0">Świadczą o zapaleniu miąższu nerki: <b>Ostre odmiedniczkowe zapalenie nerek (PZN)</b> lub śródmiąższowe zapalenie nerek.</p>
+          <span class="chip" style="background:var(--amber-l);color:var(--amber)">PZN / ZUM górnych dróg</span>
+        </div>
+        <div class="card" style="border-left:4px solid var(--teal)">
+          <b style="color:var(--teal);font-size:1.05rem">Wałeczki szkliste & ziarniste</b>
+          <p class="srcline" style="margin:.4rem 0">Mogą pojawiać się przy odwodnieniu, po wysiłku lub w ostrym uszkodzeniu nerek (AKI / ostra martwica cewek ATN).</p>
+          <span class="chip" style="background:var(--teal-l);color:var(--teal)">Uszkodzenie cewek / Odwodnienie</span>
+        </div>
+      </div>
+
+      <h4 style="margin:1.4rem 0 .5rem">Kryteria Bakteriomoczu Znamiennego w ZUM u Dzieci:</h4>
+      <div style="display:grid;gap:.5rem;font-size:.88rem">
+        <div class="prow" style="background:var(--bg)">
+          <b>Środkowy strumień moczu (ze zbiórki)</b>
+          <div style="font-weight:800;color:var(--teal)">≥ 10^5 CFU / ml (jednego uropatogenu)</div>
+        </div>
+        <div class="prow" style="background:var(--bg)">
+          <b>Mocz pobrany przez cewnik pęcherzowy</b>
+          <div style="font-weight:800;color:var(--teal)">≥ 10^4 CFU / ml</div>
+        </div>
+        <div class="prow" style="background:var(--bg)">
+          <b>Nakłucie nadłonowe pęcherza (złoty standard)</b>
+          <div style="font-weight:800;color:var(--green)">Każda liczba bakterii (nawet 1 CFU/ml!)</div>
+        </div>
+      </div>
+      <p class="srcline" style="margin-top:.8rem;color:var(--red)">⚠️ <b>Worek do zbiórki moczu:</b> służy wyłącznie do WYKLUCZENIA ZUM (wynik ujemny wyklucza zakażenie). Dodatni wynik z woreczka NIE upoważnia do rozpoznania ZUM bez potwierdzenia cewnikowaniem/środkowym strumieniem!</p>
+    </div>`;
+  };
+
+  /* 4. CBC */
+  const renderDiagCBC = () => {
+    return `<div class="card" style="padding:1.4rem">
+      <h3 style="font-size:1.25rem;margin-bottom:.4rem">Morfologia Krwi i Algorytm Różnicowania Niedokrwistości</h3>
+      <p class="muted" style="margin-bottom:1.2rem">Klasyfikacja niedokrwistości na podstawie wskaźnika MCV, retikulocytów i RDW.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.4rem">
+        <div class="card" style="border-top:4px solid var(--amber)">
+          <b>1. Anemia mikrocytarna (niskie MCV)</b>
+          <div style="font-size:.84rem;margin-top:.4rem">
+            <div>• <b>Niedobór żelaza (IDA):</b> RDW wysokie (>15%), ferrytyna niska, wskaźnik Mentzera > 13.</div>
+            <div style="margin-top:.3rem">• <b>Talasemia minor:</b> RDW prawidłowe, liczba krwinek RBC często wysoka, Mentzer < 13.</div>
+          </div>
+        </div>
+        <div class="card" style="border-top:4px solid var(--teal)">
+          <b>2. Anemia normocytarna (prawidłowe MCV)</b>
+          <div style="font-size:.84rem;margin-top:.4rem">
+            <div>• <b>Retikulocyty > 2%:</b> Hemoliza (sferocytoza wrodzona, AIHA, niedobór G6PD, HUS).</div>
+            <div style="margin-top:.3rem">• <b>Retikulocyty < 0.5%:</b> Aplazja szpiku (PRCA, aplastyczna), białaczka, choroba przewlekła.</div>
+          </div>
+        </div>
+        <div class="card" style="border-top:4px solid var(--violet)">
+          <b>3. Anemia makrocytarna (wysokie MCV)</b>
+          <div style="font-size:.84rem;margin-top:.4rem">
+            <div>• <b>Megaloblastyczna:</b> Niedobór witaminy B12 lub kwasu foliowego (hypersegmentacja neutrofilów).</div>
+            <div style="margin-top:.3rem">• <b>Niemegaloblastyczna:</b> Niedoczynność tarczycy, zespół Blackfana-Diamonda.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:var(--teal-xl);border-color:var(--teal)">
+        <b>Wzór Mentzera (różnicowanie IDA vs Talasemia):</b>
+        <div style="font-size:1.1rem;font-weight:800;color:var(--teal);margin:.3rem 0">Wskaźnik Mentzera = MCV / RBC</div>
+        <p class="srcline">Wynik <b>> 13</b> wskazuje na niedobór żelaza (Iron Deficiency Anemia). Wynik <b>< 13</b> silnie przemawia za nosicielstwem talasemii (cecha talasemii).</p>
+      </div>
+    </div>`;
+  };
+
+  /* 5. Imaging */
+  const renderDiagImaging = () => {
+    return `<div class="card" style="padding:1.4rem">
+      <h3 style="font-size:1.25rem;margin-bottom:.4rem">Kluczowe Objawy Obrazowe w Pediatrii (USG / RTG)</h3>
+      <p class="muted" style="margin-bottom:1.4rem">Charakterystyczne znaki radiologiczne, o które pytają na każdym zaliczeniu.</p>
+
+      <div class="imaging-grid">
+        <div class="imaging-card" style="border-left:4px solid var(--red)">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--red)">Wgłobienie jelita (Intussusception)</div>
+          <span class="chip" style="align-self:flex-start">USG jamy brzusznej</span>
+          <p class="srcline"><b>Objaw tarczy strzelniczej (target sign / doughnut sign)</b> w przekroju poprzecznym oraz <b>objaw pseudonerki</b> w przekroju podłużnym. Złoty standard diagnostyki i leczenia: wlew kontrastowy/powietrzny pod kontrolą USG/RTG.</p>
+        </div>
+
+        <div class="imaging-card" style="border-left:4px solid var(--amber)">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--amber)">Przerostowe zwężenie odźwiernika (PS)</div>
+          <span class="chip" style="align-self:flex-start">USG odźwiernika</span>
+          <p class="srcline">Grubość warstwy mięśniowej <b>≥ 3 mm</b>, długość kanału odźwiernika <b>≥ 15 mm</b>. Klinika: chlustające wymioty bez żółci u niemowlęcia w 3.–6. tygodniu życia, zasadowica hipochloremiczna.</p>
+        </div>
+
+        <div class="imaging-card" style="border-left:4px solid var(--blue)">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--blue)">Niedrożność przewodu pokarmowego (ZNZ)</div>
+          <span class="chip" style="align-self:flex-start">RTG przeglądowe jamy brzusznej</span>
+          <p class="srcline"><b>Poziomy płynów w pętlach jelitowych</b> na zdjęciu w pozycji stojącej lub leżącej na boku promienieniem poziomym oraz brak gazu w bańce odbytnicy.</p>
+        </div>
+
+        <div class="imaging-card" style="border-left:4px solid var(--violet)">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--violet)">Guz Wilmsa vs Neuroblastoma</div>
+          <span class="chip" style="align-self:flex-start">USG / TK jamy brzusznej</span>
+          <p class="srcline"><b>Guz Wilmsa:</b> wychodzi z miąższu nerki, dobrze odgraniczony, rzadko przekracza linię pośrodkową.<br><b>Neuroblastoma:</b> wychodzi z nadnercza/pnia, nacieka naczynia, <b>przekracza linię pośrodkową</b>, w 85% zawiera zwapnienia.</p>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  /* Mini-Quiz */
+  const renderLabQuiz = () => {
+    return `<div id="labQuizBox">
+      <div style="font-weight:800;font-size:1.05rem;margin-bottom:.4rem" id="lqQuestion">
+        Zagadka 1: 3-letni chłopiec z gorączką 39.5°C, sztywnością karku i wybroczynami na podudziach. Wynik PMR: cytoza 3200/µl (88% neutrofili), białko 240 mg/dl, glukoza 12 mg/dl (glikemia 90 mg/dl). Jakie jest prawidłowe natychmiastowe postępowanie?
+      </div>
+      <div class="opts" id="lqOpts" style="margin:1rem 0">
+        <button class="opt" data-qans="1"><span class="l">A</span><span>Ceftriakson i.v. + Wankomycyna + Deksametazon (przed lub z 1. dawką antybiotyku)</span></button>
+        <button class="opt" data-qans="2"><span class="l">B</span><span>Acyklowir i.v. w dawce 500 mg/m2 co 8h</span></button>
+        <button class="opt" data-qans="3"><span class="l">C</span><span>Oczekiwanie na wynik posiewu i leczenie objawowe</span></button>
+      </div>
+      <div id="lqFeedback"></div>
+    </div>`;
+  };
+
+  const updatePMRCalc = () => {
+    const cyt = +($('#pmrCytoza') || {}).value || 0;
+    const neut = +($('#pmrNeutro') || {}).value || 0;
+    const prot = +($('#pmrProtein') || {}).value || 0;
+    const glc = +($('#pmrGlc') || {}).value || 0;
+    const sGlc = +($('#pmrSerumGlc') || {}).value || 100;
+    const ratio = Math.round((glc / sGlc) * 100) / 100;
+
+    let title = 'Płyn mózgowo-rdzeniowy w normie';
+    let color = 'var(--green)';
+    let bg = 'var(--green-l)';
+    let desc = 'Parametry mieszczą się w granicach normy pediatrycznej.';
+
+    if (cyt > 500 && neut > 60 && ratio < 0.4) {
+      title = '🚨 Obraz typowy dla bakteryjnego (ropnego) ZOMR';
+      color = 'var(--red)';
+      bg = 'var(--red-l)';
+      desc = `Wysoka pleocytoza z przewagą neutrofilów (${neut}%), podwyższone białko (${prot} mg/dl) i drastyczny spadek glukozy (wskaźnik PMR/krew = ${ratio} < 0.4). Wskazana natychmiastowa antybiotykoterapia empiryczna (Ceftriakson + Wankomycyna) oraz Deksametazon przed pierwszą dawką.`;
+    } else if (cyt >= 10 && neut < 50 && ratio >= 0.5) {
+      title = '⚠️ Obraz aseptycznego / wirusowego ZOMR';
+      color = 'var(--amber)';
+      bg = 'var(--amber-l)';
+      desc = `Umiarkowana pleocytoza z przewagą limfocytów, umiarkowanie podwyższone białko (${prot} mg/dl) i prawidłowa glukoza (wskaźnik PMR/krew = ${ratio} ≥ 0.5). Najczęstsza etiologia: enterowirusy. W razie podejrzenia HSV włącz Acyklowir.`;
+    } else if (cyt >= 50 && prot > 200 && ratio < 0.3) {
+      title = '⚠️ Podejrzenie gruźliczego ZOMR';
+      color = 'var(--violet)';
+      bg = 'var(--violet-l)';
+      desc = `Pleocytoza limfocytarna z bardzo wysokim stężeniem białka (${prot} mg/dl) i znaczną hipoglikorrachią (${ratio}). Może wystąpić siateczka włóknikowa po odstaniu płynu.`;
+    }
+
+    const box = $('#pmrVerdict');
+    if (box) {
+      box.innerHTML = `<div class="lab-verdict-banner" style="background:${bg};border:1.5px solid ${color}">
+        <span class="lab-verdict-title" style="color:${color}">${title}</span>
+        <div style="font-weight:700;font-size:.88rem">Wskaźnik glukozy PMR / Surowica: <b>${ratio}</b> (norma > 0.6)</div>
+        <p class="srcline" style="color:var(--ink)">${desc}</p>
+      </div>`;
+    }
+  };
+
+  const updateGasCalc = () => {
+    const ph = +($('#gasPh') || {}).value || 7.4;
+    const pco2 = +($('#gasPco2') || {}).value || 40;
+    const hco3 = +($('#gasHco3') || {}).value || 24;
+    const na = +($('#gasNa') || {}).value || 140;
+    const cl = +($('#gasCl') || {}).value || 100;
+
+    const ag = Math.round((na - (cl + hco3)) * 10) / 10;
+    let state = 'Prawidłowa równowaga kwasowo-zasadowa';
+    let color = 'var(--green)';
+    let bg = 'var(--green-l)';
+    let detail = '';
+
+    if (ph < 7.35) {
+      if (hco3 < 22 && pco2 <= 40) {
+        state = ag > 16 ? '🚨 Kwasica metaboliczna z wysoką luką anionową (HAGMA)' : '⚠️ Kwasica metaboliczna z prawidłową luką (NAGMA)';
+        color = 'var(--red)'; bg = 'var(--red-l)';
+        detail = ag > 16
+          ? `Luka anionowa AG = ${ag} mmol/l (norma 8–16). Przyczyny HAGMA: Cukrzycowa kwasica ketonowa (DKA), kwasica mleczanowa we wstrząsie, mocznica w AKI, zatrucia.`
+          : `Luka anionowa AG = ${ag} mmol/l (prawidłowa). Przyczyny NAGMA: Utrata wodorowęglanów przez przewód pokarmowy (ciężka biegunka), nerkowa kwasica cewkowa (RTA).`;
+      } else if (pco2 > 45) {
+        state = '🚨 Kwasica oddechowa (retencja CO2)';
+        color = 'var(--red)'; bg = 'var(--red-l)';
+        detail = `Hipowentylacja, ciężkie zaostrzenie astmy, ciało obce, zmęczenie mięśni oddechowych. Wymaga pilnej oceny drożności dróg oddechowych!`;
+      }
+    } else if (ph > 7.45) {
+      if (hco3 > 26) {
+        state = '⚠️ Zasadowica metaboliczna (np. wymioty kwaśną treścią)';
+        color = 'var(--amber)'; bg = 'var(--amber-l)';
+        detail = `Utrata jonów H+ i Cl- (np. w przeroście odźwiernika u niemowlęcia). Towarzyszy jej hipochloremia i hipokaliemia.`;
+      } else if (pco2 < 35) {
+        state = 'Zasadowica oddechowa (hiperwentylacja)';
+        color = 'var(--blue)'; bg = 'var(--blue-l)';
+        detail = `Hiperwentylacja psychogenna, wczesny wstrząs septyczny, ból, hipoksja.`;
+      }
+    }
+
+    const box = $('#gasVerdict');
+    if (box) {
+      box.innerHTML = `<div class="lab-verdict-banner" style="background:${bg};border:1.5px solid ${color}">
+        <span class="lab-verdict-title" style="color:${color}">${state}</span>
+        <div style="font-weight:700;font-size:.9rem">Luka anionowa (Anion Gap): <b>${ag} mmol/l</b> [Wzór: Na - (Cl + HCO3)]</div>
+        <p class="srcline" style="color:var(--ink)">${detail}</p>
+      </div>`;
+    }
+  };
+
+  const attachEvents = () => {
+    // Zakładki
+    $$('#diagTabNav button').forEach(b => {
+      b.onclick = () => {
+        DIAG_TAB = b.dataset.dtab;
+        render();
+      };
+    });
+
+    // PMR listeners
+    ['pmrCytoza', 'pmrNeutro', 'pmrProtein', 'pmrGlc', 'pmrSerumGlc'].forEach(id => {
+      const el = $('#' + id);
+      if (el) el.addEventListener('input', updatePMRCalc);
+    });
+
+    $$('[data-pmr-set]').forEach(b => {
+      b.onclick = () => {
+        const s = b.dataset.pmrSet;
+        if (s === 'bact') { $('#pmrCytoza').value = 2400; $('#pmrNeutro').value = 88; $('#pmrProtein').value = 220; $('#pmrGlc').value = 16; $('#pmrSerumGlc').value = 95; }
+        else if (s === 'viral') { $('#pmrCytoza').value = 140; $('#pmrNeutro').value = 25; $('#pmrProtein').value = 65; $('#pmrGlc').value = 58; $('#pmrSerumGlc').value = 95; }
+        else if (s === 'tb') { $('#pmrCytoza').value = 350; $('#pmrNeutro').value = 20; $('#pmrProtein').value = 450; $('#pmrGlc').value = 20; $('#pmrSerumGlc').value = 95; }
+        else if (s === 'norm') { $('#pmrCytoza').value = 2; $('#pmrNeutro').value = 0; $('#pmrProtein').value = 28; $('#pmrGlc').value = 60; $('#pmrSerumGlc').value = 95; }
+        updatePMRCalc();
+      };
+    });
+
+    // Gas listeners
+    ['gasPh', 'gasPco2', 'gasHco3', 'gasNa', 'gasCl'].forEach(id => {
+      const el = $('#' + id);
+      if (el) el.addEventListener('input', updateGasCalc);
+    });
+
+    $$('[data-gas-set]').forEach(b => {
+      b.onclick = () => {
+        const s = b.dataset.gasSet;
+        if (s === 'dka') { $('#gasPh').value = 7.15; $('#gasPco2').value = 24; $('#gasHco3').value = 8; $('#gasNa').value = 135; $('#gasCl').value = 98; }
+        else if (s === 'diarrhea') { $('#gasPh').value = 7.28; $('#gasPco2').value = 30; $('#gasHco3').value = 14; $('#gasNa').value = 138; $('#gasCl').value = 112; }
+        else if (s === 'asthma') { $('#gasPh').value = 7.22; $('#gasPco2').value = 62; $('#gasHco3').value = 25; $('#gasNa').value = 140; $('#gasCl').value = 101; }
+        else if (s === 'pyloric') { $('#gasPh').value = 7.55; $('#gasPco2').value = 48; $('#gasHco3').value = 36; $('#gasNa').value = 134; $('#gasCl').value = 84; }
+        updateGasCalc();
+      };
+    });
+
+    // Quiz listener
+    const quizOpts = $('#lqOpts');
+    if (quizOpts) {
+      quizOpts.onclick = e => {
+        const b = e.target.closest('[data-qans]');
+        if (!b) return;
+        const ans = +b.dataset.qans;
+        const fb = $('#lqFeedback');
+        if (ans === 1) {
+          fb.innerHTML = `<div class="card" style="background:var(--green-l);border-color:var(--green);margin-top:.8rem">
+            <b style="color:var(--green)">✓ Brawo! Prawidłowa odpowiedź (A).</b>
+            <p class="srcline" style="margin-top:.3rem">Obraz kliniczny i badanie PMR jednoznacznie wskazują na ropne zapalenie opon mózgowo-rdzeniowych (ZOMR). Leczeniem z wyboru jest Ceftriakson z Wankomycyną. Podanie Deksametazonu przed lub z pierwszą dawką antybiotyku zmniejsza ryzyko powikłań słuchowych i neurologicznych w zapaleniu pneumokokowym i Hib!</p>
+          </div>`;
+        } else {
+          fb.innerHTML = `<div class="card" style="background:var(--red-l);border-color:var(--red);margin-top:.8rem">
+            <b style="color:var(--red)">✗ Niestety to nie jest optymalna odpowiedź.</b>
+            <p class="srcline" style="margin-top:.3rem">PMR wskazuje na ZOMR bakteryjne (cytoza neutrofilowa, drastyczny spadek glukozy). Prawidłową odpowiedzią jest natychmiastowy Ceftriakson + Wankomycyna + Deksametazon (opcja A).</p>
+          </div>`;
+        }
+      };
+    }
+
+    if (DIAG_TAB === 'pmr') updatePMRCalc();
+    if (DIAG_TAB === 'gas') updateGasCalc();
+  };
+
+  render();
+}
+
 /* ---------- TRENING ---------- */
 function viewTrening(parts, params) {
   if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank) {
@@ -3674,6 +4465,8 @@ const VIEWS = [
   ['Trening mieszany', '#/trening'],
   ['Egzamin próbny', '#/egzamin'],
   ['Kalkulator dawek i PALS', '#/kalkulator'],
+  ['Kalendarz szczepień PSO', '#/szczepienia'],
+  ['Atlas badań i diagnostyki', '#/badania'],
   ['Baza pytań', '#/pytania'],
   ['Notatki Markdown', '#/notatki'],
   ['Mapa powiązań', '#/polaczenia'],

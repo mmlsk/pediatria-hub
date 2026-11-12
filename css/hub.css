@@ -1130,3 +1130,169 @@ body.reader footer.ft{display:none}
   border-color:var(--teal);
   color:#fff;
 }
+
+/* ---------- Immunization Timeline (PSO) ---------- */
+.pso-container{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:1.5rem;
+}
+.timeline-pso{
+  position:relative;
+  display:grid;
+  gap:1.6rem;
+  padding-left:2.2rem;
+}
+.timeline-pso::before{
+  content:'';
+  position:absolute;
+  left:13px;
+  top:12px;
+  bottom:12px;
+  width:3px;
+  background:var(--line);
+  border-radius:999px;
+}
+.pso-node{
+  position:relative;
+}
+.pso-dot{
+  position:absolute;
+  left:-2.2rem;
+  top:1.2rem;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--teal);
+  border:3px solid var(--surface);
+  box-shadow:0 0 0 2px var(--teal);
+  z-index:2;
+}
+.pso-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:1.3rem;
+  box-shadow:var(--shadow);
+  transition:all .15s ease;
+}
+.pso-card:hover{
+  box-shadow:var(--shadow-lg);
+  border-color:var(--teal);
+}
+.pso-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.6rem;
+  margin-bottom:.8rem;
+  flex-wrap:wrap;
+}
+.pso-age{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:1.25rem;
+  color:var(--teal);
+}
+.pso-vaccines-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:.8rem;
+}
+.vaccine-item{
+  background:var(--bg);
+  border:1px solid var(--line-2);
+  border-radius:10px;
+  padding:.8rem .95rem;
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+}
+.v-type-live{
+  display:inline-block;
+  font-size:.68rem;
+  font-weight:800;
+  padding:.12rem .45rem;
+  border-radius:999px;
+  background:var(--amber-l);
+  color:var(--amber);
+  border:1px solid var(--amber);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.v-type-killed{
+  display:inline-block;
+  font-size:.68rem;
+  font-weight:800;
+  padding:.12rem .45rem;
+  border-radius:999px;
+  background:var(--blue-l);
+  color:var(--blue);
+  border:1px solid var(--blue);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+/* ---------- Lab Trainer & Imaging Styles ---------- */
+.lab-calc-box{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:1.4rem;
+  box-shadow:var(--shadow);
+  margin-bottom:1.6rem;
+}
+.lab-inputs-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1rem;
+  margin-bottom:1.2rem;
+}
+.lab-input-group{
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+}
+.lab-input-group label{
+  font-size:.82rem;
+  font-weight:700;
+  color:var(--ink-2);
+}
+.lab-input-group input{
+  width:100%;
+  padding:.5rem .7rem;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  background:var(--bg);
+  color:var(--ink);
+  font-weight:800;
+  font-size:1.05rem;
+}
+.lab-verdict-banner{
+  border-radius:12px;
+  padding:1.1rem 1.3rem;
+  display:flex;
+  flex-direction:column;
+  gap:.4rem;
+  margin-top:1rem;
+}
+.lab-verdict-title{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:1.35rem;
+}
+.imaging-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:1.3rem;
+}
+.imaging-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:1.3rem;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:.6rem;
+}
