@@ -1,8 +1,14 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, modById, atById } = window.HUB_META;
-const Q = window.HUB_Q;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, modById, atById } = window.HUB_META;
+const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
+let CUSTOM_Q = [];
+try {
+  const cqRaw = localStorage.getItem(CUSTOM_Q_KEY);
+  if (cqRaw) CUSTOM_Q = JSON.parse(cqRaw);
+} catch (e) { /* ignoruj */ }
+
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const main = $('#view');
@@ -72,12 +78,35 @@ const save = () => {
   try { window.name = KEY + serialized; } catch (e) { /* ignoruj */ }
 };
 
+/* ---------- obsługa banków i pytań ---------- */
+function getBank(q) {
+  if (q.bank && BANKS[q.bank]) return q.bank;
+  if (q.isCustom) return 'custom';
+  const s = String(q.src || '').toUpperCase();
+  if (s.includes('LEK')) return 'lek';
+  if (s.includes('PES')) return 'pes';
+  if (s.includes('MP.') || s.includes('MEDYCYNA PRAKTYCZNA')) return 'mp';
+  return 'zaklad';
+}
+
+function prepQuestion(q, isCustom = false) {
+  q.isCustom = !!isCustom;
+  q.bank = q.bank || getBank(q);
+  q.pm = q.mods.find(m => modById[m] && modById[m].at === q.at) || q.mods[0] || '1';
+  q._n = norm([q.stem, (q.opts || []).join(' '), q.topic || '', q.mods.join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
+  return q;
+}
+
+let Q = [...(window.HUB_Q || []).map(q => prepQuestion(q, false)), ...CUSTOM_Q.map(q => prepQuestion(q, true))];
+let qById = Object.fromEntries(Q.map(q => [q.id, q]));
+
+function saveCustomQ() {
+  try { localStorage.setItem(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q)); } catch (e) {}
+  Q = [...(window.HUB_Q || []).map(q => prepQuestion(q, false)), ...CUSTOM_Q.map(q => prepQuestion(q, true))];
+  qById = Object.fromEntries(Q.map(q => [q.id, q]));
+}
+
 /* ---------- dane pochodne ---------- */
-Q.forEach(q => {
-  q.pm = q.mods.find(m => modById[m] && modById[m].at === q.at) || q.mods[0];
-  q._n = norm([q.stem, (q.opts || []).join(' '), q.topic, q.mods.join(' '), ASHORT[q.at]].join(' '));
-});
-const qById = Object.fromEntries(Q.map(q => [q.id, q]));
 const IDX = Object.fromEntries(MODS.map((m, i) => [m.id, i]));
 const covered = MODS.filter(m => m.at);
 const baseNums = [...new Set(MODS.map(m => parseInt(m.id, 10)))];
@@ -195,24 +224,41 @@ function optsStatic(q) {
   if (q.type === 'open' || !q.opts) return '';
   return `<div class="opts">${q.opts.map((o, i) => `<div class="opt${q.keys.includes(i) ? ' ok' : ''}"><span class="l">${L[i]}</span><span>${esc(o)}</span></div>`).join('')}</div>`;
 }
+function bankChip(b) {
+  const bank = BANKS[b] || BANKS.zaklad;
+  return `<span class="chip" style="font-weight:700;background:var(--surface);border-color:var(--line)" title="${esc(bank.desc)}">${bank.icon} ${bank.short}</span>`;
+}
 function qCard(q, open) {
   const bm = !!S.bm[q.id];
   const a = S.ans[q.id];
   return `<details class="qc" data-q="${q.id}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${modChips(q)}${confChip(q.conf)}${q.gap ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent">klucz ≠ wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at])}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${bankChip(q.bank)}${modChips(q)}${confChip(q.conf)}${q.gap ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent">klucz ≠ wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
-      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">Otwórz temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button></div>
+      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">Otwórz temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
     </div></details>`;
 }
-function delegateBm(root) {
+function delegateBm(root, onMutate) {
   root.addEventListener('click', e => {
-    const b = e.target.closest('[data-bm]'); if (!b) return;
-    e.preventDefault(); const id = b.dataset.bm;
-    if (S.bm[id]) delete S.bm[id]; else S.bm[id] = 1;
-    save(); const on = !!S.bm[id]; b.setAttribute('aria-pressed', on); $('svg', b).setAttribute('fill', on ? 'currentColor' : 'none');
-    toast(on ? 'Dodano zakładkę' : 'Usunięto zakładkę');
+    const b = e.target.closest('[data-bm]');
+    if (b) {
+      e.preventDefault(); const id = b.dataset.bm;
+      if (S.bm[id]) delete S.bm[id]; else S.bm[id] = 1;
+      save(); const on = !!S.bm[id]; b.setAttribute('aria-pressed', on); $('svg', b).setAttribute('fill', on ? 'currentColor' : 'none');
+      toast(on ? 'Dodano zakładkę' : 'Usunięto zakładkę');
+      return;
+    }
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      e.preventDefault(); const id = del.dataset.del;
+      if (confirm('Czy na pewno chcesz usunąć to pytanie z bazy własnych?')) {
+        CUSTOM_Q = CUSTOM_Q.filter(x => x.id !== id);
+        saveCustomQ();
+        toast('Pytanie zostało usunięte');
+        if (onMutate) onMutate();
+      }
+    }
   });
 }
 
@@ -422,18 +468,200 @@ function viewConnections(parts, params) {
   else if (params.trap != null && TRAPS[+params.trap]) { const b = $(`#traps [data-t="${+params.trap}"]`); b && b.click(); }
 }
 
+/* ---------- PARSER IMPORTU PYTAŃ ---------- */
+function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
+  const trimmed = String(input || '').trim();
+  if (!trimmed) return [];
+
+  // 1. Sprawdź czy dane są w formacie JSON
+  if (trimmed.startsWith('[') || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+      return arr.map((item, idx) => {
+        const id = 'cq-' + Date.now() + '-' + idx + '-' + Math.floor(Math.random() * 1000);
+        const stem = String(item.stem || item.question || '').trim();
+        const opts = Array.isArray(item.opts || item.answers || item.options) ? (item.opts || item.answers || item.options).map(String) : [];
+        let keys = [];
+        if (Array.isArray(item.keys)) keys = item.keys;
+        else if (typeof item.key === 'number') keys = [item.key];
+        else if (typeof item.key === 'string') {
+          const l = item.key.trim().toUpperCase();
+          const idxL = 'ABCDEFGH'.indexOf(l);
+          if (idxL !== -1) keys = [idxL];
+        }
+        const b = item.bank || defaultBank;
+        const m = (Array.isArray(item.mods) && item.mods.length) ? item.mods : [defaultMod];
+        return {
+          id: item.id || id,
+          at: item.at || (modById[m[0]]?.at) || 'brzuch',
+          type: opts.length ? 'mcq' : 'open',
+          mods: m,
+          topic: item.topic || '',
+          stem: stem,
+          opts: opts,
+          keys: keys.length ? keys : [0],
+          conf: item.conf || 'src',
+          adapt: !!item.adapt,
+          gap: !!item.gap,
+          src: item.src || (BANKS[b]?.n || 'Własne'),
+          bank: b,
+          why: item.why || item.explanation || '',
+          tip: item.tip || '',
+          zal: item.zal || '',
+          akt: item.akt || '',
+          ans: item.ans || '',
+          isCustom: true
+        };
+      }).filter(q => q.stem && (q.type === 'open' || q.opts.length >= 2));
+    } catch (e) {
+      /* Niepoprawny JSON - spróbuj parsowania tekstu */
+    }
+  }
+
+  // 2. Parser tekstu ze standardowych formatów testów (1. Pytanie... A. ... B. ... Klucz: B)
+  const rawBlocks = trimmed.split(/(?=(?:^|\n)\s*(?:\d+[\.\)]|Pytanie\s*\d+[\.:]?)\s*)/i).filter(b => b.trim());
+  const questions = [];
+
+  rawBlocks.forEach((block, bIdx) => {
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+
+    let stemLines = [];
+    let opts = [];
+    let correctKey = -1;
+    let why = '';
+    let src = '';
+    let inWhy = false;
+
+    lines.forEach(line => {
+      const keyMatch = line.match(/^(?:Prawid(?:ł|l)owa|Poprawna|Klucz|Odpowied(?:ź|z)|Odp|Odp\.)\s*[:=-]?\s*([A-H])/i);
+      if (keyMatch) {
+        correctKey = 'ABCDEFGH'.indexOf(keyMatch[1].toUpperCase());
+        inWhy = false;
+        return;
+      }
+
+      const whyMatch = line.match(/^(?:Om(?:ó|o)wienie|Wyja(?:ś|s)nienie|Komentarz)\s*[:=-]?\s*(.*)/i);
+      if (whyMatch) {
+        inWhy = true;
+        if (whyMatch[1]) why += (why ? ' ' : '') + whyMatch[1];
+        return;
+      }
+
+      const srcMatch = line.match(/^(?:(?:Ź|Z|z|ź)r(?:ó|o)d(?:ł|l)o|Pula|Egzamin)\s*[:=-]?\s*(.*)/i);
+      if (srcMatch) {
+        src = srcMatch[1];
+        inWhy = false;
+        return;
+      }
+
+      const optMatch = line.match(/^[\(\[]?([A-H])[\)\.\:]\s*(.*)/i);
+      if (optMatch) {
+        inWhy = false;
+        const optLetter = optMatch[1].toUpperCase();
+        const optIdx = 'ABCDEFGH'.indexOf(optLetter);
+        const optText = optMatch[2].trim();
+        if (/\*|\[x\]|\(x\)|\(prawid(?:ł|l)owa\)/i.test(line)) {
+          correctKey = optIdx;
+        }
+        opts[optIdx] = optText.replace(/\*|\[x\]|\(x\)|\(prawid(?:ł|l)owa\)/gi, '').trim();
+        return;
+      }
+
+      if (inWhy) {
+        why += (why ? ' ' : '') + line;
+      } else if (!opts.length) {
+        const cleaned = line.replace(/^\d+[\.\)]\s*/, '');
+        stemLines.push(cleaned);
+      }
+    });
+
+    const stem = stemLines.join(' ').trim();
+    const cleanOpts = opts.filter(Boolean);
+
+    if (stem && cleanOpts.length >= 2) {
+      questions.push({
+        id: 'cq-' + Date.now() + '-' + bIdx + '-' + Math.floor(Math.random() * 1000),
+        at: modById[defaultMod]?.at || 'brzuch',
+        type: 'mcq',
+        mods: [defaultMod],
+        topic: '',
+        stem: stem,
+        opts: cleanOpts,
+        keys: [correctKey >= 0 ? correctKey : 0],
+        conf: 'src',
+        adapt: false,
+        gap: false,
+        src: src || BANKS[defaultBank]?.n || 'Własne',
+        bank: defaultBank,
+        why: why,
+        tip: '',
+        zal: '',
+        akt: '',
+        ans: '',
+        isCustom: true
+      });
+    }
+  });
+
+  return questions;
+}
+
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, open: 'all', limit: 40 };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, open: 'all', limit: 40, tab: 'browse', addMode: 'single' };
+let parsedImportStash = [];
+
 function viewQuestions(parts, params) {
   if (Object.keys(params).length) {
     F.q = params.q || ''; F.at = new Set((params.at || '').split(',').filter(Boolean)); F.mods = new Set((params.mods || '').split(',').filter(Boolean));
+    F.banks = new Set((params.bank || '').split(',').filter(Boolean));
     F.all = !!params.all; F.conf = new Set((params.conf || '').split(',').filter(Boolean)); F.gap = !!params.gap; F.bm = !!params.bm; F.wrong = !!params.wrong; F.limit = 40;
+    if (params.tab) F.tab = params.tab;
   }
+  
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Baza pytań</div><h2>${Q.length} zadań, jedna wyszukiwarka</h2>
-    <p class="lead">Szukaj po treści, filtruj po atlasie, module i pewności klucza. Rozwiń zadanie, aby zobaczyć poprawną odpowiedź i omówienie.</p>
+    <div class="eyebrow">Baza pytań i banki zewnętrzne</div><h2>${Q.length} zadań · Pula, LEK, PES, MP</h2>
+    <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
+    
+    <div class="qtabs" id="qTabs">
+      <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Przeglądaj pytania (${Q.length})</button>
+      <button class="qtab${F.tab === 'add' ? ' on' : ''}" data-t="add">➕ Dodaj nowe pytanie / Import</button>
+      <button class="qtab${F.tab === 'export' ? ' on' : ''}" data-t="export">📤 Eksport dodanych (${CUSTOM_Q.length})</button>
+    </div>
+
+    <div id="qTabContent"></div>
+  </div></section>`;
+
+  $('#qTabs').addEventListener('click', e => {
+    const b = e.target.closest('[data-t]');
+    if (!b) return;
+    F.tab = b.dataset.t;
+    $$('#qTabs .qtab').forEach(x => x.classList.toggle('on', x === b));
+    renderTabContent();
+  });
+
+  renderTabContent();
+}
+
+function renderTabContent() {
+  const container = $('#qTabContent');
+  if (!container) return;
+
+  if (F.tab === 'browse') {
+    renderBrowseTab(container);
+  } else if (F.tab === 'add') {
+    renderAddTab(container);
+  } else if (F.tab === 'export') {
+    renderExportTab(container);
+  }
+}
+
+function renderBrowseTab(container) {
+  container.innerHTML = `
     <div class="tool">
-      <input class="field" id="fq" type="search" placeholder="Szukaj w treści pytań i odpowiedzi…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
+      <input class="field" id="fq" type="search" placeholder="Szukaj w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
+      <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="fBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${F.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="fAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${F.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => Q.some(q => q.mods.includes(m.id))).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
       <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="fConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${F.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
@@ -441,11 +669,13 @@ function viewQuestions(parts, params) {
         <span style="flex:1"></span><span class="muted" id="fCount" style="font-weight:700"></span><button class="btn sec sm" id="fClr">Wyczyść</button></div>
     </div>
     <div class="qlist" id="qlist"></div><div style="text-align:center;margin-top:1.2rem" id="more"></div>
-  </div></section>`;
+  `;
+
   const list = $('#qlist');
   function filtered() {
     const toks = norm(F.q).split(/\s+/).filter(Boolean);
     return Q.filter(q => {
+      if (F.banks.size && !F.banks.has(q.bank)) return false;
       if (F.at.size && !F.at.has(q.at)) return false;
       if (F.mods.size) { const ms = [...F.mods]; if (F.all ? !ms.every(m => q.mods.includes(m)) : !ms.some(m => q.mods.includes(m))) return false; }
       if (F.conf.size && !F.conf.has(q.conf)) return false;
@@ -461,19 +691,266 @@ function viewQuestions(parts, params) {
     const mb = $('#moreB'); if (mb) mb.onclick = () => { F.limit += 40; draw(); };
   }
   const tgl = (sel, set) => $(sel).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); b.setAttribute('aria-pressed', set.has(v)); F.limit = 40; draw(); });
-  tgl('#fAt', F.at); tgl('#fMod', F.mods); tgl('#fConf', F.conf);
+  tgl('#fBank', F.banks); tgl('#fAt', F.at); tgl('#fMod', F.mods); tgl('#fConf', F.conf);
   $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); draw(); });
   $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 40; draw(); });
   $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 40; draw(); });
-  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, limit: 40 }); viewQuestions([], {}); });
-  delegateBm(list); draw();
+  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, limit: 40 }); renderBrowseTab(container); });
+  delegateBm(list, () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; });
+  draw();
+}
+
+function renderAddTab(container) {
+  container.innerHTML = `
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+      <button class="btn ${F.addMode === 'single' ? 'pri' : 'sec'} sm" id="btnModeSingle">Pojedyncze pytanie</button>
+      <button class="btn ${F.addMode === 'mass' ? 'pri' : 'sec'} sm" id="btnModeMass">Masowy import (tekst / JSON)</button>
+    </div>
+    <div id="addModeBox"></div>
+  `;
+
+  $('#btnModeSingle').onclick = () => { F.addMode = 'single'; renderAddTab(container); };
+  $('#btnModeMass').onclick = () => { F.addMode = 'mass'; renderAddTab(container); };
+
+  const box = $('#addModeBox');
+  if (F.addMode === 'single') {
+    box.innerHTML = `
+      <form class="qform" id="sqForm">
+        <div class="qform-row">
+          <label for="sqStem">Treść pytania (stem) *</label>
+          <textarea class="qform-textarea" id="sqStem" required placeholder="Wpisz treść pytania klinicznego lub teoretycznego..."></textarea>
+        </div>
+
+        <div class="qform-row">
+          <label>Odpowiedzi i dystraktory (zaznacz kółkiem prawidłową odpowiedź) *</label>
+          <div id="sqOptsList">
+            ${['A', 'B', 'C', 'D', 'E'].map((l, i) => `
+              <div class="qform-opt">
+                <input type="radio" name="sqKey" value="${i}" ${i === 0 ? 'checked' : ''} title="Zaznacz odpowiedź ${l} jako prawidłową">
+                <span class="opt-letter">${l}</span>
+                <input class="qform-input opt-inp" placeholder="Treść opcji ${l}..." ${i < 2 ? 'required' : ''}>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="qform-grid">
+          <div class="qform-row">
+            <label for="sqBank">Bank / Źródło *</label>
+            <select class="qform-select" id="sqBank">
+              ${Object.keys(BANKS).map(b => `<option value="${b}">${BANKS[b].icon} ${BANKS[b].n}</option>`).join('')}
+            </select>
+          </div>
+          <div class="qform-row">
+            <label for="sqMod">Moduł główny *</label>
+            <select class="qform-select" id="sqMod">
+              ${MODS.map(m => `<option value="${m.id}">[${m.id}] ${esc(m.n)} (${GROUPS[m.g].short})</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="qform-row">
+          <label for="sqWhy">Omówienie / uzasadnienie kliniczne (opcjonalne)</label>
+          <textarea class="qform-textarea" id="sqWhy" placeholder="Dlaczego ta odpowiedź jest prawidłowa, jakie wytyczne o tym decydują..."></textarea>
+        </div>
+
+        <div class="qform-acts">
+          <button type="submit" class="btn pri">Dodaj pytanie do bazy</button>
+          <button type="reset" class="btn sec">Wyczyść formularz</button>
+        </div>
+      </form>
+    `;
+
+    $('#sqForm').onsubmit = e => {
+      e.preventDefault();
+      const stem = $('#sqStem').value.trim();
+      const inps = $$('.opt-inp', $('#sqOptsList'));
+      const opts = inps.map(x => x.value.trim()).filter(Boolean);
+      if (opts.length < 2) {
+        toast('Podaj co najmniej 2 opcje odpowiedzi!');
+        return;
+      }
+      const selRadio = $('input[name="sqKey"]:checked');
+      const keyIdx = selRadio ? parseInt(selRadio.value, 10) : 0;
+      const bank = $('#sqBank').value;
+      const mod = $('#sqMod').value;
+      const why = $('#sqWhy').value.trim();
+
+      const newQ = {
+        id: 'cq-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        at: modById[mod]?.at || 'brzuch',
+        type: 'mcq',
+        mods: [mod],
+        topic: '',
+        stem,
+        opts,
+        keys: [keyIdx < opts.length ? keyIdx : 0],
+        conf: 'src',
+        adapt: false,
+        gap: false,
+        src: BANKS[bank]?.n || 'Własne',
+        bank,
+        why,
+        tip: '',
+        zal: '',
+        akt: '',
+        ans: '',
+        isCustom: true
+      };
+
+      CUSTOM_Q.push(newQ);
+      saveCustomQ();
+      toast('Pytanie zostało pomyślnie dodane!');
+      $('#sqForm').reset();
+      $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`;
+      $('#qTabs button[data-t="browse"]').textContent = `🔍 Przeglądaj pytania (${Q.length})`;
+    };
+  } else {
+    box.innerHTML = `
+      <div class="qform">
+        <p class="muted">Wklej tekst pytań z numeracją i literami A–E (np. ze skryptu, PDF-a, bazy LEK/PES) lub wklej tablicę JSON. Parser automatycznie wyodrębni treść pytania, warianty odpowiedzi i klucz.</p>
+        
+        <div class="qform-grid">
+          <div class="qform-row">
+            <label for="mqBank">Domyślny bank</label>
+            <select class="qform-select" id="mqBank">
+              ${Object.keys(BANKS).map(b => `<option value="${b}">${BANKS[b].icon} ${BANKS[b].n}</option>`).join('')}
+            </select>
+          </div>
+          <div class="qform-row">
+            <label for="mqMod">Domyślny moduł</label>
+            <select class="qform-select" id="mqMod">
+              ${MODS.map(m => `<option value="${m.id}">[${m.id}] ${esc(m.n)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="qform-row">
+          <label for="mqText">Treść pytań do importu</label>
+          <textarea class="qform-textarea" id="mqText" style="min-height:160px" placeholder="Przykład formatu tekstowego:
+1. Które ze stwierdzeń dotyczących zapalenia płuc u niemowląt jest fałszywe?
+A. Najczęstszą etiologią są wirusy
+B. Badaniem pierwszego wyboru jest TK klatki piersiowej
+C. Duszność i tachypnoe to wiodące objawy
+D. Antybiotykiem pierwszego rzutu jest amoksycylina
+E. Wskazaniem do hospitalizacji jest saturacja <92%
+Klucz: B
+Omówienie: TK nie jest badaniem rutynowym, wystarczy badanie kliniczne i ew. RTG."></textarea>
+        </div>
+
+        <div class="qform-acts">
+          <button class="btn pri" id="btnParse">Przetestuj i wyświetl podgląd</button>
+          <button class="btn sec" id="btnCommitImport" style="display:none">Zatwierdź i dodaj do bazy</button>
+        </div>
+
+        <div id="mqPreview"></div>
+      </div>
+    `;
+
+    $('#btnParse').onclick = () => {
+      const text = $('#mqText').value;
+      const b = $('#mqBank').value;
+      const m = $('#mqMod').value;
+      parsedImportStash = parseQuestionsInput(text, b, m);
+      const prev = $('#mqPreview');
+      const btnCommit = $('#btnCommitImport');
+
+      if (!parsedImportStash.length) {
+        prev.innerHTML = `<div class="card" style="margin-top:1rem;color:var(--red)">Nie udało się rozpoznać pytań. Upewnij się, że każde pytanie ma treść oraz warianty zaczynające się od A., B., C...</div>`;
+        btnCommit.style.display = 'none';
+        return;
+      }
+
+      btnCommit.style.display = 'inline-block';
+      btnCommit.textContent = `Zatwierdź i dodaj ${parsedImportStash.length} ${parsedImportStash.length === 1 ? 'pytanie' : 'pytań'}`;
+
+      prev.innerHTML = `
+        <div class="preview-box">
+          <h4 style="color:var(--green)">✓ Rozpoznano poprawnie: ${parsedImportStash.length} pytań</h4>
+          <div class="qlist" style="margin-top:.8rem">
+            ${parsedImportStash.slice(0, 5).map(q => qCard(q, true)).join('')}
+            ${parsedImportStash.length > 5 ? `<p class="muted" style="margin-top:.5rem">...oraz ${parsedImportStash.length - 5} kolejnych pytań.</p>` : ''}
+          </div>
+        </div>
+      `;
+    };
+
+    $('#btnCommitImport').onclick = () => {
+      if (!parsedImportStash.length) return;
+      CUSTOM_Q.push(...parsedImportStash);
+      saveCustomQ();
+      toast(`Dodano ${parsedImportStash.length} nowych pytań!`);
+      parsedImportStash = [];
+      $('#mqText').value = '';
+      $('#mqPreview').innerHTML = '';
+      $('#btnCommitImport').style.display = 'none';
+      $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`;
+      $('#qTabs button[data-t="browse"]').textContent = `🔍 Przeglądaj pytania (${Q.length})`;
+    };
+  }
+}
+
+function renderExportTab(container) {
+  const jsonStr = JSON.stringify(CUSTOM_Q, null, 2);
+  container.innerHTML = `
+    <div class="qform">
+      <h3>Eksport pytań dodanych przez Ciebie (${CUSTOM_Q.length})</h3>
+      <p class="muted">Pytania zapisane są w pamięci Twojej przeglądarki. Aby wdrożyć je na stałe do repozytorium GitHub i dla wszystkich użytkowników, skopiuj poniższy kod JSON lub pobierz plik.</p>
+      
+      <div class="qform-row">
+        <textarea class="qform-textarea" id="expJson" style="min-height:220px;font-family:monospace;font-size:.85rem" readonly>${esc(jsonStr)}</textarea>
+      </div>
+
+      <div class="qform-acts">
+        <button class="btn pri" id="btnCopyJson">Skopiuj kod JSON</button>
+        <button class="btn sec" id="btnDownloadJson">Pobierz plik .json</button>
+        ${CUSTOM_Q.length ? `<button class="btn sec" id="btnClearCustom" style="color:var(--red);margin-left:auto">Wyczyść wszystkie dodane (${CUSTOM_Q.length})</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  $('#btnCopyJson').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(jsonStr);
+      toast('Skopiowano kod JSON do schowka!');
+    } catch (e) {
+      $('#expJson').select();
+      toast('Zaznaczono tekst, skopiuj go za pomocą Ctrl+C');
+    }
+  };
+
+  $('#btnDownloadJson').onclick = () => {
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pediatria-hub-pytania-custom-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Pobrano plik JSON!');
+  };
+
+  const btnClear = $('#btnClearCustom');
+  if (btnClear) {
+    btnClear.onclick = () => {
+      if (confirm('Czy na pewno chcesz usunąć wszystkie pytania dodane w tej przeglądarce? Tej operacji nie można cofnąć.')) {
+        CUSTOM_Q = [];
+        saveCustomQ();
+        toast('Wyczyszczono dodane pytania');
+        $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (0)`;
+        $('#qTabs button[data-t="browse"]').textContent = `🔍 Przeglądaj pytania (${Q.length})`;
+        renderExportTab(container);
+      }
+    };
+  }
 }
 
 /* ---------- TRENING ---------- */
-const C = { at: new Set(), mods: new Set(), conf: new Set(), gap: false, wrong: false, bm: false, fresh: false, open: false, n: 10, mode: 'learn' };
+const C = { at: new Set(), mods: new Set(), banks: new Set(), conf: new Set(), gap: false, wrong: false, bm: false, fresh: false, open: false, n: 10, mode: 'learn' };
 function pool() {
   return Q.filter(q => {
     if (q.type === 'open' && !C.open) return false;
+    if (C.banks.size && !C.banks.has(q.bank)) return false;
     if (C.at.size && !C.at.has(q.at)) return false;
     if (C.mods.size && ![...C.mods].some(m => q.mods.includes(m))) return false;
     if (C.conf.size && !C.conf.has(q.conf)) return false;
@@ -484,8 +961,9 @@ function pool() {
   });
 }
 function viewTrening(parts, params) {
-  if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap) {
+  if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank) {
     C.at = new Set((params.at || '').split(',').filter(Boolean)); C.mods = new Set((params.mods || '').split(',').filter(Boolean));
+    C.banks = new Set((params.bank || '').split(',').filter(Boolean));
     C.wrong = !!params.wrong; C.gap = !!params.gap; C.conf = new Set(); C.bm = false; C.fresh = false; C.open = false;
     SESSION = null;
     if (params.auto) { startSession(); return; }
@@ -499,6 +977,7 @@ function renderConfig() {
     <div class="eyebrow">Trening mieszany</div><h2>Ułóż sesję</h2>
     <p class="lead">Pytania pochodzą ze wszystkich atlasów naraz. W trybie nauki omówienie pojawia się od razu, w trybie egzaminu dopiero na końcu.</p>
     <div class="tool">
+      <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="cBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${C.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="cAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${C.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       ${C.mods.size ? `<div class="frow"><span class="flab">Moduły</span><div class="pillrow">${[...C.mods].map(m => `<button class="tgl" data-rm="${m}" aria-pressed="true">[${m}] ✕</button>`).join('')}</div></div>` : ''}
       <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="cConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${C.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
@@ -509,7 +988,7 @@ function renderConfig() {
     </div></div></section>`;
   const upd = () => { const p = pool().length; $('#cPool').textContent = p ? `Pula: ${p} ${p === 1 ? 'pytanie' : 'pytań'}` : 'Pula pusta, poluzuj filtry'; $('#go').disabled = !p; };
   const tgl = (sel, set) => $(sel).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); b.setAttribute('aria-pressed', set.has(v)); upd(); });
-  tgl('#cAt', C.at); tgl('#cConf', C.conf);
+  tgl('#cBank', C.banks); tgl('#cAt', C.at); tgl('#cConf', C.conf);
   $('#cFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; C[b.dataset.f] = !C[b.dataset.f]; b.setAttribute('aria-pressed', C[b.dataset.f]); upd(); });
   $('#cN').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (!b) return; C.n = +b.dataset.n; $$('#cN button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   $('#cMode').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; C.mode = b.dataset.m; $$('#cMode button').forEach(x => x.setAttribute('aria-pressed', x === b)); });

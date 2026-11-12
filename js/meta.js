@@ -77,7 +77,15 @@ window.HUB_META = (function () {
     own: { n: 'Autorskie', short: 'autorskie', c: 'var(--blue)', l: 'var(--blue-l)', d: 'Zadanie autorskie wg wytycznych' }
   };
 
+  const BANKS = {
+    zaklad: { id: 'zaklad', n: 'Pula zakładowa (V rok)', short: 'Zakładowa', icon: '🏛️', desc: 'Baza pytań z kolokwiów i zaliczeń zakładowych' },
+    lek:    { id: 'lek',    n: 'Baza pytań LEK',          short: 'LEK',       icon: '🩺', desc: 'Pytania z Państwowego Egzaminu Lekarskiego' },
+    pes:    { id: 'pes',    n: 'Baza pytań PES',          short: 'PES',       icon: '🎓', desc: 'Pytania z Państwowego Egzaminu Specjalizacyjnego' },
+    mp:     { id: 'mp',     n: 'Medycyna Praktyczna (5000 pytań)', short: 'MP 5000', icon: '📖', desc: 'Pytania z bazy mp.premium i 5000 pytań z pediatrii' },
+    custom: { id: 'custom', n: 'Dodane pytania (Własne)', short: 'Własne',   icon: '✏️', desc: 'Pytania wprowadzone przez użytkownika' }
+  };
+
   const modById = Object.fromEntries(MODS.map(m => [m.id, m]));
   const atById = Object.fromEntries(ATLASES.map(a => [a.id, a]));
-  return { GROUPS, MODS, ATLASES, TRAPS, CONF, modById, atById };
+  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, modById, atById };
 })();

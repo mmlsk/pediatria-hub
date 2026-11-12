@@ -172,6 +172,25 @@ body.reader main{display:flex;flex-direction:column}
 .rsecs .wrap{width:min(1500px,100% - 2rem);display:flex;gap:.3rem;overflow-x:auto;padding:.4rem 0;scrollbar-width:none;align-items:center}
 .rsecs .lab{font-size:.74rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:.4rem;white-space:nowrap}
 
+/* ---------- question view tabs & creator ---------- */
+.qtabs{display:flex;gap:.4rem;margin-bottom:1.2rem;overflow-x:auto;scrollbar-width:none}
+.qtab{padding:.5rem 1.1rem;border-radius:999px;font-weight:700;font-size:.92rem;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);transition:all .2s;white-space:nowrap}
+.qtab:hover{border-color:var(--teal);color:var(--teal-d)}
+.qtab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.qform{display:grid;gap:1.2rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.4rem;box-shadow:var(--shadow)}
+.qform-row{display:grid;gap:.4rem}
+.qform-row label{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.qform-input,.qform-textarea,.qform-select{width:100%;padding:.65rem .9rem;border:1.5px solid var(--line);border-radius:10px;font:500 .95rem var(--font-body);color:var(--ink);background:var(--bg)}
+.qform-input:focus,.qform-textarea:focus,.qform-select:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px var(--teal-l)}
+.qform-textarea{min-height:90px;resize:vertical}
+.qform-opt{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.qform-opt input[type=radio]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer}
+.qform-opt .opt-letter{font-weight:800;width:24px;text-align:center;color:var(--teal-d)}
+.qform-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:700px){.qform-grid{grid-template-columns:1fr}}
+.qform-acts{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-top:.8rem;padding-top:1rem;border-top:1px solid var(--line-2)}
+.preview-box{background:var(--bg);border:1.5px dashed var(--line);border-radius:var(--r);padding:1rem;margin-top:1rem}
+
 /* ---------- toolbar / filters ---------- */
 .tool{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.1rem 1.2rem;display:grid;gap:.9rem;box-shadow:var(--shadow)}
 .frow{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center}
