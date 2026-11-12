@@ -1,5 +1,5 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v2';
+const CACHE_NAME = 'pediatria-hub-v3';
 
 const PRECACHE_ASSETS = [
   './',
@@ -18,6 +18,12 @@ const PRECACHE_ASSETS = [
   './atlasy/atlas-bol-brzucha/index.html',
   './atlasy/atlas-bol-brzucha/app.js',
   './atlasy/atlas-bol-brzucha/style.css',
+
+  // Moduł 2: Zakażenia u dzieci
+  './atlasy/modul-2-zakazenia/index.html',
+  './atlasy/modul-2-zakazenia/app.js',
+  './atlasy/modul-2-zakazenia/data.js',
+  './atlasy/modul-2-zakazenia/style.css',
 
   // Moduł 11: Nowotwory krwiotwórcze i chłonne
   './atlasy/modul-11-hemato-onko/index.html',

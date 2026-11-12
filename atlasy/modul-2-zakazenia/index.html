@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<script>
+try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(t==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';}catch(e){}
+window.addEventListener('storage',e=>{if(e.key==='pediatria_hub_theme'){const t=e.newValue||'auto';if(t==='dark'||(t==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';else delete document.documentElement.dataset.theme;}});
+window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e.data.theme==='dark')document.documentElement.dataset.theme='dark';else delete document.documentElement.dataset.theme;}});
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[2] Zakażenia u dzieci – atlas do zaliczenia z pediatrii</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <div class="brand"><b>[2]</b> <span>Zakażenia</span></div>
+  <ul id="navlist">
+    <li><a href="#wiek">Wiek</a></li>
+    <li><a href="#goraczka">Gorączka</a></li>
+    <li><a href="#gora">Górne DO</a></li>
+    <li><a href="#dolne">Dolne DO</a></li>
+    <li><a href="#wysypki">Wysypki</a></li>
+    <li><a href="#neuro">Neuro</a></li>
+    <li><a href="#sepsa">Sepsa</a></li>
+    <li><a href="#szczepienia">Szczepienia</a></li>
+    <li><a href="#dawki">Dawki</a></li>
+    <li><a href="#zadania">Zadania</a></li>
+    <li><a href="#klucz">Klucz</a></li>
+    <li><a href="#pulapki">Pułapki</a></li>
+    <li><a href="#zrodla">Źródła</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap grid">
+  <div>
+    <span class="tag">MODUŁ [2] · Pediatria V rok · Zakażenia</span>
+    <h1>Zakażenia u dzieci<br><span>wiek decyduje o diagnozie</span></h1>
+    <p class="sub">Atlas do zaliczenia: gorączka wg wieku, zakażenia dróg oddechowych, wysypki, neuroinfekcje i sepsa (Phoenix 2024, SSC 2026). Z wyróżnionymi zadaniami z puli, omówieniami, schematami oraz rozbieżnościami „klucz kontra wytyczne”.</p>
+    <div class="chips">
+      <span class="chip s">🚩 Gorączka + wybroczyny = antybiotyk bez zwłoki</span>
+      <span class="chip i">🫁 Krup w dniach, nagłośnia w godzinach</span>
+      <span class="chip e">🧠 LP nie opóźnia antybiotyku</span>
+      <span class="chip f">⏱️ Wstrząs septyczny: antybiotyk ≤1 h</span>
+    </div>
+    <div class="legend">
+      <div><span class="kb src">KLUCZ POTWIERDZONY</span> odpowiedź zaznaczona w pliku z omówieniem lub w eksporcie z platformy</div>
+      <div><span class="kb inf">KLUCZ WNIOSKOWANY</span> w pliku brak klucza; odpowiedź wynika z wykładu zakładu i wytycznych</div>
+      <div><span class="kb unk">KLUCZ NIEPEWNY</span> pula jest sprzeczna lub brak pewności; sprawdź w zakładzie</div>
+    </div>
+  </div>
+  <figure class="fig" aria-label="Schemat: etiologia wg wieku">
+    <svg viewBox="0 0 420 400" role="img" aria-label="Drabina wiekowa: noworodek, niemowlę, przedszkolak, wiek szkolny i nastolatek z najczęstszymi patogenami">
+      <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#13232C"/></marker></defs>
+      <text x="210" y="26" text-anchor="middle" font-size="15" font-weight="800" fill="#13232C" font-family="Cabinet Grotesk">Wiek → najczęstsza etiologia</text>
+      <g id="heroAge"></g>
+      <path d="M26 360 H394" stroke="#13232C" stroke-width="3" marker-end="url(#ar2)"/>
+      <text x="26" y="384" font-size="11" fill="#44545D" font-weight="700">noworodek</text>
+      <text x="394" y="384" text-anchor="end" font-size="11" fill="#44545D" font-weight="700">nastolatek</text>
+    </svg>
+    <figcaption>Wiek zmienia etiologię i próg do hospitalizacji. Schemat poglądowy zbudowany z wykładu zakładu, pul i wytycznych z listy źródeł.</figcaption>
+  </figure>
+</div>
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi r"><b id="kQ">–</b><span>zadań w atlasie z omówieniami</span></div>
+    <div class="kpi"><b id="kSrc">–</b><span>z kluczem potwierdzonym w pliku (zaznaczenie lub ✔ z platformy)</span></div>
+    <div class="kpi a"><b id="kGap">–</b><span>zadań z ramką „klucz kontra wytyczne”</span></div>
+    <div class="kpi v"><b>5</b><span>obszarów: drogi oddechowe, wysypki, neuroinfekcje, sepsa, gorączka wg wieku</span></div>
+  </div>
+  <div class="card">
+    <h4>Rozkład zadań w atlasie wg tematu</h4>
+    <p class="small" style="margin-bottom:.6rem">Moje zestawienie zadań włączonych do atlasu, nie oficjalny blueprint zaliczenia ani pełne liczenie pul.</p>
+    <div class="bars" id="barsFreq"></div>
+  </div>
+</div></header>
+
+<!-- ============ WIEK ============ -->
+<section id="wiek"><div class="wrap">
+  <div class="eyebrow">Część A · Mapa zakażeń</div>
+  <h2>Co zakaża w którym wieku</h2>
+  <p class="lead">Ten sam objaw ma inną przyczynę u noworodka, przedszkolaka i nastolatka. Każdą kartę czytaj jako podpowiedź, nie jako zamkniętą listę.</p>
+  <div class="agegrid" id="ageGrid"></div>
+  <div class="callout amber" style="margin-top:1rem"><b class="k">Tag modułu</b>Moduł [2] łączy się z [14] (gorączka bez ogniska = mocz), [5] (PAT, wstrząs, krup, nagłośnia), [3] (biegunki infekcyjne), [4] (powikłania pozapaciorkowcowe), [12] (plamica) i [13b] (nawracające infekcje).</div>
+</div></section>
+
+<!-- ============ GORĄCZKA ============ -->
+<section id="goraczka"><div class="wrap">
+  <div class="eyebrow">Część B · Gorączka wg wieku</div>
+  <h2>Niemowlę z gorączką: kto potrzebuje pełnej oceny</h2>
+  <p class="lead">Poniżej wg AAP 2021 dla donoszonych, dobrze wyglądających niemowląt 8–60 dni z gorączką ≥38,0°C. W plikach Projektu nie znalazłem lokalnego wymogu zakładu dla tej grupy wieku, więc to wiedza kliniczna, a nie klucz do zaliczenia.</p>
+  <div class="grid2">
+    <figure class="fig wide scroll"><svg class="min" viewBox="0 0 700 280" id="febSvg" role="img" aria-label="Oś wieku niemowlęcia z gorączką: 8–21 dni, 22–28 dni, 29–60 dni"></svg><figcaption>Algorytm wiekowy AAP 2021. Progi markerów: procalcytonina &gt;0,5 ng/ml, ANC &gt;4000/µl, CRP &gt;20 mg/l.</figcaption></figure>
+    <div class="stack">
+      <div class="callout red"><b class="k">🚩 Red flags niezależne od wieku</b><ul class="tight"><li>Zły wygląd, apatia, nieukojony płacz</li><li>Wydłużony CRT, marmurkowatość, tachykardia</li><li>Wybroczyny niezanikające przy ucisku</li><li>Bezdech, sinica, drgawki</li><li>Wypukłe ciemiączko</li></ul></div>
+      <div class="callout blue"><b class="k">Gorączka bez ogniska [14]</b>Niemowlę i małe dziecko z gorączką bez ogniska: mocz pobrany wiarygodnie (cewnik lub nakłucie nadłonowe) przed antybiotykiem. W puli: leukocyturia + CRP u 2-latki = ZUM.</div>
+      <div class="callout green"><b class="k">💎 Pearl</b>Dobry wygląd nie wyklucza inwazyjnego zakażenia bakteryjnego poniżej 21 dni. Im młodsze dziecko, tym niższy próg do pełnej oceny.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ GÓRNE DO ============ -->
+<section id="gora"><div class="wrap">
+  <div class="eyebrow">Część C · Zakażenia górnych dróg oddechowych</div>
+  <h2>Przeziębienie, angina, ucho</h2>
+  <p class="lead">Wg wykładu zakładu 80–90% zakażeń górnych dróg oddechowych jest wirusowych. Zadanie lekarza: nie przeoczyć anginy GAS ani powikłań, a jednocześnie nie leczyć wirusa antybiotykiem.</p>
+  <div class="grid2">
+    <div class="card"><h4>Kalkulator McIsaaca (selekcja do testu, nie do antybiotyku)</h4>
+      <p class="small">Kryteria Centora z modyfikacją wiekową. Wynik nie zastępuje wymazu ani strep-testu: wg puli antybiotyk po potwierdzeniu GAS.</p>
+      <div class="mcis" id="mcis" style="margin-top:.6rem"></div>
+      <div class="mcres" id="mcres" style="margin-top:.8rem"></div>
+    </div>
+    <div class="stack">
+      <div class="card"><h4>Angina GAS: leczenie wg NPOA 2016</h4>
+        <ul class="tight small"><li>Fenoksymetylpenicylina 100 000–200 000 j.m./kg/dobę w 2 dawkach przez 10 dni (&lt;40 kg); &gt;40 kg 2–3 mln j.m./dobę.</li><li>Brak współpracy: benzylpenicylina benzatynowa i.m. (600 000 j.m. dla &lt;40 kg).</li><li>Nawrót u nosiciela: cefadroksyl 30 mg/kg raz na dobę 10 dni.</li><li>Makrolidy tylko przy nadwrażliwości na beta-laktamy.</li></ul>
+      </div>
+      <div class="callout red"><b class="k">Cel 10 dni</b>Krótsza penicylinoterapia = gorsza eradykacja. Powikłania: wczesne ropne (ropień okołomigdałkowy, zapalenie ucha) i późne immunologiczne (gorączka reumatyczna, OKZN) [4].</div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card"><h4>OZUŚ: schemat decyzji</h4><div class="flow" id="ozusFlow" style="margin-top:.7rem"></div></div>
+    <div class="stack">
+      <div class="callout amber"><b class="k">Mononukleoza (EBV)</b>Angina z wysiękiem, powiększone węzły, hepatosplenomegalia; po amoksycylinie lub ampicylinie wysypka plamisto-grudkowa. Jednostronnie powiększony migdałek bez gorączki = różnicuj z chłoniakiem [11].</div>
+      <div class="callout blue"><b class="k">Antybiotyk przy wirusie</b>Katar, kaszel, chrypka i afonia przemawiają za wirusem. Antybiotyk nie skraca przebiegu, a zwiększa oporność i działania niepożądane.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ DOLNE DO ============ -->
+<section id="dolne"><div class="wrap">
+  <div class="eyebrow">Część D · Zakażenia dolnych dróg oddechowych</div>
+  <h2>Krup, nagłośnia, oskrzeliki, zapalenie płuc, krztusiec</h2>
+  <p class="lead">Pierwsze pytanie: czy duszność jest wdechowa (górne drogi) czy wydechowa (dolne)? Drugie: ile godzin lub dni trwa? Trzecie: ile ma dziecko lat?</p>
+  <div class="tw"><table id="respTable" class="rtable"></table></div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card"><h4>Krup: algorytm</h4><div class="flow" id="croupFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h4>Zapalenie oskrzelików: kiedy hospitalizować (NICE NG9)</h4><div class="flow" id="bronchFlow" style="margin-top:.7rem"></div></div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card"><h4>Zapalenie płuc: etiologia i leczenie wg wieku</h4><div class="tw"><table id="pnTable" class="rtable"></table></div></div>
+    <div class="stack">
+      <figure class="fig"><svg viewBox="0 0 440 190" id="pertSvg" role="img" aria-label="Trzy fazy krztuśca"></svg><figcaption>Fazy krztuśca. Makrolid najskuteczniej w fazie nieżytowej; później skraca tylko zakaźność (Moodle #96).</figcaption></figure>
+      <div class="callout red"><b class="k">🚩 Hospitalizacja przy zapaleniu płuc</b>Sinica, stękanie, retrakcje, odmowa picia, zaburzenia świadomości, SpO₂ poniżej progu. Powrót włośniczkowy &lt;2 s jest prawidłowy.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ WYSYPKI ============ -->
+<section id="wysypki"><div class="wrap">
+  <div class="eyebrow">Część E · Choroby z wysypką</div>
+  <h2>Wysypki: od czego zacząć</h2>
+  <p class="lead">Najpierw odpowiedz: czy wysypka zanika przy ucisku? Czy dziecko źle wygląda? Potem dopiero wiek, prodrom i charakter wykwitu.</p>
+  <div class="grid2">
+    <div class="card"><h4>Schemat decyzji</h4><div class="flow" id="rashFlow" style="margin-top:.7rem"></div></div>
+    <figure class="fig wide scroll"><svg class="min" viewBox="0 0 700 340" id="rashSvg" role="img" aria-label="Oś czasu gorączki i wysypki w odrze, różyczce, rumieniu nagłym, płonicy i rumieniu zakaźnym"></svg><figcaption>Schemat poglądowy (orientacyjne dni choroby): czerwony pasek = gorączka, fiolet = wysypka. Odra: wysypka w szczycie gorączki; rumień nagły: po jej ustąpieniu.</figcaption></figure>
+  </div>
+  <div class="dcards" id="rashCards" style="margin-top:1.2rem"></div>
+  <div class="grid3" style="margin-top:1.2rem">
+    <div class="callout red"><b class="k">🚩 Wysypki groźne</b><ul class="tight"><li>Wybroczyny niezanikające + gorączka</li><li>Gorączka ≥5 dni + spękane wargi, dłonie i stopy</li><li>Nasilający się ból, pęcherze na skórze i błonach</li></ul></div>
+    <div class="callout green"><b class="k">💎 High-yield</b><ul class="tight"><li>Koplik = odra</li><li>Pastia + Fiłatow = płonica</li><li>Trzy dni gorączki, potem wysypka = rumień nagły</li><li>Amoksycylina + wysypka = EBV</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>Odra: izolacja do 4 dni po wysypce</li><li>Kawasaki: nie czekaj na 5. dzień przy pełnym obrazie</li><li>HSP [12]: plamica pośladków i kończyn dolnych, dobry wygląd</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ NEURO ============ -->
+<section id="neuro"><div class="wrap">
+  <div class="eyebrow">Część F · Neuroinfekcje</div>
+  <h2>Zapalenie opon mózgowo-rdzeniowych i mózgu</h2>
+  <p class="lead">Wirusowe zapalenie opon jest częste i łagodne. Bakteryjne jest rzadsze i zagraża życiu. Nigdy nie czekamy z antybiotykiem na punkcję, jeśli dziecko jest niestabilne.</p>
+  <div class="grid2">
+    <figure class="fig"><svg viewBox="0 0 460 330" id="csfSvg" role="img" aria-label="Porównanie płynu mózgowo-rdzeniowego: prawidłowy, wirusowy, bakteryjny"></svg><figcaption>Profil PMR (Moodle #140): wirusowe 10–500 komórek, limfocyty, płyn przejrzysty lub opalizujący; bakteryjne 100–10 000, granulocyty, mętny.</figcaption></figure>
+    <div class="card"><h4>Postępowanie przy podejrzeniu bakteryjnego ZOMR</h4><div class="flow" id="menFlow" style="margin-top:.7rem"></div></div>
+  </div>
+  <div class="grid3" style="margin-top:1rem">
+    <div class="tcard r"><h4>🍼 Noworodek</h4><p class="small"><b>Czynniki:</b> GBS, bakterie Gram-ujemne (E. coli), Listeria.<br><b>Objawy:</b> niespecyficzne: bezdechy, zaburzenia temperatury, apatia, drgawki, wypukłe ciemiączko.<br><b>Leczenie wg wykładu:</b> ampicylina + aminoglikozyd lub cefotaksym.</p></div>
+    <div class="tcard b"><h4>👶 Niemowlę i dziecko</h4><p class="small"><b>Czynniki:</b> S. pneumoniae, N. meningitidis, Hib u niezaszczepionych; wirusowe: głównie enterowirusy.<br><b>Objawy:</b> gorączka, ból głowy, wymioty, sztywność karku, światłowstręt, Kernig, Brudziński.<br><b>Leczenie:</b> cefalosporyna III gen. (± wankomycyna wg lokalnych zasad).</p></div>
+    <div class="tcard a"><h4>🧒 Nastolatek</h4><p class="small"><b>Czynniki:</b> N. meningitidis (drugi szczyt zapadalności u nastolatków), S. pneumoniae.<br><b>Objawy:</b> klasyczne objawy oponowe, szybkie pogorszenie, wybroczyny.<br><b>Profilaktyka:</b> kontaktom domowym rifampicyna, ceftriakson lub cyprofloksacyna (pula).</p></div>
+  </div>
+  <div class="grid3" style="margin-top:1rem">
+    <div class="callout red"><b class="k">🚩 Red flags</b><ul class="tight"><li>Gorączka + ból głowy + sztywność karku + zaburzenia świadomości</li><li>Wybroczyny + zła perfuzja</li><li>Triada Cushinga: LP przeciwwskazana</li></ul></div>
+    <div class="callout green"><b class="k">💎 Pearls</b><ul class="tight"><li>Babiński nie jest objawem oponowym</li><li>Drgawki gorączkowe złożone: ogniskowe, &gt;15 min lub nawrót w dobie</li><li>Enterowirusy: najczęstsza przyczyna wirusowego ZOMR</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>„Ponad 90% bakteryjnych” to fałsz</li><li>Listeria nie dominuje po okresie niemowlęcym</li><li>Ceftriakson u noworodka (wapń, wcześniak) nie jest standardem</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ SEPSA ============ -->
+<section id="sepsa"><div class="wrap">
+  <div class="eyebrow">Część G · Sepsa i zakażenia inwazyjne</div>
+  <h2>Sepsa: definicja, płyny, czas do antybiotyku</h2>
+  <p class="lead">Pula nadal używa SIRS, aktualne definicje opierają się na zaburzeniu funkcji narządów (Phoenix 2024). W obu wariantach ten sam bohater: dziecko z gorączką i zaburzoną perfuzją.</p>
+  <div class="grid2">
+    <figure class="fig wide scroll"><svg class="min" viewBox="0 0 700 260" id="sepSvg" role="img" aria-label="Oś czasu sepsy: rozpoznanie, bolusy płynów, antybiotyk w 1 godzinie dla wstrząsu i w 3 godziny bez wstrząsu"></svg><figcaption>SSC 2026 (dzieci): wstrząs septyczny = antybiotyk jak najszybciej, najlepiej ≤1 h; sepsa bez wstrząsu = szybka ocena i antybiotyk, najlepiej ≤3 h.</figcaption></figure>
+    <div class="tw"><table id="sirsTable" class="rtable"></table></div>
+  </div>
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card"><h4>Postępowanie we wstrząsie septycznym</h4><div class="steps" id="sepSteps" style="margin-top:.6rem"></div></div>
+    <div class="stack">
+      <div class="callout blue"><b class="k">Kalkulator Phoenix</b>Pełny kalkulator Phoenix Sepsis Score (z progami MAP wg wieku) jest w module [5]. <a class="xlink" href="../modul-5-stany-nagle/index.html#wstrzas">Otwórz kalkulator w module [5] →</a></div>
+      <div class="callout red"><b class="k">🚩 Meningokoki</b>Gorączka + wybroczyny + zła perfuzja: antybiotyk natychmiast (NICE: ceftriakson lub benzylpenicylina, także poza szpitalem, gdy transport jest opóźniony). Nie czekaj na PMR.</div>
+      <div class="callout amber"><b class="k">⚠️ Pułapka wgłobienia</b>Szaro-blade niemowlę z napadowym bólem i wymiotami po infekcji to wgłobienie [1], nie sepsa.</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ SZCZEPIENIA ============ -->
+<section id="szczepienia"><div class="wrap">
+  <div class="eyebrow">Część H · Profilaktyka</div>
+  <h2>Szczepienia a choroby zakaźne</h2>
+  <p class="lead">Wiele zagadnień tego modułu to choroby, które znikają dzięki szczepieniom. Pamiętaj o wersji kalendarza: PSO 2026 jest nowsze niż część kluczy w puli.</p>
+  <div class="tw"><table id="vacTable" class="rtable"></table></div>
+  <div class="callout amber" style="margin-top:1rem"><b class="k">Klucz kontra PSO 2026</b>Moodle #224 uznaje za obowiązkowe pneumokoki, a PSO 2026 obejmuje także rotawirusy. Ospa wietrzna jest obowiązkowa tylko w grupach ryzyka, meningokoki nie są obowiązkowe. Daty i schematy: <a href="https://pacjent.gov.pl/kalendarz-szczepien-dzieci-i-mlodziezy-na-2026-rok" target="_blank" rel="noopener">Pacjent.gov.pl</a>.</div>
+</div></section>
+
+<!-- ============ DAWKI ============ -->
+<section id="dawki"><div class="wrap">
+  <div class="eyebrow">Część I · Dawki z potwierdzonych źródeł</div>
+  <h2>Kalkulator dawek</h2>
+  <p class="lead">Tylko dawki, które mają źródło w wykładzie zakładu, NPOA 2016, NICE lub SSC. Dawek leków przeciwgorączkowych nie umieszczam, bo nie mam ich potwierdzonych w plikach Projektu.</p>
+  <div class="card calc">
+    <div class="in"><label>Masa ciała (kg): <output id="wOut">20</output><input type="range" id="wt" min="3" max="80" value="20"></label>
+      <label>lub wpisz<input type="number" id="wtNum" min="3" max="80" value="20"></label></div>
+    <div class="tw"><table id="doseTable"></table></div>
+  </div>
+</div></section>
+
+<!-- ============ ZADANIA ============ -->
+<section id="zadania"><div class="wrap">
+  <div class="eyebrow">Część J · Wyróżnione</div>
+  <h2>Zadania testowe z puli i omówienia</h2>
+  <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2014, F 2015 i 2020, S1–S7, pule 5 roku, eksport z platformy). Część zadań jest autorska lub ma uzupełnione opcje (oznaczone). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze.</p>
+  <div class="card" style="margin-bottom:1.2rem">
+    <h4>Zestaw zadań według tematu</h4>
+    <div class="bars" id="barsPool" style="margin-top:.6rem"></div>
+  </div>
+  <div class="qtools">
+    <div class="filters" id="qFilters" style="margin:0"></div>
+    <span class="sp"></span>
+    <button class="btn" id="rand10">🎲 Losuj 10</button>
+    <button class="btn o" id="resetQ">Resetuj</button>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="score" role="status">Wynik: 0 / 0</div>
+</div></section>
+
+<section id="klucz"><div class="wrap">
+  <div class="eyebrow">Część K</div>
+  <h2>Pod zaliczenie kontra aktualnie klinicznie</h2>
+  <div class="tw"><table id="gapTable"></table></div>
+</div></section>
+
+<section id="pulapki"><div class="wrap">
+  <div class="eyebrow">Część L</div>
+  <h2>Połączenia międzymodułowe, flagi i perełki</h2>
+  <div class="grid2">
+    <figure class="fig wide scroll"><svg class="min" viewBox="0 0 680 500" id="crossSvg" role="img" aria-label="Mapa połączeń modułu 2 z pozostałymi modułami"></svg><figcaption>Moduł [2] i tematy, w których zakażenie łączy się z innymi modułami.</figcaption></figure>
+    <div class="stack" id="traps"></div>
+  </div>
+  <div class="grid3" style="margin-top:1.4rem">
+    <div class="callout red"><b class="k">🚩 Red flags</b><ul class="tight"><li>Wybroczyny + gorączka + zła perfuzja</li><li>Ślinotok, nie pije, toksyczny wygląd</li><li>Gorączka u niemowlęcia &lt;21 dni</li><li>Triada Cushinga przy zakażeniu OUN</li><li>CRT &gt;2 s, hipotensja</li></ul></div>
+    <div class="callout green"><b class="k">💎 High-yield</b><ul class="tight"><li>Penicylina V 10 dni w GAS</li><li>Krup: deksametazon p.o.</li><li>Oskrzeliki: leczenie wspomagające</li><li>Koplik, Pastia, Fiłatow</li><li>Kawasaki: IVIG + kwas acetylosalicylowy</li></ul></div>
+    <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>SIRS w puli vs Phoenix</li><li>OZUŚ: 18 m.ż. vs wyczekiwanie</li><li>Przestarzały klucz szczepień obowiązkowych</li><li>LP przed antybiotykiem</li><li>Płonica: jednostki j.m., nie mg</li></ul></div>
+  </div>
+</div></section>
+
+<footer id="zrodla"><div class="wrap">
+  <div class="eyebrow">Źródła</div>
+  <h2>Źródła i uwagi</h2>
+  <ul class="tight" id="srcList"></ul>
+  <p class="small" style="margin-top:1rem">Pod zaliczenie obowiązuje klucz puli i wykładu zakładu. Tam, gdzie klucz jest przestarzały, podano drugą kolumnę „aktualnie klinicznie”. Klucze oznaczone jako potwierdzone pochodzą z zaznaczeń w plikach zakładu lub z eksportu platformy; „wnioskowane” oznacza, że w pliku brak zaznaczenia. Opisy wysypek, krztuśca i kryteriów Kawasaki to wiedza podręcznikowa (Lissauer, Kawalec), nie wynik wyszukiwania. Nie znalazłem w plikach Projektu lokalnych wymogów zakładu dla gorączki niemowląt ani dla dawkowania przeciwgorączkowego. Weryfikuj lokalne protokoły przed zastosowaniem klinicznym.</p>
+</div></footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

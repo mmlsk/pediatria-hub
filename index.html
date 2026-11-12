@@ -12,6 +12,9 @@
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/hub.css">
+<script>
+try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(t==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';}catch(e){}
+</script>
 </head>
 <body>
 <a class="sr" href="#view">Przejdź do treści</a>
@@ -27,6 +30,7 @@
       <li><a href="#/postep" data-r="postep">Postęp</a></li>
     </ul>
     <button class="pwa-install" id="btnInstall" aria-label="Zainstaluj aplikację" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Zainstaluj</span></button>
+    <button class="srch btn-theme" id="btnTheme" aria-label="Zmień motyw" title="Motyw: Auto (systemowy)"><span id="themeIcon">🖥️</span><span id="themeLabel">Auto</span></button>
     <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span>Szukaj</span><kbd>Ctrl K</kbd></button>
   </div>
 </header>

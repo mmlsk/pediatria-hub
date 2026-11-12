@@ -51,8 +51,8 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- krótkie nazwy ---------- */
 const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN' };
-const ASHORT = { brzuch: 'Ból brzucha', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID' };
-const GA = { brzuch: ['var(--red)', 'var(--amber)'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'] };
+const ASHORT = { brzuch: 'Ból brzucha', zakazenia: 'Zakażenia', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID' };
+const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'] };
 const gOf = id => GROUPS[modById[id].g];
 
 /* ---------- magazyn postępu ---------- */
@@ -77,6 +77,73 @@ const save = () => {
   try { localStorage.setItem(STORAGE_KEY, serialized); } catch (e) { /* ignoruj jeśli zablokowany */ }
   try { window.name = KEY + serialized; } catch (e) { /* ignoruj */ }
 };
+
+/* ---------- obsługa motywu (Dark Mode) ---------- */
+const THEME_KEY = 'pediatria_hub_theme';
+let currentTheme = 'auto'; // 'auto' | 'dark' | 'light'
+try { currentTheme = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) {}
+
+function getEffectiveTheme() {
+  if (currentTheme === 'dark') return 'dark';
+  if (currentTheme === 'light') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(t, persist = true) {
+  currentTheme = t;
+  if (persist) {
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  }
+  const eff = getEffectiveTheme();
+  if (eff === 'dark') {
+    document.documentElement.dataset.theme = 'dark';
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+  updateThemeUI();
+  syncIframeTheme(eff);
+}
+
+function updateThemeUI() {
+  const icon = $('#themeIcon'), label = $('#themeLabel'), btn = $('#btnTheme');
+  if (!icon || !label) return;
+  if (currentTheme === 'dark') {
+    icon.textContent = '🌙'; label.textContent = 'Ciemny';
+    if (btn) btn.title = 'Motyw: Ciemny (kliknij, aby zmienić na Jasny)';
+  } else if (currentTheme === 'light') {
+    icon.textContent = '☀️'; label.textContent = 'Jasny';
+    if (btn) btn.title = 'Motyw: Jasny (kliknij, aby zmienić na Auto)';
+  } else {
+    icon.textContent = '🖥️'; label.textContent = 'Auto';
+    if (btn) btn.title = 'Motyw: Systemowy (kliknij, aby zmienić na Ciemny)';
+  }
+  $$('[data-theme-choice]').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.themeChoice === currentTheme);
+  });
+}
+
+function cycleTheme() {
+  const next = currentTheme === 'auto' ? 'dark' : currentTheme === 'dark' ? 'light' : 'auto';
+  applyTheme(next);
+  toast(`Zmieniono motyw: ${next === 'auto' ? 'Systemowy (Auto)' : next === 'dark' ? 'Ciemny' : 'Jasny'}`);
+}
+
+function syncIframeTheme(eff) {
+  const rf = $('#rf');
+  if (rf && rf.contentDocument && rf.contentDocument.documentElement) {
+    if (eff === 'dark') rf.contentDocument.documentElement.dataset.theme = 'dark';
+    else delete rf.contentDocument.documentElement.dataset.theme;
+  }
+  if (rf && rf.contentWindow) {
+    try { rf.contentWindow.postMessage({ type: 'SET_THEME', theme: eff }, '*'); } catch (e) {}
+  }
+}
+
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (currentTheme === 'auto') applyTheme('auto', false);
+  });
+} catch (e) {}
 
 /* ---------- obsługa banków i pytań ---------- */
 function getBank(q) {
@@ -375,7 +442,6 @@ function viewGallery() {
       <h3>${esc(a.t)}</h3><p>${esc(a.d)}</p>
       <div class="meta"><span>${a.secs.length} sekcji</span><span>${qs.length} zadań</span><span>${att ? pct(ok, att) + '% poprawnych' : 'bez prób'}</span></div></a>`;
     }).join('')}</div>
-    <div class="card" style="margin-top:1.4rem;border-style:dashed;box-shadow:none"><h3>Brakujący moduł</h3><p class="muted" style="margin-top:.3rem">Atlasu dla modułu <b>[2] Zakażenia u dzieci</b> nie ma jeszcze w Projekcie. Gdy dojdzie, wystarczy dopisać go do listy atlasów hubu.</p></div>
   </div></section>`;
 }
 
@@ -386,6 +452,7 @@ function setAnchor(id, a) {
   if (f.getAttribute('src') !== url) f.setAttribute('src', url);
   $('#secSel').value = a || '';
   S.visited[id] = Date.now(); S.last = { at: id, a: a || null }; save();
+  setTimeout(() => syncIframeTheme(getEffectiveTheme()), 60);
 }
 function viewReader(parts) {
   const id = parts[1], a = parts[2], at = atById[id];
@@ -400,6 +467,10 @@ function viewReader(parts) {
   </div></div>
   <iframe id="rf" class="rframe" title="Atlas: ${esc(at.t)}" src="" loading="eager"></iframe>`;
   $('#secSel').addEventListener('change', e => { location.hash = '#/atlas/' + id + (e.target.value ? '/' + e.target.value : ''); });
+  const rf = $('#rf');
+  if (rf) {
+    rf.addEventListener('load', () => syncIframeTheme(getEffectiveTheme()));
+  }
   setAnchor(id, a);
   $('.rtab.on').scrollIntoView({ inline: 'center', block: 'nearest' });
 }
@@ -1076,7 +1147,6 @@ function viewProgress() {
       <div class="card"><div class="muted" style="font-weight:700">Poprawne (ostatnia próba)</div><div class="big" style="font-size:2.6rem">${att.length ? pct(ok, att.length) + '%' : '–'}</div></div>
       <div class="card"><div class="muted" style="font-weight:700">Do powtórki</div><div class="big" style="font-size:2.6rem;color:var(--red)">${att.length - ok}</div></div>
     </div>
-    ${persist ? '' : '<div class="card" style="background:var(--amber-l);border-color:#EBD3A3;margin-bottom:1.2rem"><b>Podgląd w piaskownicy.</b> Postęp przetrwa odświeżenie tej karty, ale znika po jej zamknięciu. Skorzystaj z kopii zapasowej poniżej.</div>'}
     <div class="plist">${MODS.map(m => {
       const st = modStats(m.id); const g = gOf(m.id).color; const at = m.at ? atById[m.at] : null;
       if (!m.at) return `<div class="prow" style="--gc:${g};opacity:.65"><span class="nb" style="background:transparent;border:2px dashed ${g};color:${g}">${m.id}</span><div><b>${esc(m.n)}</b><small>Brak atlasu w Projekcie</small></div><div class="muted" style="font-weight:700">–</div><span></span></div>`;
@@ -1085,11 +1155,26 @@ function viewProgress() {
         <div><div class="meter"><i style="width:${pct(st.att, st.total)}%;opacity:.35"></i><i style="width:${pct(st.ok, st.total)}%;position:absolute;left:0;top:0"></i></div><div class="meterl"><span>${st.ok} poprawnych · ${st.wrong} błędnych</span><span>${st.att}/${st.total}</span></div></div>
         <div class="acts"><label class="chk"><input type="checkbox" data-done="${m.id}" ${S.done[m.id] ? 'checked' : ''}> opanowany</label><a class="btn sec sm" href="#/atlas/${m.at}/${m.a}">Atlas</a><a class="btn ${st.wrong ? 'pri' : 'sec'} sm" href="#/trening?mods=${m.id}${st.wrong ? '&wrong=1' : ''}">${st.wrong ? 'Błędne' : 'Trening'}</a></div></div>`;
     }).join('')}</div>
+    <h3 style="margin:2.2rem 0 .3rem">Motyw graficzny (Dark Mode)</h3>
+    <p class="muted" style="margin-bottom:.7rem">Wybierz motyw dla całego Hubu i czytnika atlasów.</p>
+    <div class="seg" id="themeSeg">
+      <button data-theme-choice="auto" aria-pressed="${currentTheme === 'auto'}">🖥️ Auto (systemowy)</button>
+      <button data-theme-choice="light" aria-pressed="${currentTheme === 'light'}">☀️ Jasny</button>
+      <button data-theme-choice="dark" aria-pressed="${currentTheme === 'dark'}">🌙 Ciemny</button>
+    </div>
     <h3 style="margin:2.2rem 0 .3rem">Kopia zapasowa</h3>
     <p class="muted" style="margin-bottom:.7rem">Skopiuj kod, aby przenieść postęp na inne urządzenie, albo wklej kod, aby go wczytać.</p>
     <textarea class="code" id="bk" aria-label="Kod kopii zapasowej"></textarea>
     <div class="acts" style="margin-top:.6rem"><button class="btn sec sm" id="bkGen">Wygeneruj kod</button><button class="btn sec sm" id="bkCopy">Kopiuj</button><button class="btn dark sm" id="bkLoad">Wczytaj z kodu</button><button class="btn sec sm" id="bkReset" style="color:var(--red)">Zeruj postęp</button></div>
   </div></section>`;
+  const tseg = $('#themeSeg');
+  if (tseg) {
+    tseg.addEventListener('click', e => {
+      const b = e.target.closest('[data-theme-choice]');
+      if (!b) return;
+      applyTheme(b.dataset.themeChoice);
+    });
+  }
   $$('[data-done]').forEach(c => c.addEventListener('change', () => { c.checked ? S.done[c.dataset.done] = 1 : delete S.done[c.dataset.done]; save(); viewProgressSummaryRefresh(); }));
   function viewProgressSummaryRefresh() { const cards = $$('.agrid .card .big'); if (cards[0]) cards[0].innerHTML = `${doneCount()}<span class="muted" style="font-size:1.2rem">/${covered.length}</span>`; }
   const enc = () => btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -1201,6 +1286,13 @@ function initPWA() {
   }
 }
 
+function initTheme() {
+  const btn = $('#btnTheme');
+  if (btn) btn.onclick = cycleTheme;
+  applyTheme(currentTheme, false);
+}
+
+initTheme();
 initPWA();
 route();
 })();

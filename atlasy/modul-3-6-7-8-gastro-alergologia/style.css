@@ -254,3 +254,17 @@ footer ul{padding-left:1.1rem}footer li{margin:.25rem 0}
 .svgwide svg{min-width:560px}
 .score{position:fixed;right:14px;bottom:14px;margin:0}
 @media(max-width:600px){.score{padding:6px 10px;font-size:12px;right:8px;bottom:8px;opacity:.92}}
+
+/* ---------- dark theme ---------- */
+:root[data-theme="dark"]{
+  --bg:#0C151B; --surface:#14222B; --ink:#EDF3F5; --ink-2:#A5B6BE; --muted:#738894; --line:#223744; --line-2:#1B2C37;
+  --teal:#17A2B0; --teal-d:#61D3DE; --teal-l:rgba(23,162,176,.2);
+  --red:#E05847; --red-l:rgba(224,88,71,.2);
+  --amber:#D98E1C; --amber-l:rgba(217,142,28,.2);
+  --blue:#4D8BE0; --blue-l:rgba(77,139,224,.2);
+  --green:#42B36F; --green-l:rgba(66,179,111,.2);
+  --violet:#9570E0; --violet-l:rgba(149,112,224,.2);
+}
+[data-theme="dark"] .nav{background:rgba(12,21,27,.9)}
+[data-theme="dark"] .card,.box{background:var(--surface);border-color:var(--line)}
+[data-theme="dark"] table th{background:var(--surface);color:var(--ink)}
