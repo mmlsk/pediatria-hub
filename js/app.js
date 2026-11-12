@@ -34,8 +34,8 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- krótkie nazwy ---------- */
 const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN' };
-const ASHORT = { brzuch: 'Ból brzucha', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', hemato: 'Skazy · anemie · PID' };
-const GA = { brzuch: ['var(--red)', 'var(--amber)'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], hemato: ['var(--violet)', 'var(--teal)'] };
+const ASHORT = { brzuch: 'Ból brzucha', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID' };
+const GA = { brzuch: ['var(--red)', 'var(--amber)'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'] };
 const gOf = id => GROUPS[modById[id].g];
 
 /* ---------- magazyn postępu ---------- */
@@ -229,7 +229,7 @@ function viewStart() {
     <div>
       <div class="eyebrow">Pediatria · V rok · zaliczenie</div>
       <h1>Cały materiał w <em>jednym</em> miejscu.</h1>
-      <p class="sub">Siedem atlasów modułowych, ${Q.length} zadań testowych i mapa powiązań między tematami. Czytasz, ćwiczysz, wracasz do błędów, a hub pamięta, gdzie skończyłeś.</p>
+      <p class="sub">Osiem atlasów modułowych, ${Q.length} zadań testowych i mapa powiązań między tematami. Czytasz, ćwiczysz, wracasz do błędów, a hub pamięta, gdzie skończyłeś.</p>
       <div class="cta">
         <a class="btn pri" href="${contHref}" id="cont">${last ? 'Kontynuuj: ' + esc(ASHORT[S.last.at]) : 'Zacznij od bólu brzucha'} <span aria-hidden="true">→</span></a>
         <a class="btn sec" href="#/trening?auto=1">Trening mieszany · 10 pytań</a>
@@ -294,7 +294,7 @@ function viewStart() {
 /* ---------- GALERIA ATLASÓW ---------- */
 function viewGallery() {
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Atlasy</div><h2>Siedem atlasów modułowych</h2>
+    <div class="eyebrow">Atlasy</div><h2>Osiem atlasów modułowych</h2>
     <p class="lead">Atlasy działają wewnątrz hubu, ale zachowują własną nawigację. Ostatnio otwarte są oznaczone.</p>
     <div class="agrid">${ATLASES.map(a => {
       const qs = Q.filter(q => q.at === a.id), g = GA[a.id]; const vis = S.visited[a.id];
@@ -303,7 +303,7 @@ function viewGallery() {
       <h3>${esc(a.t)}</h3><p>${esc(a.d)}</p>
       <div class="meta"><span>${a.secs.length} sekcji</span><span>${qs.length} zadań</span><span>${att ? pct(ok, att) + '% poprawnych' : 'bez prób'}</span></div></a>`;
     }).join('')}</div>
-    <div class="card" style="margin-top:1.4rem;border-style:dashed;box-shadow:none"><h3>Brakujące moduły</h3><p class="muted" style="margin-top:.3rem">Atlasy dla modułów <b>[2] Zakażenia u dzieci</b> i <b>[11] Nowotwory układu krwiotwórczego i chłonnego</b> nie znajdują się jeszcze w Projekcie. Gdy dojdą, wystarczy dopisać je do listy atlasów hubu.</p></div>
+    <div class="card" style="margin-top:1.4rem;border-style:dashed;box-shadow:none"><h3>Brakujący moduł</h3><p class="muted" style="margin-top:.3rem">Atlasu dla modułu <b>[2] Zakażenia u dzieci</b> nie ma jeszcze w Projekcie. Gdy dojdzie, wystarczy dopisać go do listy atlasów hubu.</p></div>
   </div></section>`;
 }
 
