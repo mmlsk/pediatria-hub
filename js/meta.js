@@ -397,7 +397,7 @@ window.HUB_META = (function () {
           id: 'szyja_opony',
           name: 'Szyja i objawy oponowe',
           icon: '🧣',
-          x: 48, y: 32,
+          x: 48, y: 32, backX: 48, backY: 26,
           maneuvers: [
             { id: 'm_szyja_opony', label: 'Zbadaj objawy oponowe (sztywność karku, Brudziński)', isKey: true, isFatal: false, finding: 'Brak oporu przy przyginaniu bródki do klatki piersiowej, objaw Brudzińskiego ujemny, ciemię zapadnięte (brak cech ciasnoty i zapalenia opon).', reaction: 'normal' },
             { id: 'm_wezly_szyjne', label: 'Zbadaj węzły chłonne szyjne', isKey: false, isFatal: false, finding: 'Węzły chłonne szyjne drobne, pojedyncze, niebolesne, przesuwalne.', reaction: 'normal' }
@@ -652,7 +652,7 @@ window.HUB_META = (function () {
           id: 'brzuch_palpacja',
           name: 'Brzuch – palpacja i objawy otrzewnowe',
           icon: '⚡',
-          x: 58, y: 55,
+          x: 58, y: 55, backX: 58, backY: 52,
           maneuvers: [
             { id: 'm_obrona_miesniowa', label: 'Palpacja powierzchowna powłok brzusznych', isKey: true, isFatal: false, finding: 'Miejscowa obrona mięśniowa (défense musculaire) wyczuwalna w prawym dole biodrowym. Pacjent napina powłoki przy próbie dotknięcia.', reaction: 'pain' },
             { id: 'm_mcburney', label: 'Zbadaj bolesność w punkcie McBurneya', isKey: true, isFatal: false, finding: 'Ostry ból przy ucisku w punkcie McBurneya (1/3 odległości od kolca biodrowego do pępka). Chłopiec krzyczy z bólu i cofa miednicę.', reaction: 'cry' },
@@ -995,7 +995,7 @@ window.HUB_META = (function () {
           id: 'skora_plamica',
           name: 'Skóra – ocena osutki i wybroczyn',
           icon: '🟣',
-          x: 35, y: 72,
+          x: 35, y: 72, backX: 48, backY: 64,
           maneuvers: [
             { id: 'm_purpura_palpabilis', label: 'Zbadaj wykwity na kończynach dolnych i pośladkach', isKey: true, isFatal: false, finding: 'Symetryczna, uniesiona plamica (purpura palpabilis) – wyczuwalne palpacyjnie grudki i plamki krwotoczne na pośladkach, udach i podudziach. Nie bledną pod uciskiem.', reaction: 'normal' },
             { id: 'm_skora_tulow', label: 'Obejrzyj skórę tułowia, klatki piersiowej i twarzy', isKey: true, isFatal: false, finding: 'Tułów, twarz i kończyny górne całkowicie wolne od wykwitów (wyklucza uogólnioną plamicę piorunującą w sepsie meningokokowej).', reaction: 'normal' }
@@ -1005,7 +1005,7 @@ window.HUB_META = (function () {
           id: 'stawy_skokowe',
           name: 'Stawy skokowe i kolanowe',
           icon: '🦵',
-          x: 48, y: 84,
+          x: 48, y: 84, backX: 48, backY: 86,
           maneuvers: [
             { id: 'm_stawy_badanie', label: 'Zbadaj stawy skokowe i kolanowe obustronnie', isKey: true, isFatal: false, finding: 'Obustronny obrzęk i bolesność uciskowa stawów skokowych, ruchomość czynna ograniczona z powodu bólu, brak ucieplenia i zaczerwienienia (jałowe zapalenie naczyń okołostawowych).', reaction: 'pain' }
           ]
@@ -1014,7 +1014,7 @@ window.HUB_META = (function () {
           id: 'brzuch_igav',
           name: 'Jama brzuszna',
           icon: '🤰',
-          x: 48, y: 52,
+          x: 48, y: 52, backX: 30, backY: 52,
           maneuvers: [
             { id: 'm_brzuch_palpacja_igav', label: 'Palpacja brzucha i ocena pod kątem wgłobienia', isKey: true, isFatal: false, finding: 'Brzuch miękki, umiarkowanie tkliwy w okolicy pępka, perystaltyka zachowana, brak objawów otrzewnowych, brak wyczuwalnego oporu w kształcie kiełbaski (brak wgłobienia jelita).', reaction: 'pain' }
           ]
@@ -1023,7 +1023,7 @@ window.HUB_META = (function () {
           id: 'cisnienie_tetnicze',
           name: 'Pomiar ciśnienia tętniczego',
           icon: '🩺',
-          x: 30, y: 44,
+          x: 30, y: 44, backX: 25, backY: 44,
           maneuvers: [
             { id: 'm_pomiar_rr', label: 'Zmierz ciśnienie tętnicze na ramieniu odpowiednim mankietem', isKey: true, isFatal: false, finding: 'Ciśnienie tętnicze 128/82 mmHg – PODWYŻSZONE (>95. centyla dla wieku, płci i wzrostu!). Wskazuje na zajęcie nerek w przebiegu IgAV.', reaction: 'normal' }
           ]
@@ -1032,7 +1032,7 @@ window.HUB_META = (function () {
           id: 'badanie_moczu_stix',
           name: 'Badanie ogólne moczu (test paskowy)',
           icon: '🧪',
-          x: 65, y: 65,
+          x: 65, y: 65, backX: 72, backY: 65,
           maneuvers: [
             { id: 'm_mocz_stix', label: 'Wykonaj test paskowy moczu (stix)', isKey: true, isFatal: false, finding: 'KRWINKOMOCZ (erytrocyty +++) oraz BIAŁKOMOCZ (++ ok. 1.0 g/l). Cechy kłębuszkowego zapalenia nerek (nefropatia IgA)!', reaction: 'normal' },
             {

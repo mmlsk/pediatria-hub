@@ -4914,120 +4914,748 @@ function getReactionBadge(r) {
   }
 }
 
-function renderInfantSilhouetteSvg() {
-  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka niemowlęcia">
+function getZoneClass(station, zoneId, selectedZoneObj) {
+  const isSelected = selectedZoneObj && selectedZoneObj.id === zoneId;
+  const isDone = station.zones && station.zones.some(z => z.id === zoneId && z.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers && OSCE_ACTIVE.performedManeuvers.has(m.id)));
+  let cls = 'osce-anatomy-region';
+  if (isSelected) cls += ' active-zone';
+  if (isDone) cls += ' done-zone';
+  return cls;
+}
+
+function renderInfantSilhouetteSvg(station, selectedZoneObj, viewMode = 'front') {
+  const isBack = viewMode === 'back';
+  const perf = (OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers) ? OSCE_ACTIVE.performedManeuvers : new Set();
+  const ciemieDone = perf.has('m_ciemie');
+  const oczyDone = perf.has('m_oczy');
+  const sluzowkiDone = perf.has('m_sluzowki');
+  const faldDone = perf.has('m_fald_skorny');
+  const crtDone = perf.has('m_crt');
+  const pieluchaDone = perf.has('m_pielucha_mocz');
+  const oponyDone = perf.has('m_szyja_opony');
+  const serceDone = perf.has('m_osluch_serca');
+
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka niemowlęcia">
     <defs>
       <linearGradient id="infantSkin" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.08"/>
         <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.18"/>
       </linearGradient>
+      <linearGradient id="infantSkinBack" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.09"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.19"/>
+      </linearGradient>
     </defs>
-    <!-- Tło łóżeczka niemowlęcego -->
-    <rect x="15" y="10" width="270" height="420" rx="24" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
-    <!-- Poduszeczka niemowlęca -->
-    <ellipse cx="150" cy="85" rx="75" ry="55" fill="rgba(12,122,133,0.04)" stroke="var(--line)" stroke-width="1"/>
 
-    <!-- Ciało niemowlęcia (zgięte kończyny, pozycja żabki) -->
-    <!-- Nóżki -->
-    <path d="M 115 305 C 80 320 65 355 75 385 C 82 402 100 405 110 388 C 118 368 126 340 134 320 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M 185 305 C 220 320 235 355 225 385 C 218 402 200 405 190 388 C 182 368 174 340 166 320 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Stópki -->
-    <ellipse cx="88" cy="392" rx="12" ry="7" transform="rotate(-15 88 392)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <ellipse cx="212" cy="392" rx="12" ry="7" transform="rotate(15 212 392)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Tło łóżeczka niemowlęcego / crib -->
+    <rect x="15" y="10" width="270" height="460" rx="24" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <ellipse cx="150" cy="85" rx="76" ry="55" fill="rgba(12,122,133,0.04)" stroke="var(--line)" stroke-width="1"/>
 
-    <!-- Rączki niemowlęcia (zgięte w łokciach ku górze) -->
-    <path d="M 95 160 C 65 170 52 200 58 228 C 62 240 76 242 82 230 C 88 215 95 190 102 175 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M 205 160 C 235 170 248 200 242 228 C 238 240 224 242 218 230 C 212 215 205 190 198 175 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <circle cx="68" cy="236" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <circle cx="232" cy="236" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    ${!isBack ? `
+      <!-- WIDOK Z PRZODU (ANTERIOR) -->
+      <!-- Kończyny dolne w pozycji zgięciowej (żabka) -->
+      <path class="${getZoneClass(station, 'skora_turgor', selectedZoneObj)}" data-zone-id="skora_turgor"
+            d="M 115 315 C 80 330 65 365 75 395 C 82 412 100 415 110 398 C 118 378 126 350 134 330 Z"
+            fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <path class="${getZoneClass(station, 'skora_turgor', selectedZoneObj)}" data-zone-id="skora_turgor"
+            d="M 185 315 C 220 330 235 365 225 395 C 218 412 200 415 190 398 C 182 378 174 350 166 330 Z"
+            fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- Stópki niemowlęcia (marmurkowate ucieplenie) -->
+      <ellipse cx="88" cy="402" rx="13" ry="8" transform="rotate(-15 88 402)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+      <ellipse cx="212" cy="402" rx="13" ry="8" transform="rotate(15 212 402)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
 
-    <!-- Tułów i brzuszek -->
-    <path d="M 112 145 C 92 165 88 210 90 260 C 92 290 102 315 115 320 L 185 320 C 198 315 208 290 210 260 C 212 210 208 165 188 145 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Pieluszka (diaper) -->
-    <path d="M 98 280 C 100 325 200 325 202 280 L 208 260 L 92 260 Z" fill="rgba(255,255,255,0.85)" stroke="var(--teal)" stroke-width="2"/>
-    <path d="M 98 268 L 115 272" stroke="var(--teal)" stroke-width="2"/>
-    <path d="M 202 268 L 185 272" stroke="var(--teal)" stroke-width="2"/>
+      <!-- Rączki niemowlęcia zgięte w łokciach -->
+      <path class="${getZoneClass(station, 'serce_krazenie', selectedZoneObj)}" data-zone-id="serce_krazenie"
+            d="M 95 165 C 65 175 52 205 58 233 C 62 245 76 247 82 235 C 88 220 95 195 102 180 Z"
+            fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <path class="${getZoneClass(station, 'serce_krazenie', selectedZoneObj)}" data-zone-id="serce_krazenie"
+            d="M 205 165 C 235 175 248 205 242 233 C 238 245 224 247 218 235 C 212 220 205 195 198 180 Z"
+            fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="68" cy="241" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+      <circle cx="232" cy="241" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
 
-    <!-- Mostek i żebra (subtelne linie anatomiczne) -->
-    <path d="M 150 160 L 150 205" stroke="var(--teal)" stroke-width="1.5" stroke-opacity="0.4"/>
-    <path d="M 135 180 Q 150 176 165 180" stroke="var(--teal)" stroke-width="1" stroke-opacity="0.3" fill="none"/>
-    <path d="M 132 195 Q 150 191 168 195" stroke="var(--teal)" stroke-width="1" stroke-opacity="0.3" fill="none"/>
-    <!-- Pępek (powyżej pieluszki) -->
-    <circle cx="150" cy="242" r="2" fill="var(--teal)" opacity="0.6"/>
+      <!-- Tułów i brzuszek -->
+      <path class="${getZoneClass(station, 'brzuch', selectedZoneObj)}" data-zone-id="brzuch"
+            d="M 112 150 C 92 170 88 215 90 265 C 92 295 102 320 115 325 L 185 325 C 198 320 208 295 210 265 C 212 215 208 170 188 150 Z"
+            fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
 
-    <!-- Szyja -->
-    <path d="M 132 135 L 132 145 L 168 145 L 168 135 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+      <!-- Klatka piersiowa - żebra i tachypnoe -->
+      <g class="${getZoneClass(station, 'klatka_pluca', selectedZoneObj)}" data-zone-id="klatka_pluca">
+        <path d="M 150 162 L 150 210" stroke="var(--teal)" stroke-width="1.8" stroke-opacity="0.45"/>
+        <path d="M 134 182 Q 150 178 166 182" stroke="var(--teal)" stroke-width="1.2" stroke-opacity="0.35" fill="none"/>
+        <path d="M 130 198 Q 150 194 170 198" stroke="var(--teal)" stroke-width="1.2" stroke-opacity="0.35" fill="none"/>
+        <path d="M 132 214 Q 150 210 168 214" stroke="var(--teal)" stroke-width="1.2" stroke-opacity="0.35" fill="none"/>
+      </g>
 
-    <!-- Główka niemowlęcia -->
-    <ellipse cx="150" cy="85" rx="52" ry="54" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5"/>
-    <!-- Ciemiączko przednie (Fontanelle) - romb -->
-    <polygon points="150,55 158,67 150,79 142,67" fill="rgba(12,122,133,0.25)" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
-    <!-- Uszka -->
-    <ellipse cx="98" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <ellipse cx="202" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <!-- Buzia: zamknięte powieki, nosek, usta -->
-    <path d="M 126 84 Q 134 89 142 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M 158 84 Q 166 89 174 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M 150 91 Q 152 96 148 97" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
-    <path d="M 142 107 Q 150 113 158 107" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Pieluszka (diaper) -->
+      <g class="${getZoneClass(station, 'moczoplciowe', selectedZoneObj)}" data-zone-id="moczoplciowe">
+        <path d="M 98 285 C 100 330 200 330 202 285 L 208 265 L 92 265 Z" fill="rgba(255,255,255,0.88)" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 98 272 L 115 276" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 202 272 L 185 276" stroke="var(--teal)" stroke-width="2"/>
+      </g>
+
+      <!-- Szyja niemowlęcia -->
+      <path class="${getZoneClass(station, 'szyja_opony', selectedZoneObj)}" data-zone-id="szyja_opony"
+            d="M 132 138 L 132 150 L 168 150 L 168 138 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+      <!-- Główka niemowlęcia -->
+      <g class="${getZoneClass(station, 'glowa_ciemie', selectedZoneObj)}" data-zone-id="glowa_ciemie">
+        <ellipse cx="150" cy="85" rx="52" ry="54" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <!-- Uszka -->
+        <ellipse cx="98" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="202" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Buzia: zgaszony wyraz, zamknięte powieki -->
+        <path d="M 126 84 Q 134 89 142 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M 158 84 Q 166 89 174 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M 150 91 Q 152 96 148 97" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+        <path d="M 142 107 Q 150 113 158 107" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+        <!-- Ciemiączko przednie (Fontanelle) -->
+        ${ciemieDone ? `
+          <!-- Zapadnięte ciemiączko -->
+          <polygon points="150,56 158,68 150,80 142,68" fill="rgba(194,59,42,0.35)" stroke="var(--red)" stroke-width="2.2"/>
+          <path d="M 146 68 L 154 68 M 150 64 L 150 72" stroke="var(--red)" stroke-width="1.8"/>
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="34" width="150" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="150" y="46" font-size="8" font-weight="800" text-anchor="middle" fill="var(--red)">⚠️ Zapadnięte ciemię (-3 mm)</text>
+          </g>
+        ` : `
+          <polygon points="150,56 158,68 150,80 142,68" fill="rgba(12,122,133,0.2)" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+        `}
+      </g>
+
+      <!-- DYNAMICZNE ZNALEZISKA KLINICZNE NA SYLWETCE -->
+      ${oczyDone ? `
+        <g class="osce-finding-badge-svg">
+          <circle cx="134" cy="85" r="9" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+          <circle cx="166" cy="85" r="9" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+          <rect x="70" y="98" width="160" height="17" rx="8.5" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="150" y="110" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--teal)">Zapadnięte gałki · Płacz bez łez</text>
+        </g>
+      ` : ''}
+
+      ${sluzowkiDone ? `
+        <g class="osce-finding-badge-svg">
+          <rect x="75" y="118" width="150" height="16" rx="8" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+          <text x="150" y="129" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--amber)">Suche spierzchnięte śluzówki</text>
+        </g>
+      ` : ''}
+
+      ${crtDone ? `
+        <g class="osce-finding-badge-svg">
+          <circle cx="150" cy="180" r="10" fill="rgba(194,59,42,0.25)" stroke="var(--red)" stroke-width="2"/>
+          <rect x="85" y="165" width="130" height="17" rx="8.5" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+          <text x="150" y="177" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--red)">CRT 4.0s (wstrząs!)</text>
+        </g>
+      ` : ''}
+
+      ${faldDone ? `
+        <g class="osce-finding-badge-svg">
+          <path d="M 120 238 Q 135 214 150 238" stroke="var(--amber)" stroke-width="3.5" fill="none"/>
+          <rect x="65" y="210" width="170" height="17" rx="8.5" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+          <text x="150" y="222" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--amber)">Fałd >2.5s (skrajne odwodnienie)</text>
+        </g>
+      ` : ''}
+
+      ${pieluchaDone ? `
+        <g class="osce-finding-badge-svg">
+          <rect x="75" y="295" width="150" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+          <text x="150" y="307" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--red)">Pieluszka sucha (Anuria >12h)</text>
+        </g>
+      ` : ''}
+    ` : `
+      <!-- WIDOK OD TYŁU (POSTERIOR / GRZBIET) -->
+      <!-- Tył główki (potylica) i kark -->
+      <g class="${getZoneClass(station, 'szyja_opony', selectedZoneObj)}" data-zone-id="szyja_opony">
+        <ellipse cx="150" cy="85" rx="52" ry="54" fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 125 115 Q 150 125 175 115" stroke="var(--teal)" stroke-width="2" fill="none"/>
+        <!-- Kark i objawy oponowe -->
+        <rect x="80" y="128" width="140" height="18" rx="9" fill="var(--surface)" stroke="var(--green)" stroke-width="1.5"/>
+        <text x="150" y="140" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--green)">✓ Kark wiotki · Oponowe (-)</text>
+      </g>
+
+      <!-- Kręgosłup i łopatki -->
+      <g class="${getZoneClass(station, 'klatka_pluca', selectedZoneObj)}" data-zone-id="klatka_pluca">
+        <!-- Grzbiet niemowlęcia -->
+        <path d="M 112 150 C 92 170 88 215 90 265 C 92 295 102 320 115 325 L 185 325 C 198 320 208 295 210 265 C 212 215 208 170 188 150 Z"
+              fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+        <!-- Linia kręgosłupa -->
+        <path d="M 150 155 L 150 280" stroke="var(--teal)" stroke-width="2" stroke-dasharray="3 3" opacity="0.6"/>
+        <!-- Łopatki -->
+        <path d="M 122 175 Q 130 190 120 205" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.5"/>
+        <path d="M 178 175 Q 170 190 180 205" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.5"/>
+        <text x="150" y="195" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Pola płucne od tyłu czyste</text>
+      </g>
+
+      <!-- Tył pieluszki -->
+      <g class="${getZoneClass(station, 'moczoplciowe', selectedZoneObj)}" data-zone-id="moczoplciowe">
+        <path d="M 96 280 C 100 330 200 330 204 280 L 208 265 L 92 265 Z" fill="rgba(255,255,255,0.88)" stroke="var(--teal)" stroke-width="2"/>
+        ${pieluchaDone ? `
+          <rect x="80" y="295" width="140" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+          <text x="150" y="307" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--red)">Pieluszka sucha (Anuria)</text>
+        ` : ''}
+      </g>
+
+      <!-- Tył nóżek i piętki -->
+      <g class="${getZoneClass(station, 'skora_turgor', selectedZoneObj)}" data-zone-id="skora_turgor">
+        <path d="M 115 315 C 80 330 65 365 75 395 C 82 412 100 415 110 398 C 118 378 126 350 134 330 Z" fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 185 315 C 220 330 235 365 225 395 C 218 412 200 415 190 398 C 182 378 174 350 166 330 Z" fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="88" cy="402" rx="12" ry="7" transform="rotate(-15 88 402)" fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="212" cy="402" rx="12" ry="7" transform="rotate(15 212 402)" fill="url(#infantSkinBack)" stroke="var(--teal)" stroke-width="2"/>
+        <text x="150" y="425" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Skóra marmurkowata obwodowo</text>
+      </g>
+    `}
   </svg>`;
 }
 
-function renderChildSilhouetteSvg() {
-  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka dziecka">
+function renderAcuteAbdomenChildSvg(station, selectedZoneObj, viewMode = 'front') {
+  const isBack = viewMode === 'back';
+  const perf = (OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers) ? OSCE_ACTIVE.performedManeuvers : new Set();
+  const mcburneyDone = perf.has('m_mcburney');
+  const blumbergDone = perf.has('m_blumberg');
+  const defenseDone = perf.has('m_obrona_miesniowa');
+  const peristalsisDone = perf.has('m_osluch_brzucha');
+  const mosznaDone = perf.has('m_moszna');
+  const goldflamDone = perf.has('m_goldflam');
+  const lungsDone = perf.has('m_osluch_pluc_dol');
+  const throatDone = perf.has('m_gardlo_wyrostek');
+
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka chłopca z ostrym brzuchem">
     <defs>
-      <linearGradient id="childSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="boySkin" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.07"/>
-        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.17"/>
       </linearGradient>
     </defs>
-    <!-- Tło medyczne -->
-    <rect x="20" y="10" width="260" height="460" rx="20" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
 
-    <!-- Ramiona i ręce dziecka -->
-    <!-- Lewe ramię -->
-    <path d="M 96 140 C 78 175 68 230 65 285 C 64 300 78 305 84 292 C 90 250 96 195 102 165 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <circle cx="72" cy="298" r="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <!-- Prawe ramię -->
-    <path d="M 204 140 C 222 175 232 230 235 285 C 236 300 222 305 216 292 C 210 250 204 195 198 165 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <circle cx="228" cy="298" r="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Kozetka lekarska -->
+    <rect x="18" y="10" width="264" height="460" rx="20" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
 
-    <!-- Kończyny dolne (nogi i stawy skokowe) -->
-    <!-- Lewa noga -->
-    <path d="M 104 290 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 94 290 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <!-- Prawa noga -->
-    <path d="M 196 290 L 200 375 L 198 435 C 198 448 212 450 214 438 L 212 375 L 206 290 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <ellipse cx="206" cy="442" rx="14" ry="7" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    ${!isBack ? `
+      <!-- WIDOK Z PRZODU (ANTERIOR) -->
+      <!-- Ramiona i ręce -->
+      <path class="${getZoneClass(station, 'serce', selectedZoneObj)}" data-zone-id="serce"
+            d="M 96 140 C 78 175 68 230 65 285 C 64 300 78 305 84 292 C 90 250 96 195 102 165 Z"
+            fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="72" cy="298" r="8" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+      <path class="${getZoneClass(station, 'serce', selectedZoneObj)}" data-zone-id="serce"
+            d="M 204 140 C 222 175 232 230 235 285 C 236 300 222 305 216 292 C 210 250 204 195 198 165 Z"
+            fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="228" cy="298" r="8" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
 
-    <!-- Spodenki / bielizna medyczna -->
-    <path d="M 94 250 L 88 295 L 140 295 L 150 270 L 160 295 L 212 295 L 206 250 Z" fill="rgba(255,255,255,0.85)" stroke="var(--teal)" stroke-width="2"/>
+      <!-- Nogi - Prawa noga w lekkim zgięciu antalgicznym (objaw Jaworskiego) -->
+      <g class="${getZoneClass(station, 'skora_konczyny', selectedZoneObj)}" data-zone-id="skora_konczyny">
+        <path d="M 104 290 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 94 290 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Prawa noga (podkurczona) -->
+        <path d="M 196 290 L 202 368 L 194 430 C 194 445 208 448 212 435 L 214 368 L 206 290 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="204" cy="438" rx="14" ry="7" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+      </g>
 
-    <!-- Tułów (klatka piersiowa i brzuch) -->
-    <path d="M 98 140 C 90 180 92 225 96 255 L 204 255 C 208 225 210 180 202 140 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Obojczyki i klatka piersiowa -->
-    <path d="M 112 145 Q 132 150 148 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
-    <path d="M 188 145 Q 168 150 152 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
-    <path d="M 150 150 L 150 195" stroke="var(--teal)" stroke-width="1.5" opacity="0.4"/>
-    <!-- Pępek -->
-    <circle cx="150" cy="235" r="2.5" fill="var(--teal)" opacity="0.7"/>
+      <!-- Spodenki medyczne -->
+      <g class="${getZoneClass(station, 'narzady_plciowe', selectedZoneObj)}" data-zone-id="narzady_plciowe">
+        <path d="M 94 250 L 88 295 L 140 295 L 150 270 L 160 295 L 212 295 L 206 250 Z" fill="rgba(255,255,255,0.88)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Moszna i jądra -->
+        <ellipse cx="150" cy="285" rx="14" ry="11" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="1.8"/>
+        ${mosznaDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="295" width="150" height="17" rx="8.5" fill="var(--surface)" stroke="var(--green)" stroke-width="1.5"/>
+            <text x="150" y="307" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--green)">✓ Jądra w mosznie (brak skrętu)</text>
+          </g>
+        ` : ''}
+      </g>
 
-    <!-- Szyja -->
-    <path d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+      <!-- Tułów - klatka piersiowa i brzuch -->
+      <path class="${getZoneClass(station, 'brzuch_palpacja', selectedZoneObj)}" data-zone-id="brzuch_palpacja"
+            d="M 98 140 C 90 180 92 225 96 255 L 204 255 C 208 225 210 180 202 140 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
 
-    <!-- Głowa dziecka -->
-    <ellipse cx="150" cy="75" rx="42" ry="46" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5"/>
-    <!-- Włosy -->
-    <path d="M 112 70 C 112 45 130 35 150 35 C 170 35 188 45 188 70 C 180 55 165 50 150 50 C 135 50 120 55 112 70 Z" fill="var(--teal)" opacity="0.25"/>
-    <!-- Uszy -->
-    <ellipse cx="108" cy="75" rx="5" ry="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <ellipse cx="192" cy="75" rx="5" ry="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
-    <!-- Oczy, nos, usta -->
-    <circle cx="136" cy="72" r="2.5" fill="var(--teal)"/>
-    <circle cx="164" cy="72" r="2.5" fill="var(--teal)"/>
-    <path d="M 150 77 L 148 83 L 152 83" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
-    <path d="M 142 93 Q 150 98 158 93" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Klatka piersiowa -->
+      <g class="${getZoneClass(station, 'klatka_pluca', selectedZoneObj)}" data-zone-id="klatka_pluca">
+        <path d="M 112 145 Q 132 150 148 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+        <path d="M 188 145 Q 168 150 152 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+        <path d="M 150 148 L 150 192" stroke="var(--teal)" stroke-width="1.5" opacity="0.4"/>
+        ${lungsDone ? `
+          <text x="150" y="165" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Dolne płaty płuc czyste</text>
+        ` : ''}
+      </g>
+
+      <!-- Jama brzuszna - kwadranty i znaleziska wyrostka -->
+      <g class="${getZoneClass(station, 'brzuch_ogladanie', selectedZoneObj)}" data-zone-id="brzuch_ogladanie">
+        <!-- Pępek -->
+        <circle cx="150" cy="235" r="2.5" fill="var(--teal)" opacity="0.7"/>
+        <!-- Dyskretne linie kwadrantów -->
+        <line x1="150" y1="205" x2="150" y2="255" stroke="var(--teal)" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"/>
+        <line x1="105" y1="235" x2="195" y2="235" stroke="var(--teal)" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"/>
+
+        <!-- Prawy dół biodrowy (Punkt McBurneya) -->
+        <circle cx="180" cy="246" r="4" fill="var(--teal)" opacity="0.5"/>
+        <text x="180" y="240" font-size="6.5" font-weight="700" text-anchor="middle" fill="var(--ink-muted)">McB</text>
+
+        ${mcburneyDone ? `
+          <circle cx="180" cy="246" r="15" fill="rgba(194,59,42,0.3)" stroke="var(--red)" stroke-width="2.5" class="osce-pulse-ring"/>
+          <circle cx="180" cy="246" r="5" fill="var(--red)"/>
+          <g class="osce-finding-badge-svg">
+            <rect x="110" y="222" width="85" height="16" rx="8" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="152" y="233" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">⚡ McBurney (+)</text>
+          </g>
+        ` : ''}
+
+        ${blumbergDone ? `
+          <path d="M 160 248 Q 180 234 200 248 Q 180 262 160 248" fill="rgba(194,59,42,0.2)" stroke="var(--red)" stroke-width="2"/>
+          <g class="osce-finding-badge-svg">
+            <rect x="115" y="258" width="85" height="16" rx="8" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="157" y="269" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">💥 Blumberg (+)</text>
+          </g>
+        ` : ''}
+
+        ${defenseDone ? `
+          <rect x="165" y="215" width="32" height="40" rx="4" fill="rgba(217,119,6,0.2)" stroke="var(--amber)" stroke-width="1.8" stroke-dasharray="3 3"/>
+          <text x="181" y="210" font-size="7" font-weight="800" text-anchor="middle" fill="var(--amber)">Obrona powłok</text>
+        ` : ''}
+
+        ${peristalsisDone ? `
+          <text x="122" y="246" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Leniwa perystaltyka 🩺</text>
+        ` : ''}
+      </g>
+
+      <!-- Szyja i główka -->
+      <path class="${getZoneClass(station, 'glowa_gardlo', selectedZoneObj)}" data-zone-id="glowa_gardlo"
+            d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+      <g class="${getZoneClass(station, 'glowa_gardlo', selectedZoneObj)}" data-zone-id="glowa_gardlo">
+        <ellipse cx="150" cy="75" rx="42" ry="46" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 112 70 C 112 45 130 35 150 35 C 170 35 188 45 188 70 C 180 55 165 50 150 50 C 135 50 120 55 112 70 Z" fill="var(--teal)" opacity="0.25"/>
+        <ellipse cx="108" cy="75" rx="5" ry="8" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="192" cy="75" rx="5" ry="8" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Buzia cierpiąca (ból brzucha) -->
+        <circle cx="136" cy="72" r="2.5" fill="var(--teal)"/>
+        <circle cx="164" cy="72" r="2.5" fill="var(--teal)"/>
+        <path d="M 150 77 L 148 83 L 152 83" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+        <path d="M 142 96 Q 150 90 158 96" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        ${throatDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="24" width="150" height="16" rx="8" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+            <text x="150" y="35" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--teal)">Gardło blade · Brak acetonu</text>
+          </g>
+        ` : ''}
+      </g>
+    ` : `
+      <!-- WIDOK OD TYŁU (POSTERIOR / PLECY) -->
+      <g class="${getZoneClass(station, 'glowa_gardlo', selectedZoneObj)}" data-zone-id="glowa_gardlo">
+        <ellipse cx="150" cy="75" rx="42" ry="46" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 110 75 C 110 40 130 32 150 32 C 170 32 190 40 190 75 Z" fill="var(--teal)" opacity="0.3"/>
+      </g>
+      <path d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+
+      <!-- Grzbiet i lędźwie -->
+      <g class="${getZoneClass(station, 'brzuch_palpacja', selectedZoneObj)}" data-zone-id="brzuch_palpacja">
+        <path d="M 98 140 C 90 180 92 225 96 255 L 204 255 C 208 225 210 180 202 140 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 150 145 L 150 255" stroke="var(--teal)" stroke-width="2" stroke-dasharray="3 3" opacity="0.6"/>
+
+        <!-- Kąty kręgowo-żebrowe / objaw Goldflama -->
+        <circle cx="125" cy="225" r="10" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+        <circle cx="175" cy="225" r="10" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+        ${goldflamDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="215" width="150" height="18" rx="9" fill="var(--surface)" stroke="var(--green)" stroke-width="1.5"/>
+            <text x="150" y="227" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--green)">✓ Objaw Goldflama (-) obustronnie</text>
+          </g>
+        ` : `
+          <text x="150" y="228" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--ink-muted)">Badanie kątów lędźwiowych (Goldflam)</text>
+        `}
+      </g>
+
+      <!-- Pośladki bez plamicy -->
+      <g class="${getZoneClass(station, 'skora_konczyny', selectedZoneObj)}" data-zone-id="skora_konczyny">
+        <path d="M 94 255 L 88 300 C 115 315 185 315 212 300 L 206 255 Z" fill="rgba(255,255,255,0.88)" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 104 300 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 94 300 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 196 300 L 200 375 L 198 435 C 198 448 212 450 214 438 L 212 375 L 206 300 Z" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="206" cy="442" rx="14" ry="7" fill="url(#boySkin)" stroke="var(--teal)" stroke-width="2"/>
+        <text x="150" y="325" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Skóra pośladków czysta (brak wykwitów IgAV)</text>
+      </g>
+    `}
   </svg>`;
+}
+
+function renderCroupToddlerSvg(station, selectedZoneObj, viewMode = 'front') {
+  const isBack = viewMode === 'back';
+  const perf = (OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers) ? OSCE_ACTIVE.performedManeuvers : new Set();
+  const patDone = perf.has('m_pat_ocena');
+  const stridorDone = perf.has('m_stridor_ocena');
+  const retractionsDone = perf.has('m_zaciaganie_retractions');
+  const mouthDone = perf.has('m_ogladanie_bezinwazyjne');
+  const auscultDone = perf.has('m_osluch_pluc_krup');
+
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka dziewczynki w ramionach matki">
+    <defs>
+      <linearGradient id="toddlerSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.18"/>
+      </linearGradient>
+      <linearGradient id="motherArms" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.04"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.10"/>
+      </linearGradient>
+    </defs>
+
+    <!-- RAMIONA MATKI (Zalecenie PALS - minimalizacja lęku) -->
+    <path d="M 40 180 C 20 220 25 320 60 360 C 95 400 205 400 240 360 C 275 320 280 220 260 180" fill="url(#motherArms)" stroke="var(--line)" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="150" y="465" font-size="8.5" font-weight="800" text-anchor="middle" fill="var(--teal)">🤱 Bezpieczna pozycja w ramionach matki (PALS)</text>
+
+    ${!isBack ? `
+      <!-- WIDOK Z PRZODU (ANTERIOR) -->
+      <!-- Siedząca dziewczynka (Zosia, 3 lata) -->
+      <!-- Nóżki w pozycji siedzącej na kolanach -->
+      <g class="${getZoneClass(station, 'brzuch_spokoj', selectedZoneObj)}" data-zone-id="brzuch_spokoj">
+        <path d="M 100 280 C 85 315 75 350 78 385 C 80 398 95 400 102 388 C 108 365 116 335 122 300 Z" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="85" cy="392" rx="12" ry="7" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 200 280 C 215 315 225 350 222 385 C 220 398 205 400 198 388 C 192 365 184 335 178 300 Z" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="215" cy="392" rx="12" ry="7" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Sukienka / ubranko dziewczęce -->
+        <path d="M 102 210 L 80 290 L 220 290 L 198 210 Z" fill="rgba(12,122,133,0.12)" stroke="var(--teal)" stroke-width="2"/>
+      </g>
+
+      <!-- Tułów i klatka piersiowa dziewczynki -->
+      <path class="${getZoneClass(station, 'klatka_oddech', selectedZoneObj)}" data-zone-id="klatka_oddech"
+            d="M 108 140 C 100 165 102 190 104 220 L 196 220 C 198 190 200 165 192 140 Z" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+
+      <!-- Dołek jarzmowy i zaciąganie mostka -->
+      <g class="${getZoneClass(station, 'klatka_oddech', selectedZoneObj)}" data-zone-id="klatka_oddech">
+        <!-- Dołek jarzmowy (wcięcie szyjne) -->
+        <path d="M 142 138 Q 150 144 158 138" stroke="var(--teal)" stroke-width="2.2" fill="none"/>
+        <polygon points="150,140 146,134 154,134" fill="var(--red)"/>
+        <!-- Mostek i żebra -->
+        <path d="M 150 145 L 150 195" stroke="var(--teal)" stroke-width="1.8" stroke-opacity="0.5"/>
+        <path d="M 134 165 Q 150 160 166 165" stroke="var(--teal)" stroke-width="1.4" stroke-opacity="0.4" fill="none"/>
+        <path d="M 130 180 Q 150 175 170 180" stroke="var(--teal)" stroke-width="1.4" stroke-opacity="0.4" fill="none"/>
+
+        ${retractionsDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="65" y="152" width="170" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="150" y="164" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">Zaciąganie dołka jarzmowego i klatki</text>
+          </g>
+        ` : ''}
+
+        ${auscultDone ? `
+          <text x="150" y="200" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Przewodzenie stridoru nad płuca</text>
+        ` : ''}
+      </g>
+
+      <!-- Szyja i krtań (Podgłośniowe zwężenie) -->
+      <g class="${getZoneClass(station, 'szyja_stridor', selectedZoneObj)}" data-zone-id="szyja_stridor">
+        <path d="M 138 115 L 138 138 L 162 138 L 162 115 Z" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Krtań z obrzękiem podgłośniowym (lejek krtaniowy) -->
+        <polygon points="144,118 156,118 152,130 148,130" fill="rgba(194,59,42,0.3)" stroke="var(--red)" stroke-width="1.8"/>
+
+        <!-- Fale akustyczne stridoru wdechowego -->
+        ${stridorDone ? `
+          <path d="M 124 116 Q 114 125 124 134" stroke="var(--amber)" stroke-width="2" fill="none"/>
+          <path d="M 117 111 Q 104 125 117 139" stroke="var(--amber)" stroke-width="2.5" fill="none"/>
+          <path d="M 176 116 Q 186 125 176 134" stroke="var(--amber)" stroke-width="2" fill="none"/>
+          <path d="M 183 111 Q 196 125 183 139" stroke="var(--amber)" stroke-width="2.5" fill="none"/>
+          <g class="osce-finding-badge-svg">
+            <rect x="70" y="98" width="160" height="18" rx="9" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+            <text x="150" y="110" font-size="7.8" font-weight="800" text-anchor="middle" fill="var(--amber)">🗣️ Stridor wdechowy w spoczynku</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Głowa dziewczynki (Zosia) -->
+      <g class="${getZoneClass(station, 'jama_ustna_szpatulka', selectedZoneObj)}" data-zone-id="jama_ustna_szpatulka">
+        <ellipse cx="150" cy="72" rx="38" ry="42" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <!-- Fryzura dziewczęca z kucykami -->
+        <path d="M 116 65 C 116 40 132 30 150 30 C 168 30 184 40 184 65 C 176 52 165 48 150 48 C 135 48 124 52 116 65 Z" fill="var(--teal)" opacity="0.25"/>
+        <!-- Kucyki z kokardkami -->
+        <ellipse cx="110" cy="52" rx="7" ry="11" fill="var(--teal)" opacity="0.3"/>
+        <circle cx="112" cy="62" r="3" fill="var(--red)"/>
+        <ellipse cx="190" cy="52" rx="7" ry="11" fill="var(--teal)" opacity="0.3"/>
+        <circle cx="188" cy="62" r="3" fill="var(--red)"/>
+
+        <!-- Buzia dziecka (lekko uchylona do oddechu) -->
+        <circle cx="138" cy="70" r="2.5" fill="var(--teal)"/>
+        <circle cx="162" cy="70" r="2.5" fill="var(--teal)"/>
+        <path d="M 150 74 L 148 79 L 152 79" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+        <ellipse cx="150" cy="88" rx="6" ry="4" fill="rgba(194,59,42,0.2)" stroke="var(--teal)" stroke-width="1.8"/>
+
+        ${mouthDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="20" width="150" height="17" rx="8.5" fill="var(--surface)" stroke="var(--green)" stroke-width="1.5"/>
+            <text x="150" y="32" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--green)">Połyka ślinę · Brak ślinotoku</text>
+          </g>
+        ` : ''}
+
+        ${patDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="70" y="38" width="160" height="16" rx="8" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+            <text x="150" y="49" font-size="7.2" font-weight="800" text-anchor="middle" fill="var(--teal)">PAT: Wzmożona praca oddechowa</text>
+          </g>
+        ` : ''}
+      </g>
+    ` : `
+      <!-- WIDOK OD TYŁU (POSTERIOR) -->
+      <!-- Dziewczynka wtulona w matkę od tyłu -->
+      <g class="${getZoneClass(station, 'ogladanie_pat', selectedZoneObj)}" data-zone-id="ogladanie_pat">
+        <ellipse cx="150" cy="72" rx="38" ry="42" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 114 70 C 114 38 132 30 150 30 C 168 30 186 38 186 70 Z" fill="var(--teal)" opacity="0.3"/>
+        <ellipse cx="110" cy="52" rx="7" ry="11" fill="var(--teal)" opacity="0.3"/>
+        <ellipse cx="190" cy="52" rx="7" ry="11" fill="var(--teal)" opacity="0.3"/>
+      </g>
+
+      <!-- Plecy i osłuchiwanie pól płucnych -->
+      <g class="${getZoneClass(station, 'klatka_oddech', selectedZoneObj)}" data-zone-id="klatka_oddech">
+        <path d="M 108 140 C 100 165 102 190 104 220 L 196 220 C 198 190 200 165 192 140 Z" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 150 145 L 150 220" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="3 3" opacity="0.6"/>
+        <circle cx="128" cy="175" r="9" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+        <circle cx="172" cy="175" r="9" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+        <rect x="75" y="165" width="150" height="18" rx="9" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+        <text x="150" y="177" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Osłuchowo: Przewodzenie stridoru</text>
+      </g>
+
+      <!-- Tył sukienki i stópki -->
+      <g class="${getZoneClass(station, 'brzuch_spokoj', selectedZoneObj)}" data-zone-id="brzuch_spokoj">
+        <path d="M 102 210 L 80 290 L 220 290 L 198 210 Z" fill="rgba(12,122,133,0.12)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="85" cy="392" rx="12" ry="7" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="215" cy="392" rx="12" ry="7" fill="url(#toddlerSkin)" stroke="var(--teal)" stroke-width="2"/>
+      </g>
+    `}
+  </svg>`;
+}
+
+function renderIgavChildSvg(station, selectedZoneObj, viewMode = 'front') {
+  const isBack = viewMode === 'back';
+  const perf = (OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers) ? OSCE_ACTIVE.performedManeuvers : new Set();
+  const purpuraDone = perf.has('m_purpura_palpabilis');
+  const jointsDone = perf.has('m_stawy_badanie');
+  const bpDone = perf.has('m_pomiar_rr');
+  const urineDone = perf.has('m_mocz_stix');
+  const abdDone = perf.has('m_brzuch_palpacja_igav');
+
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka pacjenta z plamicą Schönleina-Henocha (IgAV)">
+    <defs>
+      <linearGradient id="olderChildSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.06"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.15"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Tło sali gabinetu -->
+    <rect x="18" y="10" width="264" height="460" rx="20" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+    ${!isBack ? `
+      <!-- WIDOK Z PRZODU (ANTERIOR) -->
+      <!-- Ramię lewe z MANKIETEM CIŚNIENIOMIERZA (RR) -->
+      <g class="${getZoneClass(station, 'cisnienie_tetnicze', selectedZoneObj)}" data-zone-id="cisnienie_tetnicze">
+        <path d="M 96 140 C 78 175 68 230 65 285 C 64 300 78 305 84 292 C 90 250 96 195 102 165 Z"
+              fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <circle cx="72" cy="298" r="8" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Mankiet ciśnieniomierza na ramieniu -->
+        <rect x="74" y="160" width="26" height="34" rx="4" fill="#1565c0" stroke="var(--teal)" stroke-width="2"/>
+        <line x1="87" y1="194" x2="60" y2="215" stroke="#1565c0" stroke-width="2"/>
+        ${bpDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="12" y="165" width="82" height="30" rx="6" fill="var(--surface)" stroke="var(--red)" stroke-width="2"/>
+            <text x="53" y="177" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">RR 128/82</text>
+            <text x="53" y="188" font-size="6.8" font-weight="700" text-anchor="middle" fill="var(--red)">>95 pc (NT!)</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Ramię prawe -->
+      <path class="${getZoneClass(station, 'klatka_serce_pluca', selectedZoneObj)}" data-zone-id="klatka_serce_pluca"
+            d="M 204 140 C 222 175 232 230 235 285 C 236 300 222 305 216 292 C 210 250 204 195 198 165 Z"
+            fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+      <circle cx="228" cy="298" r="8" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+      <!-- Pasek moczu STIX (obok ręki) -->
+      <g class="${getZoneClass(station, 'badanie_moczu_stix', selectedZoneObj)}" data-zone-id="badanie_moczu_stix">
+        <rect x="238" y="240" width="10" height="70" rx="3" fill="#fff" stroke="var(--line)" stroke-width="1.5"/>
+        <rect x="240" y="250" width="6" height="12" rx="1" fill="${urineDone ? '#1b5e20' : '#dcedc8'}"/>
+        <rect x="240" y="268" width="6" height="12" rx="1" fill="${urineDone ? '#2e7d32' : '#fff9c4'}"/>
+        ${urineDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="215" y="222" width="80" height="38" rx="6" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.8"/>
+            <text x="255" y="234" font-size="7.2" font-weight="800" text-anchor="middle" fill="var(--ink)">Mocz (stix):</text>
+            <text x="255" y="244" font-size="6.8" font-weight="700" text-anchor="middle" fill="#1b5e20">Erytrocyty +++</text>
+            <text x="255" y="253" font-size="6.8" font-weight="700" text-anchor="middle" fill="#2e7d32">Białko ++</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Spodenki medyczne -->
+      <path d="M 94 250 L 88 295 L 140 295 L 150 270 L 160 295 L 212 295 L 206 250 Z" fill="rgba(255,255,255,0.88)" stroke="var(--teal)" stroke-width="2"/>
+
+      <!-- Tułów i brzuch -->
+      <g class="${getZoneClass(station, 'brzuch_igav', selectedZoneObj)}" data-zone-id="brzuch_igav">
+        <path d="M 98 140 C 90 180 92 225 96 255 L 204 255 C 208 225 210 180 202 140 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <!-- Pępek -->
+        <circle cx="150" cy="235" r="2.5" fill="var(--teal)" opacity="0.7"/>
+        ${abdDone ? `
+          <circle cx="150" cy="235" r="16" fill="rgba(217,119,6,0.18)" stroke="var(--amber)" stroke-width="1.8" stroke-dasharray="3 3"/>
+          <g class="osce-finding-badge-svg">
+            <rect x="75" y="215" width="150" height="17" rx="8.5" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+            <text x="150" y="227" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--amber)">Bóle okołopępkowe kurczowe</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Klatka piersiowa czysta (brak wykwitów!) -->
+      <g class="${getZoneClass(station, 'klatka_serce_pluca', selectedZoneObj)}" data-zone-id="klatka_serce_pluca">
+        <path d="M 112 145 Q 132 150 148 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+        <path d="M 188 145 Q 168 150 152 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+        <text x="150" y="160" font-size="7" font-weight="700" text-anchor="middle" fill="var(--teal)">Tułów czysty (wyklucza posocznicę)</text>
+      </g>
+
+      <!-- Kończyny dolne z PURPURA PALPABILIS na podudziach i stopach -->
+      <g class="${getZoneClass(station, 'skora_plamica', selectedZoneObj)}" data-zone-id="skora_plamica">
+        <!-- Lewa noga -->
+        <path d="M 104 290 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 94 290 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <!-- Prawa noga -->
+        <path d="M 196 290 L 200 375 L 198 435 C 198 448 212 450 214 438 L 212 375 L 206 290 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="206" cy="442" rx="14" ry="7" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+        <!-- Plamica uniesiona (purpura palpabilis) - fioletowe wykwity plamisto-grudkowe -->
+        <!-- Lewa goleń i grzbiet stopy -->
+        <circle cx="94" cy="360" r="3" fill="#800080"/>
+        <circle cx="98" cy="370" r="2.5" fill="#9c27b0"/>
+        <circle cx="92" cy="380" r="3.5" fill="#800080"/>
+        <circle cx="96" cy="392" r="2.8" fill="#9c27b0"/>
+        <circle cx="93" cy="405" r="3.2" fill="#800080"/>
+        <circle cx="98" cy="415" r="2.5" fill="#9c27b0"/>
+        <circle cx="90" cy="438" r="2.5" fill="#800080"/>
+        <!-- Prawa goleń i grzbiet stopy -->
+        <circle cx="206" cy="360" r="3" fill="#800080"/>
+        <circle cx="202" cy="370" r="2.5" fill="#9c27b0"/>
+        <circle cx="208" cy="380" r="3.5" fill="#800080"/>
+        <circle cx="204" cy="392" r="2.8" fill="#9c27b0"/>
+        <circle cx="207" cy="405" r="3.2" fill="#800080"/>
+        <circle cx="202" cy="415" r="2.5" fill="#9c27b0"/>
+        <circle cx="210" cy="438" r="2.5" fill="#800080"/>
+
+        ${purpuraDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="65" y="340" width="170" height="18" rx="9" fill="var(--surface)" stroke="#800080" stroke-width="1.8"/>
+            <text x="150" y="352" font-size="7.5" font-weight="800" text-anchor="middle" fill="#800080">🟣 Purpura palpabilis na podudziach</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Stawy skokowe z obrzękiem -->
+      <g class="${getZoneClass(station, 'stawy_skokowe', selectedZoneObj)}" data-zone-id="stawy_skokowe">
+        <ellipse cx="95" cy="428" rx="14" ry="9" fill="rgba(194,59,42,0.18)" stroke="var(--red)" stroke-width="1.8"/>
+        <ellipse cx="205" cy="428" rx="14" ry="9" fill="rgba(194,59,42,0.18)" stroke="var(--red)" stroke-width="1.8"/>
+        ${jointsDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="70" y="445" width="160" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="150" y="457" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">🦵 Obrzęk obu stawów skokowych</text>
+          </g>
+        ` : ''}
+      </g>
+
+      <!-- Szyja i głowa -->
+      <g class="${getZoneClass(station, 'glowa_gardlo_igav', selectedZoneObj)}" data-zone-id="glowa_gardlo_igav">
+        <path d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <ellipse cx="150" cy="75" rx="40" ry="44" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 114 68 C 114 42 130 34 150 34 C 170 34 186 42 186 68 C 178 54 165 48 150 48 C 135 48 122 54 114 68 Z" fill="var(--teal)" opacity="0.3"/>
+        <circle cx="136" cy="74" r="2.5" fill="var(--teal)"/>
+        <circle cx="164" cy="74" r="2.5" fill="var(--teal)"/>
+        <path d="M 150 78 L 148 84 L 152 84" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+        <path d="M 142 94 Q 150 99 158 94" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </g>
+    ` : `
+      <!-- WIDOK OD TYŁU (POSTERIOR) - KLUCZOWA DLA IGAV LOKALIZACJA NA POŚLADKACH -->
+      <!-- Głowa i kark od tyłu -->
+      <ellipse cx="150" cy="75" rx="40" ry="44" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+      <path d="M 112 75 C 112 40 130 32 150 32 C 170 32 188 40 188 75 Z" fill="var(--teal)" opacity="0.35"/>
+      <path d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+      <!-- Grzbiet (czysty, bez plamicy) -->
+      <g class="${getZoneClass(station, 'klatka_serce_pluca', selectedZoneObj)}" data-zone-id="klatka_serce_pluca">
+        <path d="M 98 140 C 90 180 92 225 96 250 L 204 250 C 208 225 210 180 202 140 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 150 145 L 150 250" stroke="var(--teal)" stroke-width="2" stroke-dasharray="3 3" opacity="0.5"/>
+        <rect x="75" y="160" width="150" height="18" rx="9" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+        <text x="150" y="172" font-size="7.5" font-weight="700" text-anchor="middle" fill="var(--teal)">Plecy czyste (brak wykwitów uogólnionych)</text>
+      </g>
+
+      <!-- POŚLADKI Z MASYWNĄ PLAMICĄ (PURPURA PALPABILIS) -->
+      <g class="${getZoneClass(station, 'skora_plamica', selectedZoneObj)}" data-zone-id="skora_plamica">
+        <!-- Pośladki -->
+        <path d="M 96 250 C 90 280 110 310 150 310 C 190 310 210 280 204 250 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <path d="M 150 255 L 150 310" stroke="var(--teal)" stroke-width="2"/>
+
+        <!-- Tył ud i podudzi -->
+        <path d="M 104 305 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 96 305 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+        <path d="M 196 305 L 200 375 L 198 435 C 198 448 212 450 214 438 L 212 375 L 204 305 Z" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+        <ellipse cx="206" cy="442" rx="14" ry="7" fill="url(#olderChildSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+        <!-- GĘSTA, SYMETRYCZNA PLAMICA NA OBU POŚLADKACH I TYLE NÓG -->
+        <!-- Lewy pośladek -->
+        <circle cx="118" cy="270" r="3.5" fill="#800080"/>
+        <circle cx="128" cy="265" r="2.8" fill="#9c27b0"/>
+        <circle cx="138" cy="272" r="3.2" fill="#800080"/>
+        <circle cx="122" cy="282" r="3.8" fill="#800080"/>
+        <circle cx="134" cy="285" r="2.6" fill="#9c27b0"/>
+        <circle cx="142" cy="295" r="3" fill="#800080"/>
+        <circle cx="126" cy="298" r="3.4" fill="#9c27b0"/>
+        <!-- Prawy pośladek -->
+        <circle cx="182" cy="270" r="3.5" fill="#800080"/>
+        <circle cx="172" cy="265" r="2.8" fill="#9c27b0"/>
+        <circle cx="162" cy="272" r="3.2" fill="#800080"/>
+        <circle cx="178" cy="282" r="3.8" fill="#800080"/>
+        <circle cx="166" cy="285" r="2.6" fill="#9c27b0"/>
+        <circle cx="158" cy="295" r="3" fill="#800080"/>
+        <circle cx="174" cy="298" r="3.4" fill="#9c27b0"/>
+        <!-- Tył ud i łydki -->
+        <circle cx="96" cy="330" r="3.2" fill="#800080"/>
+        <circle cx="94" cy="355" r="2.8" fill="#9c27b0"/>
+        <circle cx="98" cy="380" r="3.5" fill="#800080"/>
+        <circle cx="93" cy="405" r="3" fill="#9c27b0"/>
+        <circle cx="204" cy="330" r="3.2" fill="#800080"/>
+        <circle cx="206" cy="355" r="2.8" fill="#9c27b0"/>
+        <circle cx="202" cy="380" r="3.5" fill="#800080"/>
+        <circle cx="207" cy="405" r="3" fill="#9c27b0"/>
+
+        <g class="osce-finding-badge-svg">
+          <rect x="55" y="318" width="190" height="20" rx="10" fill="var(--surface)" stroke="#800080" stroke-width="1.8"/>
+          <text x="150" y="331" font-size="7.8" font-weight="800" text-anchor="middle" fill="#800080">🟣 Masywna plamica na pośladkach (IgAV)!</text>
+        </g>
+      </g>
+
+      <!-- Ścięgna Achillesa i tył stawów skokowych -->
+      <g class="${getZoneClass(station, 'stawy_skokowe', selectedZoneObj)}" data-zone-id="stawy_skokowe">
+        <ellipse cx="95" cy="428" rx="14" ry="9" fill="rgba(194,59,42,0.18)" stroke="var(--red)" stroke-width="1.8"/>
+        <ellipse cx="205" cy="428" rx="14" ry="9" fill="rgba(194,59,42,0.18)" stroke="var(--red)" stroke-width="1.8"/>
+        ${jointsDone ? `
+          <g class="osce-finding-badge-svg">
+            <rect x="70" y="445" width="160" height="18" rx="9" fill="var(--surface)" stroke="var(--red)" stroke-width="1.5"/>
+            <text x="150" y="457" font-size="7.5" font-weight="800" text-anchor="middle" fill="var(--red)">Obrzęk okołostawowy kostek</text>
+          </g>
+        ` : ''}
+      </g>
+    `}
+  </svg>`;
+}
+
+function renderChildSilhouetteSvg(station, selectedZoneObj, viewMode = 'front') {
+  return renderAcuteAbdomenChildSvg(station, selectedZoneObj, viewMode);
+}
+
+function renderOscePatientSilhouette(station, selectedZoneObj, viewMode = 'front') {
+  if (!station) return '';
+  if (station.id === 'stacja-1-odwodnienie') {
+    return renderInfantSilhouetteSvg(station, selectedZoneObj, viewMode);
+  }
+  if (station.id === 'stacja-2-brzuch') {
+    return renderAcuteAbdomenChildSvg(station, selectedZoneObj, viewMode);
+  }
+  if (station.id === 'stacja-3-krup') {
+    return renderCroupToddlerSvg(station, selectedZoneObj, viewMode);
+  }
+  if (station.id === 'stacja-4-igav') {
+    return renderIgavChildSvg(station, selectedZoneObj, viewMode);
+  }
+  return renderChildSilhouetteSvg(station, selectedZoneObj, viewMode);
 }
 
 function startOsceStation(station) {
@@ -5036,6 +5664,7 @@ function startOsceStation(station) {
     performedManeuvers: new Set(),
     performedQuestions: new Set(),
     performedOrder: [],
+    viewMode: 'front',
     scaleExpanded: false,
     selectedZone: station.zones && station.zones[0] ? station.zones[0].id : null,
     activeTab: 'maneuvers', // 'maneuvers' | 'interview'
@@ -5365,6 +5994,7 @@ function renderActiveOsceStation(station) {
   const progressPct = Math.round((doneKey / (totalKey || 1)) * 100);
 
   const selectedZoneObj = station.zones.find(z => z.id === OSCE_ACTIVE.selectedZone) || station.zones[0];
+  const viewMode = OSCE_ACTIVE.viewMode || 'front';
 
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:1120px">
     <!-- Nawigacja okruszkowa -->
@@ -5459,28 +6089,42 @@ function renderActiveOsceStation(station) {
     <div class="osce-wrap">
       <!-- LEWA KOLUMNA: Plansza anatomiczna z sylwetką pacjenta i hotspotami -->
       <div class="osce-board">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
-          <span style="font-weight:800;font-size:.92rem;color:var(--ink)">
-            📍 Sylwetka pacjenta (${station.patient.avatarType === 'infant' ? 'Niemowlę w łóżeczku' : 'Dziecko na kozetce'})
-          </span>
-          <span style="font-size:.78rem;color:var(--ink-muted)">Kliknij strefę, aby zbadać</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
+          <div>
+            <span style="font-weight:800;font-size:.92rem;color:var(--ink)">
+              📍 Sylwetka: ${station.patient.name} (${station.patient.age})
+            </span>
+            <span style="font-size:.74rem;color:var(--teal);display:block;font-weight:700">
+              ${viewMode === 'front' ? 'Widok z przodu (Anterior)' : 'Widok od tyłu (Posterior / Plecy)'}
+            </span>
+          </div>
+          <div style="display:inline-flex;border-radius:6px;border:1px solid var(--line);background:var(--bg);padding:2px">
+            <button class="btn btn-sm ${viewMode === 'front' ? 'btn-primary' : 'btn-subtle'}" id="btnOsceViewFront" style="padding:.2rem .6rem;font-size:.76rem;border-radius:4px;border:0">
+              🧍 Przód
+            </button>
+            <button class="btn btn-sm ${viewMode === 'back' ? 'btn-primary' : 'btn-subtle'}" id="btnOsceViewBack" style="padding:.2rem .6rem;font-size:.76rem;border-radius:4px;border:0">
+              🔄 Tył
+            </button>
+          </div>
         </div>
 
         <div class="osce-patient-stage" id="oscePatientStage">
           <div class="osce-stage-inner">
-            ${station.patient.avatarType === 'infant' ? renderInfantSilhouetteSvg() : renderChildSilhouetteSvg()}
+            ${renderOscePatientSilhouette(station, selectedZoneObj, viewMode)}
 
-            <!-- Hotspoty na ciele pacjenta (dokładnie wypozycjonowane względem sylwetki) -->
+            <!-- Hotspoty na ciele pacjenta (wypozycjonowane względem wybranego widoku) -->
             ${station.zones.map(zone => {
               const isDone = zone.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE.performedManeuvers.has(m.id));
               const isActive = selectedZoneObj && selectedZoneObj.id === zone.id;
               const doneCountInZone = zone.maneuvers.filter(m => OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
               const totalInZone = zone.maneuvers.length;
               const shortName = zone.name.split('–')[0].split('(')[0].trim();
+              const posX = (viewMode === 'back' && zone.backX !== undefined) ? zone.backX : zone.x;
+              const posY = (viewMode === 'back' && zone.backY !== undefined) ? zone.backY : zone.y;
               return `
               <div class="osce-hotspot ${isDone ? 'performed' : ''} ${isActive ? 'active' : ''}"
                    data-zone="${zone.id}"
-                   style="left:${zone.x}%; top:${zone.y}%;"
+                   style="left:${posX}%; top:${posY}%;"
                    role="button"
                    tabindex="0"
                    aria-label="${zone.name}"
