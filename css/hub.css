@@ -1678,3 +1678,177 @@ body.reader footer.ft{display:none}
   display: block;
   margin-bottom: .2rem;
 }
+
+
+/* ---------- OSCE Practical Exam Simulator (Stacje przyłóżkowe i status praesens) ---------- */
+.osce-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
+  gap: 1.4rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .osce-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+.osce-board {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1.2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+}
+.osce-patient-stage {
+  position: relative;
+  width: 100%;
+  min-height: 440px;
+  background: radial-gradient(circle at 50% 50%, rgba(12,122,133,0.04) 0%, transparent 70%);
+  border-radius: var(--r);
+  border: 1.5px dashed var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+.osce-silhouette-svg {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  filter: drop-shadow(0 6px 16px rgba(14,28,36,0.06));
+}
+.osce-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 10;
+  transition: transform .18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.osce-hotspot:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.osce-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .3rem .6rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--teal);
+  box-shadow: 0 4px 10px rgba(12,122,133,0.22);
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: all .15s;
+}
+.osce-hotspot.performed .osce-pin-badge {
+  border-color: var(--green);
+  background: rgba(46,133,64,0.1);
+  color: var(--green);
+}
+.osce-hotspot.active .osce-pin-badge {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+}
+.osce-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .85rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .84rem;
+  transition: all .2s;
+}
+.osce-reaction-badge.normal { background: rgba(46,133,64,0.1); color: var(--green); border: 1px solid var(--green); }
+.osce-reaction-badge.pain { background: rgba(184,115,15,0.12); color: var(--amber); border: 1px solid var(--amber); }
+.osce-reaction-badge.cry { background: rgba(194,59,42,0.12); color: var(--red); border: 1px solid var(--red); animation: shake .4s ease; }
+.osce-reaction-badge.lethargy { background: rgba(43,99,174,0.12); color: var(--blue); border: 1px solid var(--blue); }
+.osce-reaction-badge.crisis { background: var(--red); color: #fff; border: 1px solid var(--red); animation: pulseDanger 1.2s infinite; }
+
+.osce-context-card {
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--r);
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  animation: fade .2s ease;
+}
+.osce-maneuver-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: .65rem .85rem;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: .86rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: .45rem;
+}
+.osce-maneuver-btn:hover {
+  border-color: var(--teal);
+  transform: translateX(2px);
+}
+.osce-maneuver-btn.done {
+  border-color: var(--green);
+  background: rgba(46,133,64,0.06);
+}
+.osce-finding-alert {
+  background: rgba(12,122,133,0.08);
+  border-left: 4px solid var(--teal);
+  border-radius: 0 8px 8px 0;
+  padding: .85rem 1rem;
+  margin: .8rem 0;
+  font-size: .88rem;
+  line-height: 1.45;
+  color: var(--ink);
+  animation: fade .2s ease;
+}
+.osce-complication-card {
+  background: rgba(194,59,42,0.1);
+  border: 2px solid var(--red);
+  border-radius: var(--r);
+  padding: 1rem 1.15rem;
+  margin: .9rem 0;
+  color: var(--ink);
+}
+.status-praesens-box {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 1.2rem;
+  font-size: .88rem;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 1.2rem 0;
+}
+.status-praesens-section {
+  margin-bottom: 1rem;
+  padding-bottom: .8rem;
+  border-bottom: 1px solid var(--line-2);
+}
+.status-praesens-section:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.status-praesens-section h4 {
+  font-size: .92rem;
+  color: var(--teal);
+  margin-bottom: .3rem;
+}

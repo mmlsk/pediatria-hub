@@ -1,7 +1,7 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, modById, atById } = window.HUB_META;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, modById, atById } = window.HUB_META;
 const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
 let CUSTOM_Q = [];
 try {
@@ -58,7 +58,7 @@ const gOf = id => (modById[id] && GROUPS[modById[id].g]) ? GROUPS[modById[id].g]
 /* ---------- magazyn postępu ---------- */
 const KEY = 'pediatria-hub.v1:';
 const STORAGE_KEY = 'pediatria_hub_state_v1';
-let S = { visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [], patientCases: {} };
+let S = { visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [], patientCases: {}, osceCases: {} };
 
 // Wczytanie stanu: localStorage z fallbackiem do window.name
 try {
@@ -73,6 +73,7 @@ try {
 }
 S.examHistory = Array.isArray(S.examHistory) ? S.examHistory : [];
 S.patientCases = (S.patientCases && typeof S.patientCases === 'object') ? S.patientCases : {};
+S.osceCases = (S.osceCases && typeof S.osceCases === 'object') ? S.osceCases : {};
 
 const save = () => {
   const serialized = JSON.stringify(S);
@@ -1393,11 +1394,11 @@ function viewQuestions(parts, params) {
     F.hit = !!params.hit; F.hasKey = !!params.hasKey; F.hasWhy = !!params.hasWhy; F.limit = 30;
     if (params.tab) F.tab = params.tab;
   }
-  
+
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
     <div class="eyebrow">Baza pytań i banki zewnętrzne</div><h2>${Q.length} zadań · Pula zakładowa, LEK, PES, MP</h2>
     <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
-    
+
     <div class="qtabs" id="qTabs">
       <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Przeglądaj pytania (${Q.length})</button>
       <button class="qtab${F.tab === 'add' ? ' on' : ''}" data-t="add">➕ Dodaj nowe pytanie / Import</button>
@@ -1593,7 +1594,7 @@ function renderAddTab(container) {
     box.innerHTML = `
       <div class="qform">
         <p class="muted">Wklej tekst pytań z numeracją i literami A–E (np. ze skryptu, PDF-a, bazy LEK/PES) lub wklej tablicę JSON. Parser automatycznie wyodrębni treść pytania, warianty odpowiedzi i klucz.</p>
-        
+
         <div class="qform-grid">
           <div class="qform-row">
             <label for="mqBank">Domyślny bank</label>
@@ -1680,7 +1681,7 @@ function renderExportTab(container) {
     <div class="qform">
       <h3>Eksport pytań dodanych przez Ciebie (${CUSTOM_Q.length})</h3>
       <p class="muted">Pytania zapisane są w pamięci Twojej przeglądarki. Aby wdrożyć je na stałe do repozytorium GitHub i dla wszystkich użytkowników, skopiuj poniższy kod JSON lub pobierz plik.</p>
-      
+
       <div class="qform-row">
         <textarea class="qform-textarea" id="expJson" style="min-height:220px;font-family:monospace;font-size:.85rem" readonly>${esc(jsonStr)}</textarea>
       </div>
@@ -1872,23 +1873,23 @@ const NOTE_TEMPLATES = {
 **Atlas:** [Wybierz atlas]
 
 ### 1. Epidemiologia i patofizjologia
-- Wiek szczytu zachorowań: 
-- Czynnik etiologiczny / patomechanizm: 
+- Wiek szczytu zachorowań:
+- Czynnik etiologiczny / patomechanizm:
 
 ### 2. Obraz kliniczny i objawy
-- Objawy osiowe (triada/tetrada): 
-- Czerwone flagi (red flags): 
+- Objawy osiowe (triada/tetrada):
+- Czerwone flagi (red flags):
 
 ### 3. Diagnostyka różnicowa
-- Badania I rzutu (laboratorium / USG): 
-- Złoty standard potwierdzenia: 
+- Badania I rzutu (laboratorium / USG):
+- Złoty standard potwierdzenia:
 
 ### 4. Leczenie i dawki
-- Postępowanie objawowe / stabilizacja: 
-- Terapia celowana / dawkowanie leków: 
+- Postępowanie objawowe / stabilizacja:
+- Terapia celowana / dawkowanie leków:
 
 ### 5. Pułapki egzaminacyjne
-- Klucz zakładowy vs wytyczne: 
+- Klucz zakładowy vs wytyczne:
 `,
   nagle: `# Różnicowanie stanów nagłych: [Temat]
 
@@ -3948,8 +3949,34 @@ const PATIENT_CASES = [
 let SIM_ACTIVE = null;
 
 function viewPatient(parts, params) {
+  // 1. Sprawdź czy to stacja OSCE: '#/pacjent/osce/stacja-...'
+  if (parts[1] === 'osce' && parts[2]) {
+    const station = (OSCE_STATIONS || []).find(s => s.id === parts[2]);
+    if (!station) {
+      toast('Nie znaleziono stacji OSCE');
+      location.hash = '#/pacjent?tab=osce';
+      return;
+    }
+    if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
+      startOsceStation(station);
+    }
+    renderActiveOsceStation(station);
+    return;
+  }
+
+  // 2. Bezpośrednie wejście '#/pacjent/stacja-...'
+  const directOsce = (OSCE_STATIONS || []).find(s => s.id === parts[1]);
+  if (directOsce) {
+    if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== directOsce.id) {
+      startOsceStation(directOsce);
+    }
+    renderActiveOsceStation(directOsce);
+    return;
+  }
+
+  // 3. Sprawdź czy to przypadek SOR: '#/pacjent/krup'
   const caseId = parts[1];
-  if (caseId) {
+  if (caseId && caseId !== 'osce') {
     const caseItem = PATIENT_CASES.find(c => c.id === caseId);
     if (!caseItem) {
       toast('Nie znaleziono scenariusza klinicznego');
@@ -3963,8 +3990,13 @@ function viewPatient(parts, params) {
     return;
   }
 
-  // Lista scenariuszy
-  renderPatientCaseList();
+  // 4. Lista: zakładka SOR vs OSCE
+  const tab = (parts[1] === 'osce' || (params && params.tab === 'osce')) ? 'osce' : 'sor';
+  if (tab === 'osce') {
+    renderOsceStationList();
+  } else {
+    renderPatientCaseList();
+  }
 }
 
 function startPatientSim(caseItem) {
@@ -3989,6 +4021,12 @@ function renderPatientCaseList() {
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:980px">
     <div class="eyebrow">Symulator kliniczny · Ostry dyżur SOR / Izba Przyjęć</div>
     <h2>Wirtualny Pacjent – stany nagłe u dzieci</h2>
+
+    <div class="conn-tabs" role="tablist" style="margin-bottom:1.5rem">
+      <button class="conn-tab-btn active" data-ptab="sor" role="tab" aria-selected="true">🚨 SOR / Ostry Dyżur (${PATIENT_CASES.length})</button>
+      <button class="conn-tab-btn" data-ptab="osce" role="tab" aria-selected="false">📋 Stacje OSCE / Badanie fizykalne (${(OSCE_STATIONS || []).length})</button>
+    </div>
+
     <p class="lead">Podejmuj decyzje diagnostyczne i terapeutyczne krok po kroku w stanach zagrożenia życia. Dynamiczny monitor parametrów życiowych reaguje na Twoje zlecenia, a system weryfikuje trafność działań, wyłapuje błędy sztuki i przyznaje punkty.</p>
 
     <!-- Pasek statystyk -->
@@ -4030,6 +4068,13 @@ function renderPatientCaseList() {
       }).join('')}
     </div>
   </div></section>`;
+
+  $$('.conn-tab-btn[data-ptab]').forEach(b => {
+    b.onclick = () => {
+      if (b.dataset.ptab === 'osce') renderOsceStationList();
+      else renderPatientCaseList();
+    };
+  });
 }
 
 function getVitalStatus(key, val) {
@@ -4136,7 +4181,7 @@ function renderActivePatientSim(caseItem) {
             let badge = '';
             if (opt.type === 'key') {
               cls = 'rev-key';
-              badge = wasSelected 
+              badge = wasSelected
                 ? `<span class="chip" style="background:var(--green-l);color:var(--green);font-weight:700;border:0">✓ Trafne działanie kluczowe (+${opt.points} pkt)</span>`
                 : `<span class="chip" style="background:var(--amber-l);color:var(--amber);font-weight:700;border:0">⚠ Przeoczone działanie kluczowe (0 pkt)</span>`;
             } else if (opt.type === 'harmful') {
@@ -4311,8 +4356,8 @@ function renderPatientReport(caseItem) {
       <h2 style="font-size:1.8rem;margin-bottom:.4rem;font-family:var(--font-display)">Twój wynik: ${pct}% (${score}/${max} pkt)</h2>
       <b style="font-size:1.15rem;color:${gradeColor}">${grade}</b>
       <p class="srcline" style="max-width:600px;margin:1rem auto 0 auto">
-        ${pct >= 75 
-          ? 'Świetna robota! Wdrożyłeś optymalne procedury PALS/SOR, uniknąłeś przeciwwskazań i skutecznie ustabilizowałeś parametry życiowe dziecka.' 
+        ${pct >= 75
+          ? 'Świetna robota! Wdrożyłeś optymalne procedury PALS/SOR, uniknąłeś przeciwwskazań i skutecznie ustabilizowałeś parametry życiowe dziecka.'
           : 'Zwróć szczególną uwagę na błędy krytyczne (czerwone karty) – w pediatrycznych stanach nagłych zaniechanie lub niewłaściwa kolejność leków może zadecydować o życiu pacjenta.'}
       </p>
 
@@ -4384,6 +4429,1010 @@ ${caseItem.debrief.keyRules.map(r => `- ${r}`).join('\n')}
     saveNotes(notes);
     toast('Zapisano kartę pacjenta w Notatniku!');
   };
+}
+
+
+/* ==========================================================================
+   SYMULATOR EGZAMINU PRAKTYCZNEGO OSCE (Badanie fizykalne i Status Praesens)
+   ========================================================================== */
+
+let OSCE_ACTIVE = null;
+
+function getReactionBadge(r) {
+  switch (r) {
+    case 'pain':
+      return '<span class="osce-reaction-badge pain">😣 Ból / Obrona mimowolna</span>';
+    case 'cry':
+      return '<span class="osce-reaction-badge cry">😭 Płacz / Niepokój ruchowy</span>';
+    case 'lethargy':
+      return '<span class="osce-reaction-badge lethargy">😴 Apatia / Letarg</span>';
+    case 'crisis':
+      return '<span class="osce-reaction-badge crisis">🚨 KRYZYS / ZAŁAMANIE PARAMETRÓW</span>';
+    case 'normal':
+    default:
+      return '<span class="osce-reaction-badge normal">😊 Spokojny / Stabilny</span>';
+  }
+}
+
+function renderInfantSilhouetteSvg() {
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka niemowlęcia">
+    <defs>
+      <linearGradient id="infantSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.18"/>
+      </linearGradient>
+    </defs>
+    <!-- Tło łóżeczka niemowlęcego -->
+    <rect x="15" y="10" width="270" height="420" rx="24" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <!-- Poduszeczka niemowlęca -->
+    <ellipse cx="150" cy="85" rx="75" ry="55" fill="rgba(12,122,133,0.04)" stroke="var(--line)" stroke-width="1"/>
+
+    <!-- Ciało niemowlęcia (zgięte kończyny, pozycja żabki) -->
+    <!-- Nóżki -->
+    <path d="M 115 305 C 80 320 65 355 75 385 C 82 402 100 405 110 388 C 118 368 126 340 134 320 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 185 305 C 220 320 235 355 225 385 C 218 402 200 405 190 388 C 182 368 174 340 166 320 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Stópki -->
+    <ellipse cx="88" cy="392" rx="12" ry="7" transform="rotate(-15 88 392)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <ellipse cx="212" cy="392" rx="12" ry="7" transform="rotate(15 212 392)" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Rączki niemowlęcia (zgięte w łokciach ku górze) -->
+    <path d="M 95 160 C 65 170 52 200 58 228 C 62 240 76 242 82 230 C 88 215 95 190 102 175 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 205 160 C 235 170 248 200 242 228 C 238 240 224 242 218 230 C 212 215 205 190 198 175 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="68" cy="236" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <circle cx="232" cy="236" r="8" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Tułów i brzuszek -->
+    <path d="M 112 145 C 92 165 88 210 90 260 C 92 290 102 315 115 320 L 185 320 C 198 315 208 290 210 260 C 212 210 208 165 188 145 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Pieluszka (diaper) -->
+    <path d="M 98 280 C 100 325 200 325 202 280 L 208 260 L 92 260 Z" fill="rgba(255,255,255,0.85)" stroke="var(--teal)" stroke-width="2"/>
+    <path d="M 98 268 L 115 272" stroke="var(--teal)" stroke-width="2"/>
+    <path d="M 202 268 L 185 272" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Mostek i żebra (subtelne linie anatomiczne) -->
+    <path d="M 150 160 L 150 205" stroke="var(--teal)" stroke-width="1.5" stroke-opacity="0.4"/>
+    <path d="M 135 180 Q 150 176 165 180" stroke="var(--teal)" stroke-width="1" stroke-opacity="0.3" fill="none"/>
+    <path d="M 132 195 Q 150 191 168 195" stroke="var(--teal)" stroke-width="1" stroke-opacity="0.3" fill="none"/>
+    <!-- Pępek (powyżej pieluszki) -->
+    <circle cx="150" cy="242" r="2" fill="var(--teal)" opacity="0.6"/>
+
+    <!-- Szyja -->
+    <path d="M 132 135 L 132 145 L 168 145 L 168 135 Z" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Główka niemowlęcia -->
+    <ellipse cx="150" cy="85" rx="52" ry="54" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+    <!-- Ciemiączko przednie (Fontanelle) - romb -->
+    <polygon points="150,55 158,67 150,79 142,67" fill="rgba(12,122,133,0.25)" stroke="var(--teal)" stroke-width="1.8" stroke-dasharray="2 2"/>
+    <!-- Uszka -->
+    <ellipse cx="98" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <ellipse cx="202" cy="85" rx="6" ry="10" fill="url(#infantSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Buzia: zamknięte powieki, nosek, usta -->
+    <path d="M 126 84 Q 134 89 142 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 158 84 Q 166 89 174 84" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 150 91 Q 152 96 148 97" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+    <path d="M 142 107 Q 150 113 158 107" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderChildSilhouetteSvg() {
+  return `<svg class="osce-silhouette-svg" viewBox="0 0 300 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sylwetka dziecka">
+    <defs>
+      <linearGradient id="childSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.07"/>
+        <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.16"/>
+      </linearGradient>
+    </defs>
+    <!-- Tło medyczne -->
+    <rect x="20" y="10" width="260" height="460" rx="20" fill="rgba(12,122,133,0.02)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+    <!-- Ramiona i ręce dziecka -->
+    <!-- Lewe ramię -->
+    <path d="M 96 140 C 78 175 68 230 65 285 C 64 300 78 305 84 292 C 90 250 96 195 102 165 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="72" cy="298" r="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Prawe ramię -->
+    <path d="M 204 140 C 222 175 232 230 235 285 C 236 300 222 305 216 292 C 210 250 204 195 198 165 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="228" cy="298" r="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Kończyny dolne (nogi i stawy skokowe) -->
+    <!-- Lewa noga -->
+    <path d="M 104 290 L 100 375 L 102 435 C 102 448 88 450 86 438 L 88 375 L 94 290 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="94" cy="442" rx="14" ry="7" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Prawa noga -->
+    <path d="M 196 290 L 200 375 L 198 435 C 198 448 212 450 214 438 L 212 375 L 206 290 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <ellipse cx="206" cy="442" rx="14" ry="7" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Spodenki / bielizna medyczna -->
+    <path d="M 94 250 L 88 295 L 140 295 L 150 270 L 160 295 L 212 295 L 206 250 Z" fill="rgba(255,255,255,0.85)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Tułów (klatka piersiowa i brzuch) -->
+    <path d="M 98 140 C 90 180 92 225 96 255 L 204 255 C 208 225 210 180 202 140 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Obojczyki i klatka piersiowa -->
+    <path d="M 112 145 Q 132 150 148 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+    <path d="M 188 145 Q 168 150 152 146" stroke="var(--teal)" stroke-width="1.8" fill="none" opacity="0.6"/>
+    <path d="M 150 150 L 150 195" stroke="var(--teal)" stroke-width="1.5" opacity="0.4"/>
+    <!-- Pępek -->
+    <circle cx="150" cy="235" r="2.5" fill="var(--teal)" opacity="0.7"/>
+
+    <!-- Szyja -->
+    <path d="M 136 115 L 136 138 L 164 138 L 164 115 Z" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+
+    <!-- Głowa dziecka -->
+    <ellipse cx="150" cy="75" rx="42" ry="46" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2.5"/>
+    <!-- Włosy -->
+    <path d="M 112 70 C 112 45 130 35 150 35 C 170 35 188 45 188 70 C 180 55 165 50 150 50 C 135 50 120 55 112 70 Z" fill="var(--teal)" opacity="0.25"/>
+    <!-- Uszy -->
+    <ellipse cx="108" cy="75" rx="5" ry="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <ellipse cx="192" cy="75" rx="5" ry="8" fill="url(#childSkin)" stroke="var(--teal)" stroke-width="2"/>
+    <!-- Oczy, nos, usta -->
+    <circle cx="136" cy="72" r="2.5" fill="var(--teal)"/>
+    <circle cx="164" cy="72" r="2.5" fill="var(--teal)"/>
+    <path d="M 150 77 L 148 83 L 152 83" stroke="var(--teal)" stroke-width="1.5" fill="none"/>
+    <path d="M 142 93 Q 150 98 158 93" stroke="var(--teal)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function startOsceStation(station) {
+  OSCE_ACTIVE = {
+    stationId: station.id,
+    performedManeuvers: new Set(),
+    performedQuestions: new Set(),
+    selectedZone: station.zones && station.zones[0] ? station.zones[0].id : null,
+    activeTab: 'maneuvers', // 'maneuvers' | 'interview'
+    reaction: (station.id === 'stacja-1-odwodnienie') ? 'lethargy' : (station.id === 'stacja-2-brzuch' ? 'pain' : (station.id === 'stacja-3-krup' ? 'cry' : 'normal')),
+    currentVitals: { ...(station.patient.vitalsInitial || {}) },
+    isComplication: false,
+    complicationMessage: '',
+    findings: [],
+    fatalErrorsTriggered: 0,
+    isFinished: false,
+    synthesisDiagnosis: null,
+    synthesisDifferentials: [],
+    synthesisActions: [],
+    score: null,
+    startedAt: Date.now()
+  };
+}
+
+function renderOsceStationList() {
+  const main = $('#main');
+  if (!main) return;
+  window.scrollTo(0, 0);
+
+  const totalStations = (OSCE_STATIONS || []).length;
+  const completedCount = Object.keys(S.osceCases || {}).length;
+  const avgScore = completedCount > 0
+    ? Math.round(Object.values(S.osceCases).reduce((acc, c) => acc + (c.score || 0), 0) / completedCount)
+    : 0;
+
+  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:1040px">
+    <div class="eyebrow">Symulator kliniczny · Egzamin Praktyczny OSCE</div>
+    <h2>Stacje Badania Fizykalnego i Status Praesens</h2>
+
+    <div class="conn-tabs" role="tablist" style="margin-bottom:1.5rem">
+      <button class="conn-tab-btn" data-ptab="sor" role="tab" aria-selected="false">🚨 SOR / Ostry Dyżur (${PATIENT_CASES.length})</button>
+      <button class="conn-tab-btn active" data-ptab="osce" role="tab" aria-selected="true">📋 Stacje OSCE / Badanie fizykalne (${totalStations})</button>
+    </div>
+
+    <p class="lead">Przyłóżkowy symulator badania fizykalnego u dzieci. Zbadaj pacjenta na wektorowej planszy manewr po manewrze, unikaj błędów krytycznych wywołujących załamanie parametrów i wygeneruj profesjonalny 9-punktowy raport Status Praesens wymagany na odprawach i egzaminie praktycznym.</p>
+
+    <!-- Pasek statystyk OSCE -->
+    <div class="hero-strip" style="margin-bottom:2rem">
+      <div class="hero-stat">
+        <span class="val">${totalStations}</span>
+        <span class="lbl">Stacji OSCE</span>
+      </div>
+      <div class="hero-stat">
+        <span class="val">${completedCount} / ${totalStations}</span>
+        <span class="lbl">Zaliczonych</span>
+      </div>
+      <div class="hero-stat">
+        <span class="val">${avgScore > 0 ? avgScore + '%' : '–'}</span>
+        <span class="lbl">Średni wynik</span>
+      </div>
+      <div class="hero-stat">
+        <span class="val">9 pkt</span>
+        <span class="lbl">Wzorcowy Status Praesens</span>
+      </div>
+    </div>
+
+    <!-- Lista stacji -->
+    <div class="grid cols-2" style="gap:1.4rem">
+      ${(OSCE_STATIONS || []).map(station => {
+        const saved = (S.osceCases || {})[station.id];
+        const isPassed = saved && saved.score >= 60;
+        const totalKey = station.zones.flatMap(z => z.maneuvers).filter(m => m.isKey).length;
+        const totalZones = station.zones.length;
+        return `
+        <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:4px solid var(--teal)">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
+              <span class="badge" style="background:var(--teal);color:#fff;font-weight:800">STACJA ${station.number}</span>
+              <span style="font-size:.82rem;color:var(--ink-muted);font-weight:700">Wiek: ${station.patient.age} · ${station.patient.gender === 'm' ? 'Chłopiec' : 'Dziewczynka'}</span>
+            </div>
+            <h3 style="margin-top:0;margin-bottom:.4rem"><a href="#/pacjent/osce/${station.id}">${station.title}</a></h3>
+            <div style="font-size:.85rem;color:var(--teal);font-weight:700;margin-bottom:.6rem">🩺 ${station.topic}</div>
+            <p style="font-size:.88rem;color:var(--ink-muted);line-height:1.45;margin-bottom:.9rem">${station.briefing.scenario}</p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem">
+              <span class="badge" style="background:rgba(12,122,133,0.1);color:var(--teal)">📍 ${totalZones} stref anatomicznych</span>
+              <span class="badge" style="background:rgba(12,122,133,0.1);color:var(--teal)">🔑 ${totalKey} manewrów kluczowych</span>
+              <span class="badge" style="background:rgba(194,59,42,0.1);color:var(--red)">⚠️ Błędy krytyczne</span>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line-2);padding-top:.9rem;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              ${saved ? `
+                <span class="badge" style="background:${isPassed ? 'rgba(46,133,64,0.15)' : 'rgba(194,59,42,0.15)'};color:${isPassed ? 'var(--green)' : 'var(--red)'};font-weight:800">
+                  ${isPassed ? '✅ ZALICZONE' : '❌ DO POPRAWY'}: ${saved.score}%
+                </span>
+              ` : `
+                <span class="badge" style="background:var(--bg-card);color:var(--ink-muted)">Status: Nowa stacja</span>
+              `}
+            </div>
+            <a href="#/pacjent/osce/${station.id}" class="btn btn-sm btn-primary">
+              ${saved ? 'Powtórz badanie →' : 'Rozpocznij stację →'}
+            </a>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div></section>`;
+
+  $$('.conn-tab-btn[data-ptab]').forEach(b => {
+    b.onclick = () => {
+      if (b.dataset.ptab === 'osce') {
+        location.hash = '#/pacjent?tab=osce';
+      } else {
+        location.hash = '#/pacjent';
+      }
+    };
+  });
+}
+
+function renderActiveOsceStation(station) {
+  const main = $('#main');
+  if (!main) return;
+  if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
+    startOsceStation(station);
+  }
+
+  // Obliczenia postępu
+  const allManeuvers = station.zones.flatMap(z => z.maneuvers);
+  const totalKey = allManeuvers.filter(m => m.isKey).length;
+  const doneKey = allManeuvers.filter(m => m.isKey && OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
+  const progressPct = Math.round((doneKey / (totalKey || 1)) * 100);
+
+  const selectedZoneObj = station.zones.find(z => z.id === OSCE_ACTIVE.selectedZone) || station.zones[0];
+
+  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:1120px">
+    <!-- Nawigacja okruszkowa -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+      <div class="crumbs" style="margin:0">
+        <a href="#/pacjent?tab=osce">← Stacje OSCE</a> / <span>${station.shortTitle}</span>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn btn-sm" id="btnRestartOsce" title="Zresetuj stację i zacznij od początku">🔄 Od nowa</button>
+        <button class="btn btn-sm btn-primary" id="btnFinishOsce">Zakończ badanie i sprawdź Status Praesens →</button>
+      </div>
+    </div>
+
+    <!-- Pasek parametrów życiowych i pacjenta -->
+    <div class="card" style="margin-bottom:1.2rem;background:var(--surface);border:1.5px solid var(--line);box-shadow:var(--shadow)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:.8rem">
+        <div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem">
+            <span class="badge" style="background:var(--teal);color:#fff;font-weight:800">STACJA ${station.number}</span>
+            <h2 style="margin:0;font-size:1.3rem">${station.title}</h2>
+          </div>
+          <div style="font-size:.88rem;color:var(--ink-muted)">
+            <b>Pacjent:</b> ${station.patient.name} (${station.patient.age}, ${station.patient.weight}) · <b>Rozpoznanie wstępne:</b> ${station.topic}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
+          <div style="font-size:.78rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em">Reakcja kliniczna pacjenta:</div>
+          <div>${getReactionBadge(OSCE_ACTIVE.reaction)}</div>
+        </div>
+      </div>
+
+      <!-- Monitor parametrów życiowych pacjenta -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:.6rem;background:var(--bg);padding:.7rem;border-radius:var(--r);border:1px solid var(--line-2)">
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">HR (Akcja serca)</div>
+          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.hr || '–'}<span style="font-size:.75rem">/min</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">RR (Oddechy)</div>
+          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.rr || '–'}<span style="font-size:.75rem">/min</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">RR (Ciśnienie)</div>
+          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.bp || '–'}<span style="font-size:.72rem"> mmHg</span></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">Temp. ciała</div>
+          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.temp || '–'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">SpO₂ (Saturacja)</div>
+          <div style="font-size:1.15rem;font-weight:900;color:${parseInt(OSCE_ACTIVE.currentVitals.spo2 || '100') < 92 ? 'var(--red)' : 'var(--teal)'}">${OSCE_ACTIVE.currentVitals.spo2 || '–'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">Nawrót CRT</div>
+          <div style="font-size:1.15rem;font-weight:900;color:${parseFloat(OSCE_ACTIVE.currentVitals.crt || '1') > 2.0 ? 'var(--amber)' : 'var(--teal)'}">${OSCE_ACTIVE.currentVitals.crt || '–'}</div>
+        </div>
+      </div>
+
+      <!-- Pasek postępu manewrów -->
+      <div style="margin-top:.8rem">
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;margin-bottom:.3rem">
+          <span>Postęp badania fizykalnego: ${doneKey} z ${totalKey} manewrów kluczowych</span>
+          <span>${progressPct}%</span>
+        </div>
+        <div style="height:7px;background:var(--line);border-radius:999px;overflow:hidden">
+          <div style="width:${progressPct}%;height:100%;background:var(--teal);transition:width .3s ease"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert błędu krytycznego i powikłania (jeśli wystąpiło) -->
+    ${OSCE_ACTIVE.isComplication ? `
+      <div class="osce-complication-card">
+        <div style="display:flex;align-items:flex-start;gap:.8rem">
+          <div style="font-size:1.8rem;line-height:1">🚨</div>
+          <div style="flex:1">
+            <h4 style="margin:0 0 .4rem 0;color:var(--red);font-size:1.05rem">ZAŁAMANIE STANU PACJENTA – POWIKŁANIE IATROGENNE!</h4>
+            <p style="margin:0 0 .6rem 0;font-size:.9rem;line-height:1.45">${OSCE_ACTIVE.complicationMessage}</p>
+            <button class="btn btn-sm" id="btnStabilizeOsce" style="background:var(--red);color:#fff;border-color:var(--red)">
+              🚑 Zastosuj natychmiastowe postępowanie ratunkowe i ustabilizuj pacjenta
+            </button>
+          </div>
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- Główny układ planszy pacjenta -->
+    <div class="osce-wrap">
+      <!-- LEWA KOLUMNA: Plansza anatomiczna z sylwetką pacjenta i hotspotami -->
+      <div class="osce-board">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+          <span style="font-weight:800;font-size:.92rem;color:var(--ink)">
+            📍 Sylwetka pacjenta (${station.patient.avatarType === 'infant' ? 'Niemowlę w łóżeczku' : 'Dziecko na kozetce'})
+          </span>
+          <span style="font-size:.78rem;color:var(--ink-muted)">Kliknij strefę, aby zbadać</span>
+        </div>
+
+        <div class="osce-patient-stage" id="oscePatientStage">
+          ${station.patient.avatarType === 'infant' ? renderInfantSilhouetteSvg() : renderChildSilhouetteSvg()}
+
+          <!-- Hotspoty na ciele pacjenta -->
+          ${station.zones.map(zone => {
+            const isDone = zone.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE.performedManeuvers.has(m.id));
+            const isActive = selectedZoneObj && selectedZoneObj.id === zone.id;
+            const doneCountInZone = zone.maneuvers.filter(m => OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
+            const totalInZone = zone.maneuvers.length;
+            return `
+            <div class="osce-hotspot ${isDone ? 'performed' : ''} ${isActive ? 'active' : ''}"
+                 data-zone="${zone.id}"
+                 style="left:${zone.x}%; top:${zone.y}%;"
+                 title="${zone.name} (${doneCountInZone}/${totalInZone})">
+              <span class="osce-pin-badge">
+                ${zone.icon} ${zone.name.split('–')[0].split('(')[0].trim()}
+                ${isDone ? '✓' : ''}
+              </span>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <!-- Pasek szybkiego wyboru stref anatomicznych (przyciski pomocnicze) -->
+        <div style="margin-top:1rem">
+          <div style="font-size:.78rem;font-weight:800;color:var(--ink-muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">
+            Wszystkie strefy anatomiczne:
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:.35rem">
+            ${station.zones.map(zone => {
+              const isDone = zone.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE.performedManeuvers.has(m.id));
+              const isActive = selectedZoneObj && selectedZoneObj.id === zone.id;
+              return `
+              <button class="btn btn-sm btn-subtle zone-chip-btn ${isActive ? 'btn-primary' : ''}"
+                      data-zone="${zone.id}"
+                      style="font-size:.78rem;padding:.25rem .55rem;border-radius:999px;${isDone ? 'border-color:var(--green);color:var(--green)' : ''}">
+                ${zone.icon} ${zone.name.split('–')[0].trim()} ${isDone ? '✓' : ''}
+              </button>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- PRAWA KOLUMNA: Kontekst badania, manewry, wywiad i spostrzeżenia -->
+      <div>
+        <!-- Przełącznik: Manewry badania vs Wywiad z rodzicem -->
+        <div class="conn-tabs" style="margin-bottom:.8rem">
+          <button class="conn-tab-btn ${OSCE_ACTIVE.activeTab === 'maneuvers' ? 'active' : ''}" id="tabBtnManeuvers">
+            🩺 Badanie fizykalne (${selectedZoneObj ? selectedZoneObj.name.split('–')[0].trim() : ''})
+          </button>
+          <button class="conn-tab-btn ${OSCE_ACTIVE.activeTab === 'interview' ? 'active' : ''}" id="tabBtnInterview">
+            🗣️ Wywiad (${OSCE_ACTIVE.performedQuestions.size}/${station.interview.length})
+          </button>
+        </div>
+
+        <!-- ZAKŁADKA 1: Badanie fizykalne wybranej strefy -->
+        ${OSCE_ACTIVE.activeTab === 'maneuvers' ? `
+          <div class="card" style="margin-bottom:1rem;background:var(--surface)">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
+              <span style="font-size:1.4rem">${selectedZoneObj.icon}</span>
+              <div>
+                <h4 style="margin:0;font-size:1.05rem;color:var(--ink)">${selectedZoneObj.name}</h4>
+                <div style="font-size:.78rem;color:var(--ink-muted)">Dostępne manewry diagnostyczne w tej strefie:</div>
+              </div>
+            </div>
+
+            <!-- Lista manewrów w strefie -->
+            <div>
+              ${selectedZoneObj.maneuvers.map(m => {
+                const isPerformed = OSCE_ACTIVE.performedManeuvers.has(m.id);
+                return `
+                <div style="margin-bottom:.65rem">
+                  <button class="osce-maneuver-btn ${isPerformed ? 'done' : ''}" data-maneuver="${m.id}">
+                    <span style="display:flex;align-items:center;gap:.4rem;flex:1;text-align:left">
+                      ${isPerformed ? '✅' : '🩺'}
+                      <span>${m.label}</span>
+                      ${m.isKey ? '<span class="badge" style="background:rgba(12,122,133,0.15);color:var(--teal);font-size:.68rem;padding:.15rem .4rem">KLUCZOWY</span>' : ''}
+                      ${m.isFatal ? '<span class="badge" style="background:rgba(194,59,42,0.15);color:var(--red);font-size:.68rem;padding:.15rem .4rem">RYZYKO</span>' : ''}
+                    </span>
+                    <span style="font-size:.78rem;font-weight:800;color:${isPerformed ? 'var(--green)' : 'var(--teal)'};margin-left:.6rem">
+                      ${isPerformed ? 'Wykonano' : 'Zbadaj →'}
+                    </span>
+                  </button>
+
+                  <!-- Wynik badania jeśli już wykonano -->
+                  ${isPerformed ? `
+                    <div class="osce-finding-alert">
+                      <b>Wynik badania:</b> ${m.finding}
+                    </div>
+                  ` : ''}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : `
+          <!-- ZAKŁADKA 2: Wywiad celowany z rodzicem -->
+          <div class="card" style="margin-bottom:1rem;background:var(--surface)">
+            <div style="margin-bottom:.8rem">
+              <h4 style="margin:0 0 .2rem 0;font-size:1.05rem;color:var(--ink)">🗣️ Wywiad celowany z opiekunem pacjenta</h4>
+              <p style="margin:0;font-size:.82rem;color:var(--ink-muted)">Wybierz pytania, aby uzyskać kluczowe informacje anamnestyczne:</p>
+            </div>
+
+            <div>
+              ${station.interview.map((item, idx) => {
+                const isAsked = OSCE_ACTIVE.performedQuestions.has(idx);
+                return `
+                <div class="card" style="margin-bottom:.6rem;padding:.75rem .9rem;background:var(--bg);border:1px solid ${isAsked ? 'var(--green)' : 'var(--line)'}">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
+                    <span style="font-weight:700;font-size:.86rem;color:var(--ink)">„${item.q}”</span>
+                    ${!isAsked ? `
+                      <button class="btn btn-sm btn-subtle btn-ask-question" data-qidx="${idx}" style="white-space:nowrap">
+                        Zapytaj 💬
+                      </button>
+                    ` : `
+                      <span class="badge" style="background:rgba(46,133,64,0.12);color:var(--green);font-size:.72rem">Zadano</span>
+                    `}
+                  </div>
+                  ${isAsked ? `
+                    <div style="margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--line);font-size:.84rem;color:var(--teal);line-height:1.45">
+                      <b>Odpowiedź:</b> „${item.a}”
+                      ${item.isKey ? '<span class="badge" style="background:rgba(12,122,133,0.15);color:var(--teal);font-size:.65rem;margin-left:.4rem">KLUCZOWE</span>' : ''}
+                    </div>
+                  ` : ''}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        `}
+
+        <!-- Dziennik spostrzeżeń klinicznych -->
+        <div class="card" style="background:var(--bg);border:1px solid var(--line-2)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+            <span style="font-weight:800;font-size:.86rem;color:var(--ink)">
+              📝 Ostatnio odkryte objawy kliniczne (${OSCE_ACTIVE.findings.length})
+            </span>
+          </div>
+          ${OSCE_ACTIVE.findings.length === 0 ? `
+            <div style="font-size:.82rem;color:var(--ink-muted);font-style:italic">
+              Nie wykonano jeszcze żadnych manewrów. Kliknij wybraną strefę ciała, aby rozpocząć badanie fizykalne.
+            </div>
+          ` : `
+            <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem">
+              ${OSCE_ACTIVE.findings.slice(0, 5).map(f => `
+                <div style="font-size:.8rem;padding:.4rem .6rem;background:var(--surface);border-radius:6px;border-left:3px solid ${f.isFatal ? 'var(--red)' : 'var(--teal)'}">
+                  <div style="display:flex;justify-content:space-between;color:var(--ink-muted);font-size:.72rem;margin-bottom:.15rem">
+                    <span><b>${f.zoneName}</b> › ${f.label}</span>
+                    <span>${f.time}</span>
+                  </div>
+                  <div style="color:var(--ink);line-height:1.35">${f.finding}</div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  </div></section>`;
+
+  // Podpięcie zdarzeń
+  // 1. Kliknięcie w hotspot na ciele
+  $$('.osce-hotspot[data-zone]').forEach(h => {
+    h.onclick = () => {
+      OSCE_ACTIVE.selectedZone = h.dataset.zone;
+      OSCE_ACTIVE.activeTab = 'maneuvers';
+      renderActiveOsceStation(station);
+    };
+  });
+
+  // 2. Kliknięcie w chipsy wyboru strefy
+  $$('.zone-chip-btn[data-zone]').forEach(b => {
+    b.onclick = () => {
+      OSCE_ACTIVE.selectedZone = b.dataset.zone;
+      OSCE_ACTIVE.activeTab = 'maneuvers';
+      renderActiveOsceStation(station);
+    };
+  });
+
+  // 3. Przełączanie zakładek: Badanie vs Wywiad
+  const tManeuvers = $('#tabBtnManeuvers');
+  if (tManeuvers) {
+    tManeuvers.onclick = () => {
+      OSCE_ACTIVE.activeTab = 'maneuvers';
+      renderActiveOsceStation(station);
+    };
+  }
+  const tInterview = $('#tabBtnInterview');
+  if (tInterview) {
+    tInterview.onclick = () => {
+      OSCE_ACTIVE.activeTab = 'interview';
+      renderActiveOsceStation(station);
+    };
+  }
+
+  // 4. Wykonanie manewru
+  $$('.osce-maneuver-btn[data-maneuver]').forEach(b => {
+    b.onclick = () => {
+      const maneuverId = b.dataset.maneuver;
+      const maneuver = selectedZoneObj.maneuvers.find(m => m.id === maneuverId);
+      if (maneuver) {
+        performOsceManeuver(station, selectedZoneObj, maneuver);
+      }
+    };
+  });
+
+  // 5. Zadanie pytania w wywiadzie
+  $$('.btn-ask-question[data-qidx]').forEach(b => {
+    b.onclick = () => {
+      const idx = parseInt(b.dataset.qidx);
+      askOsceInterviewQuestion(station, idx);
+    };
+  });
+
+  // 6. Reset stacji
+  const btnRestart = $('#btnRestartOsce');
+  if (btnRestart) {
+    btnRestart.onclick = () => {
+      if (confirm('Czy na pewno chcesz zresetować tę stację i rozpocząć badanie od początku?')) {
+        startOsceStation(station);
+        renderActiveOsceStation(station);
+      }
+    };
+  }
+
+  // 7. Stabilizacja pacjenta po powikłaniu
+  const btnStabilize = $('#btnStabilizeOsce');
+  if (btnStabilize) {
+    btnStabilize.onclick = () => {
+      stabilizeOscePatient(station);
+    };
+  }
+
+  // 8. Zakończenie badania i ewaluacja Status Praesens
+  const btnFinish = $('#btnFinishOsce');
+  if (btnFinish) {
+    btnFinish.onclick = () => {
+      finishOsceStation(station);
+    };
+  }
+}
+
+function performOsceManeuver(station, zone, maneuver) {
+  if (!OSCE_ACTIVE) return;
+  OSCE_ACTIVE.performedManeuvers.add(maneuver.id);
+
+  if (maneuver.isFatal) {
+    OSCE_ACTIVE.isComplication = true;
+    OSCE_ACTIVE.complicationMessage = maneuver.fatalMessage;
+    OSCE_ACTIVE.reaction = 'crisis';
+    OSCE_ACTIVE.fatalErrorsTriggered += 1;
+    if (maneuver.complicationVitals) {
+      OSCE_ACTIVE.currentVitals = { ...OSCE_ACTIVE.currentVitals, ...maneuver.complicationVitals };
+    }
+    toast('⚠️ BŁĄD KRYTYCZNY! Sprawdź stan pacjenta!');
+  } else {
+    OSCE_ACTIVE.reaction = maneuver.reaction || 'normal';
+    toast('Wykonano: ' + maneuver.label);
+  }
+
+  // Dodaj do rejestru spostrzeżeń
+  OSCE_ACTIVE.findings.unshift({
+    zoneName: zone.name.split('–')[0].trim(),
+    label: maneuver.label,
+    finding: maneuver.finding,
+    reaction: maneuver.reaction,
+    isFatal: maneuver.isFatal,
+    time: new Date().toLocaleTimeString('pl-PL', { minute: '2-digit', second: '2-digit' })
+  });
+
+  renderActiveOsceStation(station);
+}
+
+function askOsceInterviewQuestion(station, index) {
+  if (!OSCE_ACTIVE) return;
+  OSCE_ACTIVE.performedQuestions.add(index);
+  const q = station.interview[index];
+  if (q && q.isKey) {
+    toast('Uzyskano kluczową informację z wywiadu!');
+  }
+  renderActiveOsceStation(station);
+}
+
+function stabilizeOscePatient(station) {
+  if (!OSCE_ACTIVE) return;
+  OSCE_ACTIVE.isComplication = false;
+  OSCE_ACTIVE.reaction = (station.id === 'stacja-1-odwodnienie') ? 'lethargy' : 'pain';
+  OSCE_ACTIVE.currentVitals = { ...(station.patient.vitalsInitial || {}) };
+  toast('🚑 Wykonano procedury ratunkowe – parametry ustabilizowane.');
+  renderActiveOsceStation(station);
+}
+
+function finishOsceStation(station) {
+  const main = $('#main');
+  if (!main) return;
+  window.scrollTo(0, 0);
+
+  if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
+    startOsceStation(station);
+  }
+
+  const allManeuvers = station.zones.flatMap(z => z.maneuvers);
+  const totalKey = allManeuvers.filter(m => m.isKey).length;
+  const doneKey = allManeuvers.filter(m => m.isKey && OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
+
+  const totalInterviewKey = station.interview.filter(q => q.isKey).length;
+  const doneInterviewKey = station.interview.map((q, idx) => ({ q, idx })).filter(item => item.q.isKey && OSCE_ACTIVE.performedQuestions.has(item.idx)).length;
+
+  const renderSummary = () => {
+    const isEvaluated = OSCE_ACTIVE.isFinished;
+
+    main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:980px">
+      <!-- Nawigacja powrotna -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+        <div class="crumbs" style="margin:0">
+          <a href="#/pacjent?tab=osce">← Stacje OSCE</a> /
+          <a href="#/pacjent/osce/${station.id}">Badanie fizykalne</a> /
+          <span>Ewaluacja i Status Praesens</span>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <a href="#/pacjent/osce/${station.id}" class="btn btn-sm">← Wróć do badania pacjenta</a>
+        </div>
+      </div>
+
+      <!-- Karta Podsumowania i Wyniku -->
+      <div class="card" style="margin-bottom:1.5rem;border-top:4px solid var(--teal)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:.8rem">
+          <div>
+            <div class="eyebrow" style="color:var(--teal)">Karta oceny OSCE · ${station.shortTitle}</div>
+            <h2 style="margin:0">${station.title}</h2>
+          </div>
+          ${isEvaluated ? `
+            <div style="text-align:right">
+              <span class="badge" style="font-size:1.1rem;padding:.4rem .9rem;background:${OSCE_ACTIVE.score >= 60 ? 'rgba(46,133,64,0.15)' : 'rgba(194,59,42,0.15)'};color:${OSCE_ACTIVE.score >= 60 ? 'var(--green)' : 'var(--red)'};font-weight:900">
+                ${OSCE_ACTIVE.score >= 60 ? '✅ ZDANY' : '❌ NIEZALICZONY'}: ${OSCE_ACTIVE.score}%
+              </span>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Rozbicie punktowe -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:.8rem;background:var(--bg);padding:1rem;border-radius:var(--r);margin-bottom:1rem">
+          <div>
+            <div style="font-size:.75rem;font-weight:800;color:var(--ink-muted)">Manewry kluczowe</div>
+            <div style="font-size:1.1rem;font-weight:900;color:var(--ink)">${doneKey} / ${totalKey}</div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;font-weight:800;color:var(--ink-muted)">Kluczowy wywiad</div>
+            <div style="font-size:1.1rem;font-weight:900;color:var(--ink)">${doneInterviewKey} / ${totalInterviewKey}</div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;font-weight:800;color:var(--ink-muted)">Błędy krytyczne</div>
+            <div style="font-size:1.1rem;font-weight:900;color:${OSCE_ACTIVE.fatalErrorsTriggered > 0 ? 'var(--red)' : 'var(--green)'}">
+              ${OSCE_ACTIVE.fatalErrorsTriggered > 0 ? `⚠️ ${OSCE_ACTIVE.fatalErrorsTriggered} powikłań` : '0 (Czysto)'}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;font-weight:800;color:var(--ink-muted)">Ocena syntetyczna</div>
+            <div style="font-size:1.1rem;font-weight:900;color:var(--teal)">
+              ${isEvaluated ? `${OSCE_ACTIVE.score}% punktów` : 'Oczekuje na test'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Test syntezy diagnostycznej -->
+        <div style="border-top:1px solid var(--line-2);padding-top:1.2rem">
+          <h3 style="margin-top:0;margin-bottom:.5rem;font-size:1.1rem">🧠 Synteza kliniczna i decyzja egzaminacyjna</h3>
+          <p style="font-size:.86rem;color:var(--ink-muted);margin-bottom:1.2rem">
+            Przed wygenerowaniem wzorcowego raportu Status Praesens sformułuj rozpoznanie główne, wskaż rozpoznania różnicowe i zaplanuj postępowanie.
+          </p>
+
+          <!-- Pytanie diagnostyczne -->
+          <div style="margin-bottom:1.3rem">
+            <div style="font-weight:800;font-size:.92rem;margin-bottom:.6rem;color:var(--ink)">
+              1. ${station.synthesis.questionDiagnostic}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.5rem">
+              ${station.synthesis.optionsDiagnostic.map(opt => {
+                const isSelected = OSCE_ACTIVE.synthesisDiagnosis === opt.id;
+                return `
+                <label style="display:flex;align-items:flex-start;gap:.6rem;padding:.75rem .9rem;border-radius:8px;background:var(--bg);border:1.5px solid ${isSelected ? 'var(--teal)' : 'var(--line)'};cursor:pointer;transition:all .15s">
+                  <input type="radio" name="osceDiag" value="${opt.id}" ${isSelected ? 'checked' : ''} ${isEvaluated ? 'disabled' : ''} style="margin-top:.2rem"/>
+                  <div style="flex:1">
+                    <span style="font-size:.9rem;font-weight:700;color:var(--ink)">${opt.label}</span>
+                    ${isEvaluated ? `
+                      <div style="margin-top:.35rem;font-size:.82rem;color:${opt.isCorrect ? 'var(--green)' : 'var(--red)'}">
+                        ${opt.isCorrect ? '✅ Prawidłowe:' : '❌ Błędne:'} ${opt.explanation}
+                      </div>
+                    ` : ''}
+                  </div>
+                </label>`;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Rozpoznania różnicowe -->
+          <div style="margin-bottom:1.3rem">
+            <div style="font-weight:800;font-size:.92rem;margin-bottom:.6rem;color:var(--ink)">
+              2. Zaznacz trafne rozpoznania różnicowe, które należy uwzględnić:
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.5rem">
+              ${station.synthesis.differentialOptions.map(diff => {
+                const isChecked = (OSCE_ACTIVE.synthesisDifferentials || []).includes(diff.id);
+                return `
+                <label style="display:flex;align-items:center;gap:.6rem;padding:.65rem .85rem;border-radius:8px;background:var(--bg);border:1.5px solid ${isChecked ? 'var(--teal)' : 'var(--line)'};cursor:pointer">
+                  <input type="checkbox" class="osce-diff-cb" value="${diff.id}" ${isChecked ? 'checked' : ''} ${isEvaluated ? 'disabled' : ''}/>
+                  <span style="font-size:.88rem;color:var(--ink);flex:1">${diff.label}</span>
+                  ${isEvaluated ? `
+                    <span style="font-size:.8rem;font-weight:800;color:${diff.isCorrect ? 'var(--green)' : 'var(--red)'}">
+                      ${diff.isCorrect ? '✅ Należy uwzględnić' : '❌ Niezwiązane'}
+                    </span>
+                  ` : ''}
+                </label>`;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Postępowanie kliniczne -->
+          <div style="margin-bottom:1.3rem">
+            <div style="font-weight:800;font-size:.92rem;margin-bottom:.6rem;color:var(--ink)">
+              3. Zaznacz kluczowe kroki postępowania terapeutycznego i zlecenia:
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.5rem">
+              ${station.synthesis.actionOptions.map(act => {
+                const isChecked = (OSCE_ACTIVE.synthesisActions || []).includes(act.id);
+                return `
+                <label style="display:flex;align-items:center;gap:.6rem;padding:.65rem .85rem;border-radius:8px;background:var(--bg);border:1.5px solid ${isChecked ? 'var(--teal)' : 'var(--line)'};cursor:pointer">
+                  <input type="checkbox" class="osce-act-cb" value="${act.id}" ${isChecked ? 'checked' : ''} ${isEvaluated ? 'disabled' : ''}/>
+                  <span style="font-size:.88rem;color:var(--ink);flex:1">${act.label}</span>
+                  ${isEvaluated ? `
+                    <span style="font-size:.8rem;font-weight:800;color:${act.isCorrect ? 'var(--green)' : 'var(--red)'}">
+                      ${act.isCorrect ? '✅ Zalecane' : '❌ Przeciwwskazane'}
+                    </span>
+                  ` : ''}
+                </label>`;
+              }).join('')}
+            </div>
+          </div>
+
+          ${!isEvaluated ? `
+            <button class="btn btn-primary" id="btnSubmitOsceEvaluation" style="width:100%;padding:.8rem;font-size:.95rem">
+              Zatwierdź rozpoznanie i odbierz Wzorcowy Status Praesens →
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- WZORCOWY RAPORT STATUS PRAESENS (9 punktów badania fizykalnego) -->
+      ${isEvaluated ? `
+        <div class="card" style="margin-bottom:1.5rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;margin-bottom:1rem">
+            <div>
+              <div class="eyebrow" style="color:var(--teal)">Egzamin kliniczny · Dokumentacja medyczna</div>
+              <h3 style="margin:0">${station.statusPraesens.title}</h3>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btnCopyStatusPraesens">
+              📋 Kopiuj raport do Notatnika Markdown
+            </button>
+          </div>
+
+          <p style="font-size:.86rem;color:var(--ink-muted);line-height:1.45;margin-bottom:1.2rem">
+            Wzorcowy, 9-punktowy opis stanu przedmiotowego zgodny ze standardem odpraw klinicznych w klinikach pediatrii. Możesz skopiować ten raport do wbudowanego Notatnika lub schowka systemowego jednym kliknięciem.
+          </p>
+
+          <div class="status-praesens-box">
+            ${station.statusPraesens.sections.map(sec => `
+              <div class="status-praesens-section">
+                <h4>${sec.num}. ${sec.title}</h4>
+                <p style="margin:0;color:var(--ink)">${sec.content}</p>
+              </div>
+            `).join('')}
+
+            <div style="margin-top:1.2rem;padding-top:1rem;border-top:1.5px solid var(--line);background:rgba(12,122,133,0.04);padding:1rem;border-radius:8px">
+              <h4 style="margin:0 0 .35rem 0;color:var(--teal)">💡 Wnioski kliniczne i rozpoznanie końcowe:</h4>
+              <p style="margin:0;font-size:.9rem;line-height:1.5;color:var(--ink)">${station.statusPraesens.conclusions}</p>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem;flex-wrap:wrap;gap:.6rem">
+            <a href="#/pacjent?tab=osce" class="btn">← Wróć do listy stacji OSCE</a>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn" id="btnRepeatOsce">🔄 Powtórz stację</button>
+              <button class="btn btn-primary" id="btnCopyStatusPraesensBottom">📋 Kopiuj do Notatnika</button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    </div></section>`;
+
+    // Podpięcie zdarzeń formularza ewaluacji
+    $$('input[name="osceDiag"]').forEach(r => {
+      r.onchange = () => {
+        OSCE_ACTIVE.synthesisDiagnosis = r.value;
+      };
+    });
+
+    $$('.osce-diff-cb').forEach(cb => {
+      cb.onchange = () => {
+        const val = cb.value;
+        const arr = new Set(OSCE_ACTIVE.synthesisDifferentials || []);
+        if (cb.checked) arr.add(val);
+        else arr.delete(val);
+        OSCE_ACTIVE.synthesisDifferentials = Array.from(arr);
+      };
+    });
+
+    $$('.osce-act-cb').forEach(cb => {
+      cb.onchange = () => {
+        const val = cb.value;
+        const arr = new Set(OSCE_ACTIVE.synthesisActions || []);
+        if (cb.checked) arr.add(val);
+        else arr.delete(val);
+        OSCE_ACTIVE.synthesisActions = Array.from(arr);
+      };
+    });
+
+    const btnSubmit = $('#btnSubmitOsceEvaluation');
+    if (btnSubmit) {
+      btnSubmit.onclick = () => {
+        if (!OSCE_ACTIVE.synthesisDiagnosis) {
+          toast('Proszę wskazać rozpoznanie główne przed zatwierdzeniem');
+          return;
+        }
+
+        // Kalkulacja wyniku:
+        // 1. Manewry kluczowe: max 50 pkt
+        const maneuverPts = (doneKey / (totalKey || 1)) * 50;
+        // 2. Wywiad kluczowy: max 10 pkt
+        const interviewPts = (doneInterviewKey / (totalInterviewKey || 1)) * 10;
+        // 3. Rozpoznanie główne: max 20 pkt
+        const correctDiag = station.synthesis.optionsDiagnostic.find(o => o.isCorrect);
+        const diagPts = (OSCE_ACTIVE.synthesisDiagnosis === (correctDiag ? correctDiag.id : '')) ? 20 : 0;
+        // 4. Różnicowe: max 10 pkt
+        const correctDiffs = station.synthesis.differentialOptions.filter(d => d.isCorrect).map(d => d.id);
+        const selectedDiffs = OSCE_ACTIVE.synthesisDifferentials || [];
+        const diffMatches = selectedDiffs.filter(id => correctDiffs.includes(id)).length;
+        const diffFalse = selectedDiffs.filter(id => !correctDiffs.includes(id)).length;
+        const diffPts = Math.max(0, (diffMatches - diffFalse) / (correctDiffs.length || 1) * 10);
+        // 5. Postępowanie: max 10 pkt
+        const correctActs = station.synthesis.actionOptions.filter(a => a.isCorrect).map(a => a.id);
+        const selectedActs = OSCE_ACTIVE.synthesisActions || [];
+        const actMatches = selectedActs.filter(id => correctActs.includes(id)).length;
+        const actFalse = selectedActs.filter(id => !correctActs.includes(id)).length;
+        const actPts = Math.max(0, (actMatches - actFalse) / (correctActs.length || 1) * 10);
+        // 6. Kary za błędy krytyczne: -25 pkt za każdy
+        const fatalPenalty = OSCE_ACTIVE.fatalErrorsTriggered * 25;
+
+        const totalRaw = maneuverPts + interviewPts + diagPts + diffPts + actPts - fatalPenalty;
+        const finalPct = Math.max(0, Math.min(100, Math.round(totalRaw)));
+
+        OSCE_ACTIVE.score = finalPct;
+        OSCE_ACTIVE.isFinished = true;
+
+        // Zapisz postęp w S
+        S.osceCases = S.osceCases || {};
+        S.osceCases[station.id] = {
+          score: finalPct,
+          doneAt: Date.now(),
+          passed: finalPct >= 60,
+          maneuversDone: doneKey,
+          maneuversTotal: totalKey
+        };
+        save();
+
+        toast(finalPct >= 60 ? `Gratulacje! Stacja zaliczona na ${finalPct}%` : `Wynik: ${finalPct}% – przeanalizuj błędy i powtórz badanie`);
+        renderSummary();
+      };
+    }
+
+    const copyBtn = $('#btnCopyStatusPraesens');
+    const copyBtnBottom = $('#btnCopyStatusPraesensBottom');
+    const handleCopy = () => {
+      copyStatusPraesensToNotes(station);
+    };
+    if (copyBtn) copyBtn.onclick = handleCopy;
+    if (copyBtnBottom) copyBtnBottom.onclick = handleCopy;
+
+    const btnRepeat = $('#btnRepeatOsce');
+    if (btnRepeat) {
+      btnRepeat.onclick = () => {
+        startOsceStation(station);
+        location.hash = `#/pacjent/osce/${station.id}`;
+      };
+    }
+  };
+
+  renderSummary();
+}
+
+function copyStatusPraesensToNotes(station) {
+  if (!station || !station.statusPraesens) return;
+
+  const sp = station.statusPraesens;
+  const nowStr = new Date().toLocaleDateString('pl-PL') + ' ' + new Date().toLocaleTimeString('pl-PL');
+
+  const md = `# ${sp.title}
+**Data badania:** ${nowStr}
+**Pacjent:** ${station.patient.name} (${station.patient.age}, ${station.patient.weight})
+**Tematyka kliniczna:** ${station.topic}
+
+---
+
+## Badanie przedmiotowe (Status Praesens)
+
+${sp.sections.map(s => `### ${s.num}. ${s.title}\n${s.content}`).join('\n\n')}
+
+---
+
+### Wnioski kliniczne i rozpoznanie końcowe
+${sp.conclusions}
+
+---
+*Wygenerowano w module Wirtualny Pacjent – Symulator Egzaminu Praktycznego OSCE (Pediatria V – Hub)*
+`;
+
+  try {
+    const notes = getNotes();
+    notes.unshift({
+      id: 'osce_sp_' + Date.now(),
+      title: `Status Praesens: ${station.shortTitle} (OSCE)`,
+      content: md,
+      body: md,
+      mod: (station.mods && station.mods[0]) ? station.mods[0] : 'all',
+      updatedAt: Date.now()
+    });
+    saveNotes(notes);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+    toast('✅ Skopiowano raport do Notatnika oraz do schowka!');
+  } catch (err) {
+    console.error('Błąd zapisu notatki:', err);
+    toast('Nie udało się zapisać notatki');
+  }
 }
 
 
@@ -6430,6 +7479,7 @@ const VIEWS = [
 const ALL = [
   ...VIEWS.map(v => ({ k: 'Widok', t: v[0], h: v[1], n: norm(v[0]) })),
   ...PATIENT_CASES.map(c => ({ k: 'Pacjent SOR', t: c.title, h: '#/pacjent/' + c.id, n: norm(c.shortTitle + ' ' + c.title + ' ' + c.category + ' ' + c.debrief.diagnosis) })),
+  ...(OSCE_STATIONS || []).map(s => ({ k: 'Stacja OSCE', t: s.title, h: '#/pacjent/osce/' + s.id, n: norm(s.shortTitle + ' ' + s.title + ' ' + s.topic) })),
   ...(SEMANTIC_GAPS || []).map(g => ({ k: 'Luka wiedzy', t: g.title, h: `#/graf?gap=${g.id}`, n: norm(`${g.title} ${g.clinicalReason} ${g.examTrap}`) })),
   ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
   ...ATLASES.flatMap(a => a.secs.map(s => ({ k: 'Sekcja', t: `${ASHORT[a.id]} › ${s[1]}`, h: `#/atlas/${a.id}/${s[0]}`, n: norm(`${ASHORT[a.id]} ${s[1]}`) }))),
