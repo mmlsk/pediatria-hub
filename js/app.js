@@ -4094,8 +4094,8 @@ function renderVitalsMonitor(v) {
     <div class="vital-chip ${getVitalStatus('spo2', v.spo2)}"><span class="v-lab">🫁 Saturacja</span><span class="v-val">${v.spo2}%</span><span class="v-unit">SpO2</span></div>
     <div class="vital-chip ${getVitalStatus('rr', v.rr)}"><span class="v-lab">💨 Oddech</span><span class="v-val">${v.rr}</span><span class="v-unit">/min</span></div>
     <div class="vital-chip"><span class="v-lab">🩸 Ciśnienie</span><span class="v-val" style="font-size:1.05rem">${v.bp}</span><span class="v-unit">mmHg</span></div>
-    <div class="vital-chip ${getVitalStatus('temp', v.temp)}"><span class="v-lab">🌡️ Temp</span><span class="v-val">${v.temp.toFixed(1)}</span><span class="v-unit">°C</span></div>
-    <div class="vital-chip ${getVitalStatus('crt', v.crt)}"><span class="v-lab">⏱️ CRT</span><span class="v-val">${v.crt.toFixed(1)}s</span><span class="v-unit">nawrót</span></div>
+    <div class="vital-chip ${getVitalStatus('temp', v.temp)}"><span class="v-lab">🌡️ Temp</span><span class="v-val">${Number(v.temp || 0).toFixed(1)}</span><span class="v-unit">°C</span></div>
+    <div class="vital-chip ${getVitalStatus('crt', v.crt)}"><span class="v-lab">⏱️ CRT</span><span class="v-val">${Number(v.crt || 0).toFixed(1)}s</span><span class="v-unit">nawrót</span></div>
     <div class="vital-chip ${getVitalStatus('pgcs', v.pgcs)}"><span class="v-lab">🧠 pGCS</span><span class="v-val">${v.pgcs}</span><span class="v-unit">/15</span></div>
     <div class="vital-chip ${getVitalStatus('gluc', v.gluc)}"><span class="v-lab">🍬 Cukier</span><span class="v-val">${v.gluc}</span><span class="v-unit">mg/dl</span></div>
   </div>`;
@@ -4295,7 +4295,8 @@ function submitPatientStage(caseItem) {
 
   SIM_ACTIVE.state = 'reviewed';
   renderActivePatientSim(caseItem);
-  window.scrollTo({ top: 150, behavior: 'smooth' });
+  const target = document.querySelector('.vitals-monitor') || document.querySelector('.sim-steps');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function nextPatientStage(caseItem) {
@@ -4304,10 +4305,12 @@ function nextPatientStage(caseItem) {
     SIM_ACTIVE.state = 'deciding';
     SIM_ACTIVE.selectedOptionIds = new Set();
     renderActivePatientSim(caseItem);
-    window.scrollTo({ top: 150, behavior: 'smooth' });
+    const target = document.querySelector('.vitals-monitor') || document.querySelector('.sim-steps');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else {
     SIM_ACTIVE.state = 'finished';
     renderPatientReport(caseItem);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
@@ -4419,15 +4422,20 @@ ${caseItem.debrief.keyRules.map(r => `- ${r}`).join('\n')}
 > ${caseItem.debrief.pearls}
 `;
 
-    const notes = loadNotes();
+    const notes = getNotes();
     notes.unshift({
       id: 'note_' + Date.now(),
       title: `SOR: ${caseItem.shortTitle} (${pct}%)`,
+      content: md,
       body: md,
+      updatedAt: Date.now(),
       updated: Date.now()
     });
     saveNotes(notes);
-    toast('Zapisano kartę pacjenta w Notatniku!');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+    toast('Zapisano kartę pacjenta w Notatniku i skopiowano do schowka!');
   };
 }
 
@@ -4593,8 +4601,6 @@ function startOsceStation(station) {
 }
 
 function renderOsceStationList() {
-  const main = $('#main');
-  if (!main) return;
   window.scrollTo(0, 0);
 
   const totalStations = (OSCE_STATIONS || []).length;
@@ -4690,8 +4696,6 @@ function renderOsceStationList() {
 }
 
 function renderActiveOsceStation(station) {
-  const main = $('#main');
-  if (!main) return;
   if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
     startOsceStation(station);
   }
@@ -4735,30 +4739,30 @@ function renderActiveOsceStation(station) {
       </div>
 
       <!-- Monitor parametrów życiowych pacjenta -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:.6rem;background:var(--bg);padding:.7rem;border-radius:var(--r);border:1px solid var(--line-2)">
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">HR (Akcja serca)</div>
-          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.hr || '–'}<span style="font-size:.75rem">/min</span></div>
+      <div class="osce-vitals-monitor">
+        <div class="vital-chip ${getVitalStatus('hr', parseInt(OSCE_ACTIVE.currentVitals.hr || '100'))}">
+          <span class="v-lab">❤️ HR</span>
+          <span class="v-val">${OSCE_ACTIVE.currentVitals.hr || '–'}<span class="v-unit">/min</span></span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">RR (Oddechy)</div>
-          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.rr || '–'}<span style="font-size:.75rem">/min</span></div>
+        <div class="vital-chip ${getVitalStatus('rr', parseInt(OSCE_ACTIVE.currentVitals.rr || '25'))}">
+          <span class="v-lab">💨 RR</span>
+          <span class="v-val">${OSCE_ACTIVE.currentVitals.rr || '–'}<span class="v-unit">/min</span></span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">RR (Ciśnienie)</div>
-          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.bp || '–'}<span style="font-size:.72rem"> mmHg</span></div>
+        <div class="vital-chip">
+          <span class="v-lab">🩸 RR (Ciśnienie)</span>
+          <span class="v-val" style="font-size:1.05rem">${OSCE_ACTIVE.currentVitals.bp || '–'}<span class="v-unit">mmHg</span></span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">Temp. ciała</div>
-          <div style="font-size:1.15rem;font-weight:900;color:var(--teal)">${OSCE_ACTIVE.currentVitals.temp || '–'}</div>
+        <div class="vital-chip ${getVitalStatus('temp', parseFloat(OSCE_ACTIVE.currentVitals.temp || '37'))}">
+          <span class="v-lab">🌡️ Temp</span>
+          <span class="v-val">${OSCE_ACTIVE.currentVitals.temp || '–'}</span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">SpO₂ (Saturacja)</div>
-          <div style="font-size:1.15rem;font-weight:900;color:${parseInt(OSCE_ACTIVE.currentVitals.spo2 || '100') < 92 ? 'var(--red)' : 'var(--teal)'}">${OSCE_ACTIVE.currentVitals.spo2 || '–'}</div>
+        <div class="vital-chip ${getVitalStatus('spo2', parseInt(OSCE_ACTIVE.currentVitals.spo2 || '100'))}">
+          <span class="v-lab">🫁 SpO₂</span>
+          <span class="v-val">${OSCE_ACTIVE.currentVitals.spo2 || '–'}</span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:.72rem;font-weight:800;color:var(--ink-muted)">Nawrót CRT</div>
-          <div style="font-size:1.15rem;font-weight:900;color:${parseFloat(OSCE_ACTIVE.currentVitals.crt || '1') > 2.0 ? 'var(--amber)' : 'var(--teal)'}">${OSCE_ACTIVE.currentVitals.crt || '–'}</div>
+        <div class="vital-chip ${getVitalStatus('crt', parseFloat(OSCE_ACTIVE.currentVitals.crt || '1.5'))}">
+          <span class="v-lab">⏱️ CRT</span>
+          <span class="v-val">${OSCE_ACTIVE.currentVitals.crt || '–'}</span>
         </div>
       </div>
 
@@ -4802,31 +4806,43 @@ function renderActiveOsceStation(station) {
         </div>
 
         <div class="osce-patient-stage" id="oscePatientStage">
-          ${station.patient.avatarType === 'infant' ? renderInfantSilhouetteSvg() : renderChildSilhouetteSvg()}
+          <div class="osce-stage-inner">
+            ${station.patient.avatarType === 'infant' ? renderInfantSilhouetteSvg() : renderChildSilhouetteSvg()}
 
-          <!-- Hotspoty na ciele pacjenta -->
-          ${station.zones.map(zone => {
-            const isDone = zone.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE.performedManeuvers.has(m.id));
-            const isActive = selectedZoneObj && selectedZoneObj.id === zone.id;
-            const doneCountInZone = zone.maneuvers.filter(m => OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
-            const totalInZone = zone.maneuvers.length;
-            return `
-            <div class="osce-hotspot ${isDone ? 'performed' : ''} ${isActive ? 'active' : ''}"
-                 data-zone="${zone.id}"
-                 style="left:${zone.x}%; top:${zone.y}%;"
-                 title="${zone.name} (${doneCountInZone}/${totalInZone})">
-              <span class="osce-pin-badge">
-                ${zone.icon} ${zone.name.split('–')[0].split('(')[0].trim()}
-                ${isDone ? '✓' : ''}
-              </span>
-            </div>`;
-          }).join('')}
+            <!-- Hotspoty na ciele pacjenta (dokładnie wypozycjonowane względem sylwetki) -->
+            ${station.zones.map(zone => {
+              const isDone = zone.maneuvers.filter(m => m.isKey).every(m => OSCE_ACTIVE.performedManeuvers.has(m.id));
+              const isActive = selectedZoneObj && selectedZoneObj.id === zone.id;
+              const doneCountInZone = zone.maneuvers.filter(m => OSCE_ACTIVE.performedManeuvers.has(m.id)).length;
+              const totalInZone = zone.maneuvers.length;
+              const shortName = zone.name.split('–')[0].split('(')[0].trim();
+              return `
+              <div class="osce-hotspot ${isDone ? 'performed' : ''} ${isActive ? 'active' : ''}"
+                   data-zone="${zone.id}"
+                   style="left:${zone.x}%; top:${zone.y}%;"
+                   role="button"
+                   tabindex="0"
+                   aria-label="${zone.name}"
+                   title="${zone.name} (${doneCountInZone}/${totalInZone})">
+                <span class="osce-pin-badge">
+                  <span class="pin-icon">${zone.icon}</span>
+                  <span class="pin-name">${shortName}</span>
+                  ${isDone ? '<span class="pin-check">✓</span>' : ''}
+                </span>
+              </div>`;
+            }).join('')}
+          </div>
         </div>
 
         <!-- Pasek szybkiego wyboru stref anatomicznych (przyciski pomocnicze) -->
         <div style="margin-top:1rem">
-          <div style="font-size:.78rem;font-weight:800;color:var(--ink-muted);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">
-            Wszystkie strefy anatomiczne:
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <span style="font-size:.78rem;font-weight:800;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em">
+              Strefy anatomiczne:
+            </span>
+            <span style="font-size:.78rem;font-weight:700;color:var(--teal)">
+              Wybrana: <b>${selectedZoneObj.name.split('–')[0].trim()}</b>
+            </span>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:.35rem">
             ${station.zones.map(zone => {
@@ -4857,7 +4873,7 @@ function renderActiveOsceStation(station) {
 
         <!-- ZAKŁADKA 1: Badanie fizykalne wybranej strefy -->
         ${OSCE_ACTIVE.activeTab === 'maneuvers' ? `
-          <div class="card" style="margin-bottom:1rem;background:var(--surface)">
+          <div class="card" id="osceManeuversCard" style="margin-bottom:1rem;background:var(--surface)">
             <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
               <span style="font-size:1.4rem">${selectedZoneObj.icon}</span>
               <div>
@@ -4896,7 +4912,7 @@ function renderActiveOsceStation(station) {
           </div>
         ` : `
           <!-- ZAKŁADKA 2: Wywiad celowany z rodzicem -->
-          <div class="card" style="margin-bottom:1rem;background:var(--surface)">
+          <div class="card" id="osceManeuversCard" style="margin-bottom:1rem;background:var(--surface)">
             <div style="margin-bottom:.8rem">
               <h4 style="margin:0 0 .2rem 0;font-size:1.05rem;color:var(--ink)">🗣️ Wywiad celowany z opiekunem pacjenta</h4>
               <p style="margin:0;font-size:.82rem;color:var(--ink-muted)">Wybierz pytania, aby uzyskać kluczowe informacje anamnestyczne:</p>
@@ -4959,22 +4975,33 @@ function renderActiveOsceStation(station) {
   </div></section>`;
 
   // Podpięcie zdarzeń
+  const handleZoneSelect = (zoneId) => {
+    OSCE_ACTIVE.selectedZone = zoneId;
+    OSCE_ACTIVE.activeTab = 'maneuvers';
+    const scrollY = window.scrollY;
+    renderActiveOsceStation(station);
+    if (window.innerWidth < 960) {
+      const card = $('#osceManeuversCard');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      window.scrollTo(0, scrollY);
+    }
+  };
+
   // 1. Kliknięcie w hotspot na ciele
   $$('.osce-hotspot[data-zone]').forEach(h => {
-    h.onclick = () => {
-      OSCE_ACTIVE.selectedZone = h.dataset.zone;
-      OSCE_ACTIVE.activeTab = 'maneuvers';
-      renderActiveOsceStation(station);
+    h.onclick = () => handleZoneSelect(h.dataset.zone);
+    h.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleZoneSelect(h.dataset.zone);
+      }
     };
   });
 
   // 2. Kliknięcie w chipsy wyboru strefy
   $$('.zone-chip-btn[data-zone]').forEach(b => {
-    b.onclick = () => {
-      OSCE_ACTIVE.selectedZone = b.dataset.zone;
-      OSCE_ACTIVE.activeTab = 'maneuvers';
-      renderActiveOsceStation(station);
-    };
+    b.onclick = () => handleZoneSelect(b.dataset.zone);
   });
 
   // 3. Przełączanie zakładek: Badanie vs Wywiad
@@ -4982,14 +5009,18 @@ function renderActiveOsceStation(station) {
   if (tManeuvers) {
     tManeuvers.onclick = () => {
       OSCE_ACTIVE.activeTab = 'maneuvers';
+      const scrollY = window.scrollY;
       renderActiveOsceStation(station);
+      window.scrollTo(0, scrollY);
     };
   }
   const tInterview = $('#tabBtnInterview');
   if (tInterview) {
     tInterview.onclick = () => {
       OSCE_ACTIVE.activeTab = 'interview';
+      const scrollY = window.scrollY;
       renderActiveOsceStation(station);
+      window.scrollTo(0, scrollY);
     };
   }
 
@@ -5068,7 +5099,9 @@ function performOsceManeuver(station, zone, maneuver) {
     time: new Date().toLocaleTimeString('pl-PL', { minute: '2-digit', second: '2-digit' })
   });
 
+  const scrollY = window.scrollY;
   renderActiveOsceStation(station);
+  window.scrollTo(0, scrollY);
 }
 
 function askOsceInterviewQuestion(station, index) {
@@ -5078,7 +5111,9 @@ function askOsceInterviewQuestion(station, index) {
   if (q && q.isKey) {
     toast('Uzyskano kluczową informację z wywiadu!');
   }
+  const scrollY = window.scrollY;
   renderActiveOsceStation(station);
+  window.scrollTo(0, scrollY);
 }
 
 function stabilizeOscePatient(station) {
@@ -5087,12 +5122,12 @@ function stabilizeOscePatient(station) {
   OSCE_ACTIVE.reaction = (station.id === 'stacja-1-odwodnienie') ? 'lethargy' : 'pain';
   OSCE_ACTIVE.currentVitals = { ...(station.patient.vitalsInitial || {}) };
   toast('🚑 Wykonano procedury ratunkowe – parametry ustabilizowane.');
+  const scrollY = window.scrollY;
   renderActiveOsceStation(station);
+  window.scrollTo(0, scrollY);
 }
 
 function finishOsceStation(station) {
-  const main = $('#main');
-  if (!main) return;
   window.scrollTo(0, 0);
 
   if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
