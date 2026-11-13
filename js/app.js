@@ -50,10 +50,10 @@ function toast(msg, opts = {}) {
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- krótkie nazwy ---------- */
-const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN' };
-const ASHORT = { brzuch: 'Ból brzucha', zakazenia: 'Zakażenia', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID' };
-const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'] };
-const gOf = id => GROUPS[modById[id].g];
+const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN', '0': 'Ogólna' };
+const ASHORT = { brzuch: 'Ból brzucha', zakazenia: 'Zakażenia', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID', ogolne: 'Pediatria ogólna' };
+const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'], ogolne: ['var(--blue)', 'var(--teal)'] };
+const gOf = id => (modById[id] && GROUPS[modById[id].g]) ? GROUPS[modById[id].g] : GROUPS.A;
 
 /* ---------- magazyn postępu ---------- */
 const KEY = 'pediatria-hub.v1:';
@@ -207,6 +207,7 @@ function updateRing() { /* miejsce na wskaźnik w nagłówku – pasek jest w wi
 
 /* ---------- link do atlasu ---------- */
 function atlasHref(q) {
+  if (q.at === 'ogolne' || !atById[q.at]) return '#/pytania?mods=' + (q.mods[0] || '0');
   const m = q.mods.find(x => modById[x] && modById[x].at === q.at);
   return '#/atlas/' + q.at + (m ? '/' + modById[m].a : '/zadania');
 }
@@ -299,12 +300,14 @@ function bankChip(b) {
 function qCard(q, open) {
   const bm = !!S.bm[q.id];
   const a = S.ans[q.id];
+  const isHit = q.reps && q.reps >= 2;
+  const hasKey = q.keys && q.keys.length > 0;
   return `<details class="qc" data-q="${q.id}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${bankChip(q.bank)}${modChips(q)}${confChip(q.conf)}${q.gap ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent">klucz ≠ wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent">klucz ≠ wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
-      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">Otwórz temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
+      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
     </div></details>`;
 }
 function delegateBm(root, onMutate) {
@@ -681,19 +684,20 @@ function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
 }
 
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, open: 'all', limit: 40, tab: 'browse', addMode: 'single' };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, open: 'all', limit: 30, tab: 'browse', addMode: 'single' };
 let parsedImportStash = [];
 
 function viewQuestions(parts, params) {
   if (Object.keys(params).length) {
     F.q = params.q || ''; F.at = new Set((params.at || '').split(',').filter(Boolean)); F.mods = new Set((params.mods || '').split(',').filter(Boolean));
     F.banks = new Set((params.bank || '').split(',').filter(Boolean));
-    F.all = !!params.all; F.conf = new Set((params.conf || '').split(',').filter(Boolean)); F.gap = !!params.gap; F.bm = !!params.bm; F.wrong = !!params.wrong; F.limit = 40;
+    F.all = !!params.all; F.conf = new Set((params.conf || '').split(',').filter(Boolean)); F.gap = !!params.gap; F.bm = !!params.bm; F.wrong = !!params.wrong;
+    F.hit = !!params.hit; F.hasKey = !!params.hasKey; F.hasWhy = !!params.hasWhy; F.limit = 30;
     if (params.tab) F.tab = params.tab;
   }
   
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Baza pytań i banki zewnętrzne</div><h2>${Q.length} zadań · Pula, LEK, PES, MP</h2>
+    <div class="eyebrow">Baza pytań i banki zewnętrzne</div><h2>${Q.length} zadań · Pula zakładowa, LEK, PES, MP</h2>
     <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
     
     <div class="qtabs" id="qTabs">
@@ -737,7 +741,14 @@ function renderBrowseTab(container) {
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="fAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${F.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => Q.some(q => q.mods.includes(m.id))).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
       <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="fConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${F.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
-      <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="fFlag"><button class="tgl" data-f="gap" aria-pressed="${F.gap}">klucz ≠ wytyczne</button><button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button><button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button></div>
+      <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="fFlag">
+        <button class="tgl" data-f="hit" aria-pressed="${F.hit}">🔥 hity bazy (≥2)</button>
+        <button class="tgl" data-f="hasKey" aria-pressed="${F.hasKey}">z oficjalnym kluczem</button>
+        <button class="tgl" data-f="hasWhy" aria-pressed="${F.hasWhy}">z omówieniem</button>
+        <button class="tgl" data-f="gap" aria-pressed="${F.gap}">klucz ≠ wytyczne</button>
+        <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
+        <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
+      </div>
         <span style="flex:1"></span><span class="muted" id="fCount" style="font-weight:700"></span><button class="btn sec sm" id="fClr">Wyczyść</button></div>
     </div>
     <div class="qlist" id="qlist"></div><div style="text-align:center;margin-top:1.2rem" id="more"></div>
@@ -747,6 +758,9 @@ function renderBrowseTab(container) {
   function filtered() {
     const toks = norm(F.q).split(/\s+/).filter(Boolean);
     return Q.filter(q => {
+      if (F.hit && (!q.reps || q.reps < 2)) return false;
+      if (F.hasKey && (!q.keys || !q.keys.length)) return false;
+      if (F.hasWhy && !q.why) return false;
       if (F.banks.size && !F.banks.has(q.bank)) return false;
       if (F.at.size && !F.at.has(q.at)) return false;
       if (F.mods.size) { const ms = [...F.mods]; if (F.all ? !ms.every(m => q.mods.includes(m)) : !ms.some(m => q.mods.includes(m))) return false; }
@@ -759,15 +773,15 @@ function renderBrowseTab(container) {
   function draw() {
     const r = filtered(); $('#fCount').textContent = r.length + ' z ' + Q.length;
     list.innerHTML = r.slice(0, F.limit).map(q => qCard(q)).join('') || '<div class="card" style="text-align:center;padding:2rem"><h3>Brak wyników</h3><p class="muted" style="margin:.3rem auto">Poluzuj filtry lub zmień frazę.</p></div>';
-    $('#more').innerHTML = r.length > F.limit ? `<button class="btn sec" id="moreB">Pokaż kolejne ${Math.min(40, r.length - F.limit)} (zostało ${r.length - F.limit})</button>` : '';
-    const mb = $('#moreB'); if (mb) mb.onclick = () => { F.limit += 40; draw(); };
+    $('#more').innerHTML = r.length > F.limit ? `<button class="btn sec" id="moreB">Pokaż kolejne ${Math.min(30, r.length - F.limit)} (zostało ${r.length - F.limit})</button>` : '';
+    const mb = $('#moreB'); if (mb) mb.onclick = () => { F.limit += 30; draw(); };
   }
-  const tgl = (sel, set) => $(sel).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); b.setAttribute('aria-pressed', set.has(v)); F.limit = 40; draw(); });
+  const tgl = (sel, set) => $(sel).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); b.setAttribute('aria-pressed', set.has(v)); F.limit = 30; draw(); });
   tgl('#fBank', F.banks); tgl('#fAt', F.at); tgl('#fMod', F.mods); tgl('#fConf', F.conf);
   $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); draw(); });
-  $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 40; draw(); });
-  $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 40; draw(); });
-  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, limit: 40 }); renderBrowseTab(container); });
+  $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 30; draw(); });
+  $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 30; draw(); });
+  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, limit: 30 }); renderBrowseTab(container); });
   delegateBm(list, () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; });
   draw();
 }
@@ -1018,9 +1032,11 @@ function renderExportTab(container) {
 }
 
 /* ---------- TRENING ---------- */
-const C = { at: new Set(), mods: new Set(), banks: new Set(), conf: new Set(), gap: false, wrong: false, bm: false, fresh: false, open: false, n: 10, mode: 'learn' };
+const C = { at: new Set(), mods: new Set(), banks: new Set(), conf: new Set(), gap: false, wrong: false, bm: false, fresh: false, open: false, hitsOnly: false, includeUnverified: false, n: 10, mode: 'learn' };
 function pool() {
   return Q.filter(q => {
+    if (!C.includeUnverified && (!q.keys || !q.keys.length)) return false;
+    if (C.hitsOnly && (!q.reps || q.reps < 2)) return false;
     if (q.type === 'open' && !C.open) return false;
     if (C.banks.size && !C.banks.has(q.bank)) return false;
     if (C.at.size && !C.at.has(q.at)) return false;
@@ -1725,13 +1741,17 @@ let EXAM_CONF = {
   customMinutes: 50,
   banks: new Set(Object.keys(BANKS)),
   mods: new Set(MODS.map(m => m.id)),
-  shuffleQ: true
+  shuffleQ: true,
+  hitsOnly: false,
+  includeUnverified: false
 };
 
 let EXAM_SESSION = null;
 
 function getExamQuestionsPool() {
   return Q.filter(q => {
+    if (!EXAM_CONF.includeUnverified && (!q.keys || !q.keys.length)) return false;
+    if (EXAM_CONF.hitsOnly && (!q.reps || q.reps < 2)) return false;
     if (EXAM_CONF.banks.size && !EXAM_CONF.banks.has(q.bank)) return false;
     if (EXAM_CONF.mods.size && !q.mods.some(m => EXAM_CONF.mods.has(m))) return false;
     return true;
@@ -1825,6 +1845,14 @@ function renderExamSetup() {
         </div>
       </div>
 
+      <div class="frow">
+        <span class="flab">Zawartość</span>
+        <div class="pillrow" id="exFilters">
+          <button class="tgl" id="exHitsOnly" aria-pressed="${EXAM_CONF.hitsOnly}">🔥 Tylko hity zakładowe (≥2 źródła)</button>
+          <button class="tgl" id="exUnverified" aria-pressed="${EXAM_CONF.includeUnverified}">Uwzględnij pytania bez oficjalnego klucza (do dyskusji)</button>
+        </div>
+      </div>
+
       <div class="frow" style="justify-content:space-between;border-top:1px solid var(--line-2);padding-top:1.1rem;margin-top:.6rem">
         <div>
           <span id="exPoolInfo" style="font-weight:800;font-size:1.05rem"></span>
@@ -1910,6 +1938,24 @@ function renderExamSetup() {
     $$('#exMods button').forEach(b => b.setAttribute('aria-pressed', 'false'));
     updatePoolInfo();
   };
+
+  const btnHitsOnly = $('#exHitsOnly');
+  if (btnHitsOnly) {
+    btnHitsOnly.onclick = () => {
+      EXAM_CONF.hitsOnly = !EXAM_CONF.hitsOnly;
+      btnHitsOnly.setAttribute('aria-pressed', EXAM_CONF.hitsOnly);
+      updatePoolInfo();
+    };
+  }
+
+  const btnUnverified = $('#exUnverified');
+  if (btnUnverified) {
+    btnUnverified.onclick = () => {
+      EXAM_CONF.includeUnverified = !EXAM_CONF.includeUnverified;
+      btnUnverified.setAttribute('aria-pressed', EXAM_CONF.includeUnverified);
+      updatePoolInfo();
+    };
+  }
 
   $('#btnStartExam').onclick = () => startExam();
 
@@ -4232,7 +4278,7 @@ function renderConfig() {
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="cAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${C.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       ${C.mods.size ? `<div class="frow"><span class="flab">Moduły</span><div class="pillrow">${[...C.mods].map(m => `<button class="tgl" data-rm="${m}" aria-pressed="true">[${m}] ✕</button>`).join('')}</div></div>` : ''}
       <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="cConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${C.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
-      <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="cFlag"><button class="tgl" data-f="gap" aria-pressed="${C.gap}">klucz ≠ wytyczne</button><button class="tgl" data-f="wrong" aria-pressed="${C.wrong}">moje błędne</button><button class="tgl" data-f="fresh" aria-pressed="${C.fresh}">jeszcze nie ruszone</button><button class="tgl" data-f="bm" aria-pressed="${C.bm}">zakładki</button><button class="tgl" data-f="open" aria-pressed="${C.open}">z fiszkami (otwarte)</button></div></div>
+      <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="cFlag"><button class="tgl" data-f="hitsOnly" aria-pressed="${C.hitsOnly}">🔥 hity bazy (≥2)</button><button class="tgl" data-f="includeUnverified" aria-pressed="${C.includeUnverified}">uwzględnij bez klucza</button><button class="tgl" data-f="gap" aria-pressed="${C.gap}">klucz ≠ wytyczne</button><button class="tgl" data-f="wrong" aria-pressed="${C.wrong}">moje błędne</button><button class="tgl" data-f="fresh" aria-pressed="${C.fresh}">jeszcze nie ruszone</button><button class="tgl" data-f="bm" aria-pressed="${C.bm}">zakładki</button><button class="tgl" data-f="open" aria-pressed="${C.open}">z fiszkami (otwarte)</button></div></div>
       <div class="frow"><span class="flab">Liczba</span><div class="seg" id="cN">${[10, 20, 40, 0].map(n => `<button data-n="${n}" aria-pressed="${C.n === n}">${n || 'Wszystkie'}</button>`).join('')}</div>
         <span class="flab" style="min-width:0;margin-left:1rem">Tryb</span><div class="seg" id="cMode"><button data-m="learn" aria-pressed="${C.mode === 'learn'}">Nauka</button><button data-m="exam" aria-pressed="${C.mode === 'exam'}">Egzamin</button></div></div>
       <div class="frow" style="justify-content:space-between;border-top:1px solid var(--line-2);padding-top:.9rem"><span id="cPool" style="font-weight:800"></span><button class="btn pri" id="go">Rozpocznij sesję →</button></div>
