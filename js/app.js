@@ -1,7 +1,7 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, modById, atById } = window.HUB_META;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, modById, atById } = window.HUB_META;
 const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
 let CUSTOM_Q = [];
 try {
@@ -5076,6 +5076,31 @@ function renderVitalsMonitor(v) {
   </div>`;
 }
 
+function renderPatientImagingBadge(patientId) {
+  const map = {
+    krup: { link: '#/badania?tab=imaging&case=rtg-croup', text: '🔬 Przećwicz RTG krtani (Objaw wieży kościoła) w Trenażerze Badań →', col: 'var(--blue)', bg: 'var(--blue-l)' },
+    wglobienie: { link: '#/badania?tab=imaging&case=usg-intussusception', text: '🔬 Przećwicz USG brzucha (Objaw tarczy) w Trenażerze Badań →', col: 'var(--teal-d)', bg: 'var(--teal-l)' },
+    drgawki: { link: '#/badania?tab=imaging&case=ekg-svt', text: '🔬 Przećwicz EKG (SVT / LQTS) w Trenażerze Badań →', col: 'var(--red)', bg: 'var(--red-l)' },
+    dka: { link: '#/badania?tab=gas', text: '🔬 Przećwicz Gazometrię i Lukę Anionową w Trenażerze Badań →', col: 'var(--amber)', bg: 'var(--amber-l)' },
+    sepsa: { link: '#/badania?tab=cbc', text: '🔬 Przećwicz Morfologię krwi i PMR w Trenażerze Badań →', col: 'var(--violet)', bg: 'var(--violet-l)' }
+  };
+  const item = map[patientId];
+  if (!item) return '';
+  return `<div style="margin-top:.6rem"><a class="chip" href="${item.link}" style="background:${item.bg};color:${item.col};font-weight:700;text-decoration:none">${item.text}</a></div>`;
+}
+
+function renderOsceImagingBadge(stationId) {
+  const map = {
+    'stacja-1-odwodnienie': { link: '#/badania?tab=gas', text: '🔬 Sprawdź gazometrię i odwodnienie w Trenażerze Badań →', col: 'var(--amber)', bg: 'var(--amber-l)' },
+    'stacja-2-brzuch': { link: '#/badania?tab=imaging&case=usg-appendicitis', text: '🔬 Przećwicz USG wyrostka i brzucha w Trenażerze Obrazowania →', col: 'var(--teal-d)', bg: 'var(--teal-l)' },
+    'stacja-3-krup': { link: '#/badania?tab=imaging&case=rtg-croup', text: '🔬 Przećwicz RTG krtani (Objaw wieży kościoła) w Trenażerze Obrazowania →', col: 'var(--blue)', bg: 'var(--blue-l)' },
+    'stacja-4-igav': { link: '#/badania?tab=urine', text: '🔬 Sprawdź badanie ogólne i osad moczu w Trenażerze Badań →', col: 'var(--violet)', bg: 'var(--violet-l)' }
+  };
+  const item = map[stationId];
+  if (!item) return '';
+  return `<div style="margin-top:.4rem"><a class="chip" href="${item.link}" style="background:${item.bg};color:${item.col};font-weight:700;font-size:.78rem;text-decoration:none">${item.text}</a></div>`;
+}
+
 function renderActivePatientSim(caseItem) {
   if (SIM_ACTIVE.state === 'finished') {
     return renderPatientReport(caseItem);
@@ -5103,6 +5128,7 @@ function renderActivePatientSim(caseItem) {
       </div>
       <h2 style="font-size:1.35rem;margin:.3rem 0">${esc(caseItem.title)}</h2>
       <p class="srcline" style="margin-top:.4rem;font-size:.9rem">${esc(caseItem.intro)}</p>
+      ${renderPatientImagingBadge(caseItem.id)}
     </div>
 
     <!-- Monitor parametrów życiowych -->
@@ -6564,6 +6590,7 @@ function renderActiveOsceStation(station) {
           <div style="font-size:.88rem;color:var(--ink-muted)">
             <b>Pacjent:</b> ${station.patient.name} (${station.patient.age}, ${station.patient.weight}) · <b>Rozpoznanie wstępne:</b> ${station.topic}
           </div>
+          ${renderOsceImagingBadge(station.id)}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
           <div style="font-size:.78rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em">Reakcja kliniczna pacjenta:</div>
@@ -8625,17 +8652,38 @@ function viewVaccines(parts, params) {
 
 /* ---------- ATLAS BADAŃ LABORATORYJNYCH I OBRAZOWYCH ---------- */
 let DIAG_TAB = 'pmr'; // 'pmr' | 'gas' | 'urine' | 'cbc' | 'imaging'
+const IMAGING_STORE_KEY = 'pediatria_hub_imaging_v1';
+let IMAGING_PROGRESS = {};
+try {
+  const ipRaw = localStorage.getItem(IMAGING_STORE_KEY);
+  if (ipRaw) IMAGING_PROGRESS = JSON.parse(ipRaw);
+} catch (e) { /* ignoruj */ }
+function saveImagingProgress() {
+  try { localStorage.setItem(IMAGING_STORE_KEY, JSON.stringify(IMAGING_PROGRESS)); } catch (e) {}
+}
+let ACTIVE_IMAGING_CASE_ID = 'ekg-norm';
+let IMAGING_MODALITY_FILTER = 'all'; // 'all' | 'ekg' | 'rtg' | 'usg'
+let IMAGING_SHOW_HINT = false;
+let IMAGING_LAST_FEEDBACK = null;
 
 function viewDiagnostics(parts, params) {
   if (params && params.tab && ['pmr', 'gas', 'urine', 'cbc', 'imaging'].includes(params.tab)) {
     DIAG_TAB = params.tab;
+  }
+  if (params && params.case) {
+    ACTIVE_IMAGING_CASE_ID = params.case;
+    DIAG_TAB = 'imaging';
+  }
+  if (params && params.modality && ['all', 'ekg', 'rtg', 'usg'].includes(params.modality)) {
+    IMAGING_MODALITY_FILTER = params.modality;
+    DIAG_TAB = 'imaging';
   }
 
   const render = () => {
     main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:960px">
       <div class="eyebrow">Diagnostyka laboratoryjna & Obrazowa</div>
       <h2>Atlas badań & Lab Trainer</h2>
-      <p class="lead">Interaktywny interpretator wyników badań w pediatrii: płyn mózgowo-rdzeniowy, gazometria z luką anionową, osad moczu, algorytm anemii oraz kluczowe objawy USG/RTG w stanach nagłych.</p>
+      <p class="lead">Interaktywny interpretator wyników badań w pediatrii: płyn mózgowo-rdzeniowy, gazometria z luką anionową, osad moczu, algorytm anemii oraz trenażer EKG, RTG i USG (POCUS) z hotspotami patologii.</p>
 
       <!-- Nawigacja zakładek -->
       <div class="calc-tab-nav" id="diagTabNav">
@@ -8643,7 +8691,7 @@ function viewDiagnostics(parts, params) {
         <button class="calc-tab-btn ${DIAG_TAB === 'gas' ? 'active' : ''}" data-dtab="gas">🫁 Gazometria & Luka Anionowa</button>
         <button class="calc-tab-btn ${DIAG_TAB === 'urine' ? 'active' : ''}" data-dtab="urine">🧪 Badanie i Osad Moczu</button>
         <button class="calc-tab-btn ${DIAG_TAB === 'cbc' ? 'active' : ''}" data-dtab="cbc">🩸 Morfologia & Anemie</button>
-        <button class="calc-tab-btn ${DIAG_TAB === 'imaging' ? 'active' : ''}" data-dtab="imaging">📸 Obrazowanie USG / RTG</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'imaging' ? 'active' : ''}" data-dtab="imaging">🔬 EKG, RTG & USG Trainer</button>
       </div>
 
       <!-- Treść zakładki -->
@@ -8904,37 +8952,412 @@ function viewDiagnostics(parts, params) {
     </div>`;
   };
 
-  /* 5. Imaging */
+  /* 5. SVG Generator dla Trenażera Badań Obrazowych i EKG */
+  const renderImagingSvg = (caseItem, showHighlight) => {
+    const { svgType, hotspot } = caseItem;
+    const hx = hotspot.targetX;
+    const hy = hotspot.targetY;
+    const hr = hotspot.radius;
+
+    const highlightSvg = showHighlight ? `
+      <g class="imaging-hotspot-overlay">
+        <circle cx="${hx}" cy="${hy}" r="${hr}" fill="rgba(34,197,94,0.22)" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="6,3" class="imaging-pulse-circle" />
+        <circle cx="${hx}" cy="${hy}" r="5" fill="#22c55e" />
+        <rect x="${Math.max(10, hx - 65)}" y="${hy > 150 ? hy - hr - 26 : hy + hr + 8}" width="130" height="20" rx="4" fill="rgba(15,23,42,0.92)" stroke="#22c55e" stroke-width="1"/>
+        <text x="${Math.max(75, hx)}" y="${hy > 150 ? hy - hr - 12 : hy + hr + 22}" fill="#fff" font-size="9.5" font-weight="700" text-anchor="middle">🎯 ${esc(hotspot.name.slice(0, 22))}</text>
+      </g>` : '';
+
+    const hitZone = `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="transparent" class="imaging-hit-circle" data-hotspot-hit="1" style="cursor:crosshair" />`;
+
+    let body = '';
+
+    if (svgType === 'ekg-norm') {
+      body = `
+        <defs>
+          <pattern id="ekgSmGrid" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M 4 0 L 0 0 0 4" fill="none" stroke="#fecdd3" stroke-width="0.5"/></pattern>
+          <pattern id="ekgGrid" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="url(#ekgSmGrid)"/><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f43f5e" stroke-width="0.9" stroke-opacity="0.55"/></pattern>
+        </defs>
+        <rect width="320" height="220" fill="#fff5f5"/>
+        <rect width="320" height="220" fill="url(#ekgGrid)"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#38bdf8" font-size="10.5" font-family="monospace" font-weight="700">V1 · 25 mm/s · 10 mm/mV · HR 95/min (6 lat)</text>
+        <path d="M 12 110 L 18 110 L 18 70 L 26 70 L 26 110 L 32 110" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+        <text x="36" y="113" fill="#64748b" font-size="8.5" font-family="monospace">10mm</text>
+        <path d="M 45 110 Q 53 98 61 110 L 70 110 L 73 115 L 79 50 L 86 128 L 94 110 L 105 110 Q 120 134 135 110 L 155 110 Q 163 98 171 110 L 180 110 L 183 115 L 189 50 L 196 128 L 204 110 L 212 110 Q 228 136 244 110 L 265 110 Q 273 98 281 110 L 290 110 L 293 115 L 299 50 L 306 128 L 314 110" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="189" y="42" fill="#0f172a" font-size="9" font-weight="700" text-anchor="middle">R</text>
+        <text x="228" y="152" fill="#0f172a" font-size="8.5" font-weight="700" text-anchor="middle">Ujemny T w V1</text>
+      `;
+    } else if (svgType === 'ekg-svt') {
+      body = `
+        <defs>
+          <pattern id="ekgSmGridSvt" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M 4 0 L 0 0 0 4" fill="none" stroke="#fecdd3" stroke-width="0.5"/></pattern>
+          <pattern id="ekgGridSvt" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="url(#ekgSmGridSvt)"/><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f43f5e" stroke-width="0.9" stroke-opacity="0.55"/></pattern>
+        </defs>
+        <rect width="320" height="220" fill="#fff5f5"/>
+        <rect width="320" height="220" fill="url(#ekgGridSvt)"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#ef4444" font-size="10.5" font-family="monospace" font-weight="700">MONITOR II · HR 230/min · WĄSKIE QRS (&lt;80ms) · SVT</text>
+        <path d="M 8 110 L 14 110 L 14 70 L 20 70 L 20 110 L 24 110" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M 24 110 L 27 115 L 30 42 L 34 126 L 37 110 Q 45 98 52 110 L 58 110 L 61 115 L 64 42 L 68 126 L 71 110 Q 79 98 86 110 L 92 110 L 95 115 L 98 42 L 102 126 L 105 110 Q 113 98 120 110 L 126 110 L 129 115 L 132 42 L 136 126 L 139 110 Q 147 98 154 110 L 160 110 L 163 115 L 166 42 L 170 126 L 173 110 Q 181 98 188 110 L 194 110 L 197 115 L 200 42 L 204 126 L 207 110 Q 215 98 222 110 L 228 110 L 231 115 L 234 42 L 238 126 L 241 110 Q 249 98 256 110 L 262 110 L 265 115 L 268 42 L 272 126 L 275 110 Q 283 98 290 110 L 296 110 L 299 115 L 302 42 L 306 126 L 310 110" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        <line x1="166" y1="145" x2="200" y2="145" stroke="#ef4444" stroke-width="2"/>
+        <text x="183" y="160" fill="#ef4444" font-size="9" text-anchor="middle" font-weight="700">RR = 130 ms (brak P)</text>
+      `;
+    } else if (svgType === 'ekg-lqts') {
+      body = `
+        <defs>
+          <pattern id="ekgSmGridLqts" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M 4 0 L 0 0 0 4" fill="none" stroke="#fecdd3" stroke-width="0.5"/></pattern>
+          <pattern id="ekgGridLqts" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="url(#ekgSmGridLqts)"/><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f43f5e" stroke-width="0.9" stroke-opacity="0.55"/></pattern>
+        </defs>
+        <rect width="320" height="220" fill="#fff5f5"/>
+        <rect width="320" height="220" fill="url(#ekgGridLqts)"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#f59e0b" font-size="10.5" font-family="monospace" font-weight="700">LEAD II · HR 62/min · QT = 520 ms · QTc = 540 ms (LQTS)</text>
+        <path d="M 15 110 Q 23 99 31 110 L 38 110 L 41 114 L 46 48 L 52 124 L 57 110 L 80 110 Q 102 70 124 110 L 180 110 Q 188 99 196 110 L 202 110 L 205 114 L 210 48 L 216 124 L 221 110 L 244 110 Q 266 70 288 110 L 315 110" fill="none" stroke="#0f172a" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+        <line x1="204" y1="140" x2="288" y2="140" stroke="#dc2626" stroke-width="2"/>
+        <line x1="204" y1="134" x2="204" y2="146" stroke="#dc2626" stroke-width="2"/>
+        <line x1="288" y1="134" x2="288" y2="146" stroke="#dc2626" stroke-width="2"/>
+        <text x="246" y="156" fill="#dc2626" font-size="9.5" font-weight="700" text-anchor="middle">Wydłużony QT = 520 ms (&gt; 1/2 RR)</text>
+      `;
+    } else if (svgType === 'ekg-hyperkalemia') {
+      body = `
+        <defs>
+          <pattern id="ekgSmGridK" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M 4 0 L 0 0 0 4" fill="none" stroke="#fecdd3" stroke-width="0.5"/></pattern>
+          <pattern id="ekgGridK" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="url(#ekgSmGridK)"/><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f43f5e" stroke-width="0.9" stroke-opacity="0.55"/></pattern>
+        </defs>
+        <rect width="320" height="220" fill="#fff5f5"/>
+        <rect width="320" height="220" fill="url(#ekgGridK)"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#ef4444" font-size="10.5" font-family="monospace" font-weight="700">V3 · K+ = 7.4 mmol/l · NAMIOTOWATY ZAŁAMEK T</text>
+        <path d="M 15 110 Q 25 108 35 110 L 48 110 L 53 116 L 60 62 L 67 124 L 72 110 L 80 110 L 92 24 L 104 110 L 150 110 Q 160 108 170 110 L 180 110 L 185 116 L 192 62 L 199 124 L 204 110 L 205 110 L 217 24 L 229 110 L 290 110" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="217" y="18" fill="#b91c1c" font-size="10" font-weight="800" text-anchor="middle">▲ Wysoki T (K+ &gt; 7.0)</text>
+      `;
+    } else if (svgType === 'rtg-croup') {
+      body = `
+        <rect width="320" height="220" fill="#0b0f19"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#38bdf8" font-size="10" font-family="monospace" font-weight="700">RTG SZYI AP · KRUP (LARYNGOTRACHEITIS) · 2 LATA</text>
+        <rect x="125" y="45" width="50" height="155" fill="#1e293b" opacity="0.6" rx="4"/>
+        <path d="M 80 40 Q 150 55 220 40" stroke="#475569" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M 30 195 Q 110 205 140 215" stroke="#475569" stroke-width="7" fill="none"/>
+        <path d="M 290 195 Q 210 205 180 215" stroke="#475569" stroke-width="7" fill="none"/>
+        <path d="M 128 55 L 128 85 L 144 130 L 144 185 L 156 185 L 156 130 L 172 85 L 172 55 Z" fill="#020617" stroke="#38bdf8" stroke-width="1.8"/>
+        <line x1="75" y1="130" x2="135" y2="130" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="3,2"/>
+        <text x="70" y="125" fill="#f59e0b" font-size="9.5" font-weight="700" text-anchor="end">Steeple sign</text>
+        <text x="70" y="138" fill="#cbd5e1" font-size="8" text-anchor="end">(Objaw wieży)</text>
+      `;
+    } else if (svgType === 'rtg-perforation') {
+      body = `
+        <rect width="320" height="220" fill="#0b0f19"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#ef4444" font-size="10" font-family="monospace" font-weight="700">RTG BRZUCHA / KLATKI (STOJĄCE) · PNEUMOPERITONEUM</text>
+        <ellipse cx="60" cy="90" rx="35" ry="50" fill="none" stroke="#334155" stroke-width="2.5"/>
+        <ellipse cx="260" cy="90" rx="35" ry="50" fill="none" stroke="#334155" stroke-width="2.5"/>
+        <path d="M 150 100 Q 215 60 280 100" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 150 100 Q 215 88 280 100 L 280 180 L 150 180 Z" fill="#334155"/>
+        <path d="M 165 88 Q 215 66 265 88 Q 215 80 165 88 Z" fill="#020617" stroke="#38bdf8" stroke-width="1.2"/>
+        <text x="215" y="120" fill="#f87171" font-size="9.5" font-weight="700" text-anchor="middle">Sierp powietrza pod przeponą</text>
+        <line x1="215" y1="108" x2="215" y2="82" stroke="#f87171" stroke-width="1.5" stroke-dasharray="2,2"/>
+      `;
+    } else if (svgType === 'rtg-ileus') {
+      body = `
+        <rect width="320" height="220" fill="#0b0f19"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#f59e0b" font-size="10" font-family="monospace" font-weight="700">RTG BRZUCHA AP · NIEDROŻNOŚĆ MECHANICZNA JELIT</text>
+        <rect x="75" y="70" width="75" height="50" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1.8"/>
+        <rect x="75" y="70" width="75" height="25" rx="8" fill="#020617"/>
+        <line x1="75" y1="95" x2="150" y2="95" stroke="#38bdf8" stroke-width="2.2"/>
+        <rect x="115" y="130" width="85" height="52" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1.8"/>
+        <rect x="115" y="130" width="85" height="25" rx="8" fill="#020617"/>
+        <line x1="115" y1="155" x2="200" y2="155" stroke="#ef4444" stroke-width="2.5"/>
+        <rect x="175" y="90" width="80" height="48" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1.8"/>
+        <rect x="175" y="90" width="80" height="22" rx="8" fill="#020617"/>
+        <line x1="175" y1="112" x2="255" y2="112" stroke="#38bdf8" stroke-width="2.2"/>
+        <text x="155" y="196" fill="#f59e0b" font-size="9.5" font-weight="700" text-anchor="middle">Poziomy płynów (Obraz schodów)</text>
+      `;
+    } else if (svgType === 'rtg-mediastinum') {
+      body = `
+        <rect width="320" height="220" fill="#0b0f19"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#f87171" font-size="10" font-family="monospace" font-weight="700">RTG KLATKI PIERSIOWEJ PA · GUZ ŚRÓDPIERSIA PRZEDNIEGO</text>
+        <ellipse cx="65" cy="120" rx="45" ry="65" fill="#020617" stroke="#334155" stroke-width="2"/>
+        <ellipse cx="245" cy="120" rx="45" ry="65" fill="#020617" stroke="#334155" stroke-width="2"/>
+        <path d="M 115 50 C 85 85 85 140 120 170 L 190 170 C 225 140 225 85 195 50 Z" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
+        <path d="M 150 30 Q 135 60 128 85 L 128 105" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <text x="150" y="195" fill="#ef4444" font-size="9" font-weight="700" text-anchor="middle">Masa &gt; 1/3 szerokości klatki (Zespół SVCS)</text>
+      `;
+    } else if (svgType === 'usg-target') {
+      body = `
+        <rect width="320" height="220" fill="#080c14"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#38bdf8" font-size="10" font-family="monospace" font-weight="700">USG BRZUCHA · GŁOWICA LINIOWA · OBJAW TARCZY</text>
+        <line x1="305" y1="40" x2="305" y2="200" stroke="#475569" stroke-width="1"/>
+        <text x="312" y="80" fill="#64748b" font-size="7">2cm</text>
+        <text x="312" y="140" fill="#64748b" font-size="7">4cm</text>
+        <circle cx="150" cy="140" r="46" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <circle cx="150" cy="140" r="32" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+        <ellipse cx="146" cy="138" rx="18" ry="14" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="154" cy="142" r="5" fill="#475569" stroke="#cbd5e1" stroke-width="1.5"/>
+        <text x="150" y="65" fill="#38bdf8" font-size="10.5" font-weight="700" text-anchor="middle">Objaw tarczy strzelniczej (Target sign)</text>
+        <text x="150" y="78" fill="#94a3b8" font-size="8.5" text-anchor="middle">Wgłobienie jelitowe (Intussusception)</text>
+      `;
+    } else if (svgType === 'usg-appendix') {
+      body = `
+        <rect width="320" height="220" fill="#080c14"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#f59e0b" font-size="10" font-family="monospace" font-weight="700">USG DÓŁ BIODROWY PRAWY · ZAPALENIE WYROSTKA</text>
+        <rect x="20" y="35" width="280" height="18" fill="#1e293b" opacity="0.6"/>
+        <path d="M 60 120 L 220 120 Q 235 135 220 150 L 60 150" fill="#1e293b" stroke="#475569" stroke-width="3"/>
+        <circle cx="145" cy="132" r="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+        <polygon points="138,138 152,138 156,215 134,215" fill="#020617"/>
+        <line x1="185" y1="120" x2="185" y2="150" stroke="#ef4444" stroke-width="2"/>
+        <text x="192" y="138" fill="#ef4444" font-size="9" font-weight="700">8.2 mm</text>
+        <text x="150" y="80" fill="#f59e0b" font-size="9.5" font-weight="700" text-anchor="middle">Nieściśliwy wyrostek &gt;6 mm + kamień kałowy</text>
+      `;
+    } else if (svgType === 'usg-pylorus') {
+      body = `
+        <rect width="320" height="220" fill="#080c14"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#38bdf8" font-size="10" font-family="monospace" font-weight="700">USG ODŹWIERNIKA · ZWĘŻENIE ODŹWIERNIKA (HPS)</text>
+        <rect x="90" y="96" width="130" height="24" rx="4" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+        <rect x="90" y="138" width="130" height="24" rx="4" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+        <line x1="90" y1="129" x2="220" y2="129" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="155" y1="96" x2="155" y2="120" stroke="#ef4444" stroke-width="2"/>
+        <text x="162" y="112" fill="#ef4444" font-size="8.5" font-weight="700">3.8 mm (≥3mm)</text>
+        <line x1="90" y1="172" x2="220" y2="172" stroke="#38bdf8" stroke-width="2"/>
+        <text x="155" y="188" fill="#38bdf8" font-size="9" font-weight="700" text-anchor="middle">Długość kanału: 17 mm (≥15mm)</text>
+      `;
+    } else if (svgType === 'usg-wilms') {
+      body = `
+        <rect width="320" height="220" fill="#080c14"/>
+        <rect x="0" y="0" width="320" height="24" fill="#0f172a"/>
+        <text x="10" y="16" fill="#22c55e" font-size="10" font-family="monospace" font-weight="700">USG JAMY BRZUSZNEJ · LEWA NERKA · GUZ WILMSA</text>
+        <path d="M 90 70 C 130 65 180 75 190 120 C 195 160 170 205 120 205 C 80 200 65 150 70 110 Z" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <circle cx="140" cy="145" r="44" fill="#334155" stroke="#64748b" stroke-width="2"/>
+        <path d="M 98 115 Q 120 122 135 110" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 180 115 Q 160 122 145 110" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="250" cy="135" rx="8" ry="12" fill="#020617" stroke="#ef4444" stroke-width="1.8"/>
+        <text x="250" y="158" fill="#ef4444" font-size="8" text-anchor="middle">Aorta (wolna)</text>
+        <text x="140" y="60" fill="#22c55e" font-size="9.5" font-weight="700" text-anchor="middle">Objaw pazura (Claw sign) ➔ guz nerki</text>
+      `;
+    }
+
+    return `<svg id="imagingSvgCanvas" data-case-id="${caseItem.id}" viewBox="0 0 320 220" class="imaging-canvas-svg">${body}${highlightSvg}${hitZone}</svg>`;
+  };
+
+  /* 5. Interactive Imaging & EKG Trainer */
   const renderDiagImaging = () => {
-    return `<div class="card" style="padding:1.4rem">
-      <h3 style="font-size:1.25rem;margin-bottom:.4rem">Kluczowe Objawy Obrazowe w Pediatrii (USG / RTG)</h3>
-      <p class="muted" style="margin-bottom:1.4rem">Charakterystyczne znaki radiologiczne, o które pytają na każdym zaliczeniu.</p>
+    const cases = IMAGING_TRAINER_CASES || [];
+    const totalCases = cases.length;
+    const solvedCount = cases.filter(c => IMAGING_PROGRESS[c.id] && IMAGING_PROGRESS[c.id].solved).length;
+    const progressPct = Math.round((solvedCount / (totalCases || 1)) * 100);
 
-      <div class="imaging-grid">
-        <div class="imaging-card" style="border-left:4px solid var(--red)">
-          <div style="font-size:1.1rem;font-weight:800;color:var(--red)">Wgłobienie jelita (Intussusception)</div>
-          <span class="chip" style="align-self:flex-start">USG jamy brzusznej</span>
-          <p class="srcline"><b>Objaw tarczy strzelniczej (target sign / doughnut sign)</b> w przekroju poprzecznym oraz <b>objaw pseudonerki</b> w przekroju podłużnym. Złoty standard diagnostyki i leczenia: wlew kontrastowy/powietrzny pod kontrolą USG/RTG.</p>
+    const filteredCases = cases.filter(c => {
+      if (IMAGING_MODALITY_FILTER === 'all') return true;
+      return c.modality === IMAGING_MODALITY_FILTER;
+    });
+
+    const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || filteredCases[0] || cases[0];
+    const cProg = (activeCase && IMAGING_PROGRESS[activeCase.id]) || { hotspot: false, solved: false, selectedOpt: null };
+
+    const modMap = {
+      ekg: { icon: '🫀', name: 'EKG Pediatryczne', col: 'var(--red)', bg: 'var(--red-l)' },
+      rtg: { icon: '🩻', name: 'RTG Dziecięce', col: 'var(--blue)', bg: 'var(--blue-l)' },
+      usg: { icon: '📡', name: 'POCUS / USG', col: 'var(--teal-d)', bg: 'var(--teal-l)' }
+    };
+    const modInfo = modMap[activeCase.modality] || { icon: '🔬', name: 'Badanie', col: 'var(--ink)', bg: 'var(--surface)' };
+
+    return `<div class="imaging-trainer-wrapper">
+      <!-- Pasek filtrów i postępu ogólnego -->
+      <div class="imaging-filter-bar">
+        <div class="imaging-filter-pills">
+          <button class="imaging-filter-btn ${IMAGING_MODALITY_FILTER === 'all' ? 'active' : ''}" data-mod-filter="all">Wszystkie (${totalCases})</button>
+          <button class="imaging-filter-btn ${IMAGING_MODALITY_FILTER === 'ekg' ? 'active' : ''}" data-mod-filter="ekg">🫀 EKG (4)</button>
+          <button class="imaging-filter-btn ${IMAGING_MODALITY_FILTER === 'rtg' ? 'active' : ''}" data-mod-filter="rtg">🩻 RTG (4)</button>
+          <button class="imaging-filter-btn ${IMAGING_MODALITY_FILTER === 'usg' ? 'active' : ''}" data-mod-filter="usg">📡 POCUS / USG (4)</button>
         </div>
-
-        <div class="imaging-card" style="border-left:4px solid var(--amber)">
-          <div style="font-size:1.1rem;font-weight:800;color:var(--amber)">Przerostowe zwężenie odźwiernika (PS)</div>
-          <span class="chip" style="align-self:flex-start">USG odźwiernika</span>
-          <p class="srcline">Grubość warstwy mięśniowej <b>≥ 3 mm</b>, długość kanału odźwiernika <b>≥ 15 mm</b>. Klinika: chlustające wymioty bez żółci u niemowlęcia w 3.–6. tygodniu życia, zasadowica hipochloremiczna.</p>
-        </div>
-
-        <div class="imaging-card" style="border-left:4px solid var(--blue)">
-          <div style="font-size:1.1rem;font-weight:800;color:var(--blue)">Niedrożność przewodu pokarmowego (ZNZ)</div>
-          <span class="chip" style="align-self:flex-start">RTG przeglądowe jamy brzusznej</span>
-          <p class="srcline"><b>Poziomy płynów w pętlach jelitowych</b> na zdjęciu w pozycji stojącej lub leżącej na boku promienieniem poziomym oraz brak gazu w bańce odbytnicy.</p>
-        </div>
-
-        <div class="imaging-card" style="border-left:4px solid var(--violet)">
-          <div style="font-size:1.1rem;font-weight:800;color:var(--violet)">Guz Wilmsa vs Neuroblastoma</div>
-          <span class="chip" style="align-self:flex-start">USG / TK jamy brzusznej</span>
-          <p class="srcline"><b>Guz Wilmsa:</b> wychodzi z miąższu nerki, dobrze odgraniczony, rzadko przekracza linię pośrodkową.<br><b>Neuroblastoma:</b> wychodzi z nadnercza/pnia, nacieka naczynia, <b>przekracza linię pośrodkową</b>, w 85% zawiera zwapnienia.</p>
+        <div class="acts" style="gap:.4rem;align-items:center">
+          <span class="chip" style="background:var(--surface);font-weight:700">
+            Opanowano: <b>${solvedCount}/${totalCases}</b> (${progressPct}%)
+          </span>
         </div>
       </div>
+
+      <!-- Karuzela / Pasek wyboru 12 przypadków -->
+      <div class="imaging-case-carousel">
+        ${filteredCases.map(c => {
+          const cp = IMAGING_PROGRESS[c.id] || {};
+          const isAct = c.id === activeCase.id;
+          const m = modMap[c.modality] || { icon: '🔬' };
+          let badgeText = 'Do rozwiązania';
+          let badgeStyle = 'background:var(--bg);color:var(--ink-muted)';
+          if (cp.solved) {
+            badgeText = '✓ Ukończone';
+            badgeStyle = 'background:var(--green-l);color:var(--green);font-weight:700';
+          } else if (cp.hotspot) {
+            badgeText = '🎯 Wykryto';
+            badgeStyle = 'background:var(--amber-l);color:var(--amber);font-weight:700';
+          }
+          return `<button class="imaging-case-chip ${isAct ? 'active' : ''} ${cp.solved ? 'solved' : ''}" data-case-id="${c.id}">
+            <div class="imaging-case-chip-head">
+              <span>${m.icon} ${c.modality.toUpperCase()}</span>
+              <span class="chip" style="${badgeStyle};padding:.1rem .4rem;font-size:.7rem">${badgeText}</span>
+            </div>
+            <div class="imaging-case-chip-title">${esc(c.title)}</div>
+            <div class="imaging-case-chip-sub">${esc(c.short)}</div>
+          </button>`;
+        }).join('')}
+      </div>
+
+      <!-- Główny widok aktywnego przypadku -->
+      <div class="card" style="padding:1.4rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem">
+          <div>
+            <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.3rem;flex-wrap:wrap">
+              <span class="chip" style="background:${modInfo.bg};color:${modInfo.col};font-weight:800;border:0">${modInfo.icon} ${modInfo.name}</span>
+              <a class="chip" href="#/atlas/${activeCase.atlas}/${activeCase.sec}" target="_self">📖 Atlas: ${esc(ASHORT[activeCase.atlas] || activeCase.atlas)}</a>
+              <span class="chip" style="color:var(--ink-muted)">Moduł ${activeCase.mods.join(', ')}</span>
+            </div>
+            <h3 style="font-size:1.35rem;margin:.2rem 0">${esc(activeCase.title)}</h3>
+          </div>
+          <div class="acts">
+            <button class="btn sec sm" id="btnResetImagingCase" title="Zresetuj ten przypadek">Od nowa</button>
+            <button class="btn sec sm" id="btnNextImagingCase">Następny przypadek →</button>
+          </div>
+        </div>
+
+        <!-- Opis przypadku (Winieta kliniczna) -->
+        <div style="background:var(--bg);border-left:3.5px solid ${modInfo.col};border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:1.2rem;font-size:.92rem;line-height:1.5">
+          <b>Winieta kliniczna:</b> ${esc(activeCase.vignette)}
+        </div>
+
+        <!-- Ekran diagnostyczny (Monitor medyczny z SVG) -->
+        <div class="imaging-monitor-screen">
+          <div class="imaging-monitor-header">
+            <span>PED-IMG DIAGNOSTIC MONITOR v5.0 · ${esc(activeCase.short)}</span>
+            <span style="color:#38bdf8">STANDALONE VECTOR ENGINE</span>
+          </div>
+
+          <!-- Pasek statusu kroku 1 -->
+          ${!cProg.hotspot ? `
+            <div style="padding:.6rem 1rem;background:rgba(2,6,23,0.7);border-bottom:1px solid rgba(255,255,255,0.08);color:#94a3b8;font-size:.84rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+              <span>🎯 <b>Krok 1:</b> Zlokalizuj patologię / kluczowy objaw (kliknij bezpośrednio na obrazie)</span>
+              <button class="btn sec sm" id="btnImagingHint" style="padding:.2rem .6rem;font-size:.78rem">💡 ${IMAGING_SHOW_HINT ? 'Ukryj podpowiedź' : 'Pokaż podpowiedź'}</button>
+            </div>
+          ` : `
+            <div style="padding:.65rem 1rem;background:rgba(34,197,94,0.14);border-bottom:1px solid rgba(34,197,94,0.35);color:#86efac;font-size:.85rem">
+              <span style="font-weight:700">✓ Krok 1 ukończony: Wykryto patologię!</span>
+              <div style="font-size:.82rem;color:#f1f5f9;margin-top:.2rem"><b>${esc(activeCase.hotspot.name)}:</b> ${esc(activeCase.hotspot.hint)}</div>
+            </div>
+          `}
+
+          <!-- SVG Canvas -->
+          ${renderImagingSvg(activeCase, cProg.hotspot || IMAGING_SHOW_HINT)}
+        </div>
+
+        <!-- Informacja zwrotna po kliknięciu -->
+        ${IMAGING_LAST_FEEDBACK ? `
+          <div style="margin-top:.8rem;padding:.75rem 1rem;border-radius:var(--r);background:${IMAGING_LAST_FEEDBACK.type === 'hit' ? 'var(--green-l)' : 'var(--amber-l)'};border:1.5px solid ${IMAGING_LAST_FEEDBACK.type === 'hit' ? 'var(--green)' : 'var(--amber)'};font-size:.88rem;color:var(--ink)">
+            <b>${IMAGING_LAST_FEEDBACK.type === 'hit' ? '✓ Trafienie!' : '⚠️ Blisko, ale to jeszcze nie to!'}</b> ${esc(IMAGING_LAST_FEEDBACK.text)}
+          </div>
+        ` : ''}
+
+        <!-- KROK 2: Decyzja kliniczna i postępowanie -->
+        <div style="margin-top:1.6rem">
+          ${cProg.hotspot ? `
+            <div class="imaging-step-card" style="border-color:${cProg.solved ? 'var(--green)' : 'var(--teal)'}">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="chip" style="background:${cProg.solved ? 'var(--green-l)' : 'var(--teal-l)'};color:${cProg.solved ? 'var(--green)' : 'var(--teal-d)'};font-weight:800">
+                  ${cProg.solved ? '✓ KROK 2 ROZWIĄZANY' : '🎯 KROK 2: DECYZJA KLINICZNA'}
+                </span>
+                <span class="srcline" style="font-size:.82rem">Wytyczne PALS / Standardy Dziecięce</span>
+              </div>
+
+              <div style="font-size:1.05rem;font-weight:700;line-height:1.45;color:var(--ink)">
+                ${esc(activeCase.clinicalQuestion.q)}
+              </div>
+
+              <!-- Opcje odpowiedzi -->
+              <div class="opts" style="margin:.6rem 0">
+                ${activeCase.clinicalQuestion.opts.map((opt, i) => {
+                  let cls = '';
+                  const isChosen = cProg.selectedOpt === i;
+                  const isCorrect = i === activeCase.clinicalQuestion.correct;
+                  if (cProg.solved) {
+                    if (isCorrect) cls = 'ok';
+                    else if (isChosen) cls = 'bad';
+                    else cls = 'dim';
+                  } else if (isChosen) {
+                    cls = isCorrect ? 'ok' : 'bad';
+                  }
+                  return `<button class="opt ${cls}" data-img-opt="${i}">
+                    <span class="l">${L[i]}</span>
+                    <span>${esc(opt)}</span>
+                  </button>`;
+                }).join('')}
+              </div>
+
+              <!-- Wyjaśnienie i Złota Perła Egzaminacyjna po rozwiązaniu -->
+              ${cProg.solved ? `
+                <div style="background:var(--surface);border-left:4px solid var(--green);padding:.9rem 1.1rem;border-radius:var(--r);font-size:.9rem;line-height:1.5;margin-top:.4rem">
+                  <b style="color:var(--green)">✓ Uzasadnienie postępowania:</b>
+                  <p class="srcline" style="margin-top:.3rem;color:var(--ink)">${esc(activeCase.clinicalQuestion.explanation)}</p>
+                </div>
+
+                <div class="imaging-pearl-box">
+                  <div style="font-size:1.3rem">💡</div>
+                  <div>
+                    <b style="font-size:.92rem">Złota zasada egzaminacyjna (High-Yield Pearl):</b>
+                    <div style="margin-top:.2rem">${esc(activeCase.clinicalQuestion.pearl)}</div>
+                  </div>
+                </div>
+
+                <div class="acts" style="margin-top:.6rem;justify-content:space-between">
+                  <a class="btn pri sm" href="#/atlas/${activeCase.atlas}/${activeCase.sec}">📖 Temat w atlasie (${ASHORT[activeCase.atlas] || activeCase.atlas}) →</a>
+                  <button class="btn sec sm" id="btnNextImagingCase2">Następny przypadek →</button>
+                </div>
+              ` : ''}
+            </div>
+          ` : `
+            <div class="card" style="background:var(--bg);padding:1.4rem;text-align:center;border:1.5px dashed var(--line)">
+              <div style="font-size:1.8rem;margin-bottom:.4rem">🔒</div>
+              <h4 style="margin:0 0 .3rem">Krok 2: Decyzja kliniczna jest zablokowany</h4>
+              <p class="srcline" style="max-width:480px;margin:0 auto .9rem">
+                Zgodnie z protokołem symulatora, najpierw wskaż patologię na obrazie diagnostycznym powyżej (Krok 1).
+              </p>
+              <button class="btn sec sm" id="btnSkipToQuestion">Pomiń szukanie i przejdź od razu do pytania →</button>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Szybka powtórka: Klasyczne objawy radiologiczne -->
+      <details class="card" style="padding:1.1rem">
+        <summary style="font-weight:700;font-size:1rem;cursor:pointer;color:var(--ink)">
+          📚 Zestawienie 4 klasycznych objawów radiologicznych (Szybka powtórka)
+        </summary>
+        <div class="imaging-grid" style="margin-top:1.1rem">
+          <div class="imaging-card" style="border-left:4px solid var(--red)">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--red)">Wgłobienie jelita (Intussusception)</div>
+            <span class="chip" style="align-self:flex-start">USG jamy brzusznej</span>
+            <p class="srcline"><b>Objaw tarczy strzelniczej (target / doughnut sign)</b> w poprzek oraz <b>objaw pseudonerki</b> wzdłuż. Postępowanie z wyboru: dezynwaginacja pneumatyczna/hydrostatyczna.</p>
+          </div>
+          <div class="imaging-card" style="border-left:4px solid var(--amber)">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--amber)">Przerostowe zwężenie odźwiernika (HPS)</div>
+            <span class="chip" style="align-self:flex-start">USG odźwiernika</span>
+            <p class="srcline">Grubość warstwy mięśniowej <b>≥ 3 mm</b>, długość kanału odźwiernika <b>≥ 15 mm</b>. Klinika: chlustające wymioty bez żółci w 3.–6. tyg., zasadowica hipochloremiczna.</p>
+          </div>
+          <div class="imaging-card" style="border-left:4px solid var(--blue)">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--blue)">Niedrożność przewodu pokarmowego (ZNZ)</div>
+            <span class="chip" style="align-self:flex-start">RTG przeglądowe jamy brzusznej</span>
+            <p class="srcline"><b>Poziomy płynów w pętlach jelitowych</b> na zdjęciu stojącym lub na boku promieniem poziomym, brak gazu w odbytnicy. U dzieci ze zrostami pooperacyjnymi.</p>
+          </div>
+          <div class="imaging-card" style="border-left:4px solid var(--violet)">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--violet)">Guz Wilmsa vs Neuroblastoma</div>
+            <span class="chip" style="align-self:flex-start">USG / TK jamy brzusznej</span>
+            <p class="srcline"><b>Wilms:</b> śródnerkowy, objaw pazura (claw sign), nie przekracza linii pośrodkowej.<br><b>Neuroblastoma:</b> nadnerczowy, przekracza linię środkową, w 85% zawiera zwapnienia.</p>
+          </div>
+        </div>
+      </details>
     </div>`;
   };
 
@@ -9048,6 +9471,123 @@ function viewDiagnostics(parts, params) {
         render();
       };
     });
+
+    // Trenażer Badań Obrazowych (Imaging & EKG Trainer listeners)
+    if (DIAG_TAB === 'imaging') {
+      $$('[data-mod-filter]').forEach(b => {
+        b.onclick = () => {
+          IMAGING_MODALITY_FILTER = b.dataset.modFilter;
+          render();
+        };
+      });
+
+      $$('[data-case-id]').forEach(b => {
+        b.onclick = () => {
+          ACTIVE_IMAGING_CASE_ID = b.dataset.caseId;
+          IMAGING_SHOW_HINT = false;
+          IMAGING_LAST_FEEDBACK = null;
+          render();
+        };
+      });
+
+      const svgCanvas = $('#imagingSvgCanvas');
+      if (svgCanvas) {
+        svgCanvas.onclick = e => {
+          const cases = IMAGING_TRAINER_CASES || [];
+          const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+          if (!activeCase) return;
+
+          const rect = svgCanvas.getBoundingClientRect();
+          const clickX = ((e.clientX - rect.left) / rect.width) * 320;
+          const clickY = ((e.clientY - rect.top) / rect.height) * 220;
+          const tx = activeCase.hotspot.targetX;
+          const ty = activeCase.hotspot.targetY;
+          const tr = activeCase.hotspot.radius;
+          const dist = Math.sqrt((clickX - tx) ** 2 + (clickY - ty) ** 2);
+
+          if (dist <= tr + 15 || e.target.closest('[data-hotspot-hit]')) {
+            if (!IMAGING_PROGRESS[activeCase.id]) IMAGING_PROGRESS[activeCase.id] = {};
+            IMAGING_PROGRESS[activeCase.id].hotspot = true;
+            saveImagingProgress();
+            IMAGING_LAST_FEEDBACK = { type: 'hit', text: `Zlokalizowano patologię: ${activeCase.hotspot.name}. Krok 2 (Decyzja kliniczna) został odblokowany!` };
+            render();
+          } else {
+            IMAGING_LAST_FEEDBACK = { type: 'miss', text: activeCase.hotspot.hint };
+            render();
+          }
+        };
+      }
+
+      const btnHint = $('#btnImagingHint');
+      if (btnHint) {
+        btnHint.onclick = () => {
+          IMAGING_SHOW_HINT = !IMAGING_SHOW_HINT;
+          render();
+        };
+      }
+
+      const btnSkip = $('#btnSkipToQuestion');
+      if (btnSkip) {
+        btnSkip.onclick = () => {
+          const cases = IMAGING_TRAINER_CASES || [];
+          const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+          if (activeCase) {
+            if (!IMAGING_PROGRESS[activeCase.id]) IMAGING_PROGRESS[activeCase.id] = {};
+            IMAGING_PROGRESS[activeCase.id].hotspot = true;
+            saveImagingProgress();
+            render();
+          }
+        };
+      }
+
+      const btnReset = $('#btnResetImagingCase');
+      if (btnReset) {
+        btnReset.onclick = () => {
+          const cases = IMAGING_TRAINER_CASES || [];
+          const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+          if (activeCase) {
+            delete IMAGING_PROGRESS[activeCase.id];
+            saveImagingProgress();
+            IMAGING_SHOW_HINT = false;
+            IMAGING_LAST_FEEDBACK = null;
+            render();
+          }
+        };
+      }
+
+      $$('[data-img-opt]').forEach(b => {
+        b.onclick = () => {
+          const cases = IMAGING_TRAINER_CASES || [];
+          const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+          if (!activeCase) return;
+          const optIdx = +b.dataset.imgOpt;
+          const isCorrect = optIdx === activeCase.clinicalQuestion.correct;
+          if (!IMAGING_PROGRESS[activeCase.id]) IMAGING_PROGRESS[activeCase.id] = { hotspot: true };
+          IMAGING_PROGRESS[activeCase.id].selectedOpt = optIdx;
+          if (isCorrect) {
+            IMAGING_PROGRESS[activeCase.id].solved = true;
+            saveImagingProgress();
+          }
+          render();
+        };
+      });
+
+      ['btnNextImagingCase', 'btnNextImagingCase2'].forEach(id => {
+        const btn = $('#' + id);
+        if (btn) {
+          btn.onclick = () => {
+            const cases = IMAGING_TRAINER_CASES || [];
+            const idx = cases.findIndex(c => c.id === ACTIVE_IMAGING_CASE_ID);
+            const nextCase = cases[(idx + 1) % cases.length];
+            ACTIVE_IMAGING_CASE_ID = nextCase.id;
+            IMAGING_SHOW_HINT = false;
+            IMAGING_LAST_FEEDBACK = null;
+            render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          };
+        }
+      });
+    }
 
     // PMR listeners
     ['pmrCytoza', 'pmrNeutro', 'pmrProtein', 'pmrGlc', 'pmrSerumGlc'].forEach(id => {

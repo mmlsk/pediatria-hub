@@ -507,6 +507,387 @@ window.HUB_META = (function () {
     }
   ];
 
+  /* Trenażer Badań Obrazowych i EKG (12 kluczowych przypadków: 4 EKG, 4 RTG, 4 USG) */
+  const IMAGING_TRAINER_CASES = [
+    // --- 🫀 EKG (4 przypadki) ---
+    {
+      id: 'ekg-norm',
+      modality: 'ekg',
+      title: 'Fizjologiczne EKG dziecka (Wariant normy)',
+      short: 'Normy wiekowe & załamki T',
+      mods: ['0'],
+      atlas: 'zakazenia',
+      sec: 'badanie',
+      vignette: '6-letni chłopiec badany rutynowo przed obozem sportowym. Bez dolegliwości, rozwój prawidłowy. Zapis EKG na papierze milimetrowym 25 mm/s, 10 mm/mV. HR 95/min, oś serca +75° (prawogram fizjologiczny), ujemne załamki T w odprowadzeniach przedsercowych V1–V3.',
+      svgType: 'ekg-norm',
+      hotspot: {
+        id: 'hotspot-t-neg',
+        name: 'Ujemne załamki T w V1–V3',
+        targetX: 195,
+        targetY: 85,
+        radius: 40,
+        hint: 'Fizjologiczna inwersja załamków T w odprowadzeniach prawokomorowych V1–V3 to zjawisko normy rozwojowej u dzieci od 1. tygodnia do nawet 10.–12. r.ż.!'
+      },
+      clinicalQuestion: {
+        q: 'Jak zinterpretujesz ujemne załamki T w odprowadzeniach V1–V3 u 6-letniego dziecka bez objawów klinicznych?',
+        opts: [
+          'Jest to prawidłowy wariant rozwoju dziecięcego (dziecięcy typ załamków T), nie wymaga leczenia ani ograniczenia aktywności.',
+          'Wskazuje na niedokrwienie ściany przedniej i wymaga pilnej koronarografii.',
+          'Świadczy o zapaleniu mięśnia sercowego i wymaga natychmiastowej hospitalizacji na OIT.',
+          'Jest to patognomoniczny objaw zespołu Brugadów typu 1.'
+        ],
+        correct: 0,
+        explanation: 'U dzieci po okresie noworodkowym (od ok. 7. doby życia) załamki T w odprowadzeniach prawokomorowych (V1–V3) są fizjologicznie ujemne. Odwracają się do pozycji dodatniej dopiero w wieku szkolnym/dojrzewania (tzw. zwrot załamków T). Dodatni załamek T w V1 w wieku 2 lat jest zjawiskiem PATOLOGICZNYM (świadczy o przeroście prawej komory RVH!).',
+        pearl: 'Złota zasada egzaminacyjna: Dodatni załamek T w odprowadzeniu V1 między 1. tygodniem a 8. rokiem życia to objaw patologiczny (przerost prawej komory / RVH)!'
+      }
+    },
+    {
+      id: 'ekg-svt',
+      modality: 'ekg',
+      title: 'Częstoskurcz nadkomorowy (SVT / PSVT)',
+      short: 'Wąskie QRS, HR 230/min, brak P',
+      mods: ['5'],
+      atlas: 'nagle',
+      sec: 'nagle',
+      vignette: '9-miesięczne niemowlę z nagłym niepokojem, bladością i dusznością. Tętno obwodowe nitkowate, trudne do zliczenia. Monitor wykazuje HR 230/min, wąskie zespoły QRS (<80 ms), brak widocznych załamków P przed zespołami QRS.',
+      svgType: 'ekg-svt',
+      hotspot: {
+        id: 'hotspot-narrow-qrs',
+        name: 'Wąskie zespoły QRS bez załamków P przy skrajnej tachykardii',
+        targetX: 180,
+        targetY: 80,
+        radius: 45,
+        hint: 'Rytmiczny częstoskurcz o stałym interwale RR, wąskich zespołach QRS i braku załamków P przy HR >220/min u niemowlęcia to podręcznikowy SVT!'
+      },
+      clinicalQuestion: {
+        q: 'Dziecko jest stabilne krążeniowo (ciśnienie prawidłowe, CRT 2s). Jaki jest prawidłowy pierwszy krok postępowania wg wytycznych PALS?',
+        opts: [
+          'Manewry stymulacji nerwu błędnego (worek z lodem na twarz niemowlęcia na 15–20 s), a przy braku powrotu rytmu zatokowego – adenozyna i.v. 0.1 mg/kg w szybkim bolusie.',
+          'Natychmiastowa kardiowersja elektryczna zsynchronizowana 2 J/kg bez wcześniejszych leków.',
+          'Masaż zatoki szyjnej i uciskanie gałek ocznych (odruch Aschnera).',
+          'Podanie doustnego digoksyny i wyczekanie na efekt przez 24 godziny.'
+        ],
+        correct: 0,
+        explanation: 'U stabilnego krążeniowo niemowlęcia z SVT pierwszym krokiem są manewry wagalne (u niemowląt: lód w woreczku foliowym przyłożony do górnej połowy twarzy na 15–20 s, bez blokowania dróg oddechowych). Zakazane jest uciskanie gałek ocznych! W razie braku efektu lekiem pierwszego wyboru jest adenozyna i.v. (0.1 mg/kg, maks. 6 mg) podana metodą dwóch strzykawek przez wkłucie możliwie blisko serca.',
+        pearl: 'Adenozyna ma okres półtrwania <10 sekund! Musi być podana w szybkim pchnięciu i natychmiast przepłukana minimum 5–10 ml 0.9% NaCl metodą trójnika.'
+      }
+    },
+    {
+      id: 'ekg-lqts',
+      modality: 'ekg',
+      title: 'Zespół wydłużonego odstępu QT (LQTS)',
+      short: 'Skorygowany QTc > 470 ms (Bazett)',
+      mods: ['5'],
+      atlas: 'nagle',
+      sec: 'drgawki',
+      vignette: '12-letnia dziewczynka po nagłym epizodzie utraty przytomności (omdlenia) podczas skoku do zimnej wody na basenie. W badaniu EKG: miarowy rytm zatokowy HR 65/min, odstęp QT wynosi 520 ms. Po skorygowaniu wzorem Bazetta: QTc = 540 ms (norma < 460 ms).',
+      svgType: 'ekg-lqts',
+      hotspot: {
+        id: 'hotspot-qt-interval',
+        name: 'Maksymalnie wydłużony odstęp QT / szeroki załamek T',
+        targetX: 235,
+        targetY: 90,
+        radius: 45,
+        hint: 'Odstęp od początku załamka Q do końca załamka T zajmuje ponad połowę całego cyklu RR (QT > 1/2 RR przy miarowym rytmie)!'
+      },
+      clinicalQuestion: {
+        q: 'Jakie leczenie jest terapią pierwszego wyboru u pacjentów z wrodzonym LQTS, a jakich leków należy bezwzględnie unikać?',
+        opts: [
+          'Leczeniem z wyboru są beta-adrenolityki (np. propranolol, nadolol); bezwzględnie przeciwwskazane są leki wydłużające QT (makrolidy, ondansetron, hydroksyzyna).',
+          'Leczeniem z wyboru są leki antyarytmiczne klasy IA (chinidyna) i amiodaron.',
+          'Wskazana jest natychmiastowa suplementacja wapnia i wlew digoksyny.',
+          'Schorzenie ma charakter łagodny i nie wymaga farmakoterapii, zaleca się intensywne sporty wyczynowe.'
+        ],
+        correct: 0,
+        explanation: 'Podstawą leczenia wrodzonego LQTS są nieselektywne beta-blokery (nadolol, propranolol), które redukują ryzyko złośliwych komorowych zaburzeń rytmu (Torsade de Pointes ➔ migotanie komór) wyzwalanych wyrzutem katecholamin (np. podczas pływania, dźwięku budzika, wysiłku). Bezwzględny zakaz stosowania leków z listy CredibleMeds (erytromycyna, azytromycyna, ondansetron, amiodaron, trójpierścieniowe leki przeciwdepresyjne).',
+        pearl: 'Reguła kciuka w pediatrii: Jeśli odstęp QT przekracza połowę odstępu R-R (QT > 0.5 RR), odstęp QTc jest niemal na pewno patologicznie wydłużony!'
+      }
+    },
+    {
+      id: 'ekg-hyperkalemia',
+      modality: 'ekg',
+      title: 'Hiperkaliemia w ostrej niewydolności nerek',
+      short: 'Wysokie, spiczaste załamki T (K+ > 7.0 mmol/l)',
+      mods: ['15', '5'],
+      atlas: 'nefro',
+      sec: 'aki',
+      vignette: '5-letni chłopiec w 4. dobie zespołu HUS po biegunce krwistej. Bezmoczu od 18 godzin. W surowicy: K+ 7.4 mmol/l, kreatynina 4.2 mg/dl. EKG wykazuje symetryczne, spiczaste, namiotowate załamki T o wąskiej podstawie w odprowadzeniach przedsercowych.',
+      svgType: 'ekg-hyperkalemia',
+      hotspot: {
+        id: 'hotspot-t-peaked',
+        name: 'Wysoki, namiotowaty załamek T o wąskiej podstawie',
+        targetX: 205,
+        targetY: 55,
+        radius: 40,
+        hint: 'Namiotowaty, symetryczny, wąski załamek T przekraczający wysokością zespół QRS to pierwszy i najbardziej czuły objaw kardiotoksyczności potasu!'
+      },
+      clinicalQuestion: {
+        q: 'W EKG stwierdzono cechy kardiotoksyczności hiperkaliemii (K+ 7.4 mmol/l). Jaki lek należy podać NATYCHMIAST w celu stabilizacji błony kardiomiocytów?',
+        opts: [
+          '10% glukonian wapnia (lub chlorek wapnia) i.v. pod kontrolą kardiomonitora.',
+          'Furosemid i.v. w dawce 5 mg/kg jako jedyny lek ratunkowy.',
+          'Wlew chlorku potasu w 5% glukozie.',
+          'Wodorowęglan sodu w bolusie bez monitorowania rytmu.'
+        ],
+        correct: 0,
+        explanation: 'Glukonian wapnia (10% 0.5 ml/kg i.v.) NIE obniża stężenia potasu we krwi, ale NATYCHMIAST (w 1–3 min) stabilizuje potencjał spoczynkowy błony komórkowej kardiomiocytów, chroniąc przed migotaniem komór i asystolią. Kolejnym krokiem jest przesunięcie potasu do wnętrza komórek (glukoza z insuliną, salbutamol w nebulizacji, wodorowęglan sodu) oraz usunięcie potasu z ustroju (żywice jonowymienne, hemodializa).',
+        pearl: 'Pamiętaj: Wapń chroni serce natychmiast, ale nie usuwa potasu! Zawsze po wapniu musisz wdrożyć leki przesuwające potas do komórek (insulina + glukoza).'
+      }
+    },
+
+    // --- 🩻 RTG (4 przypadki) ---
+    {
+      id: 'rtg-croup',
+      modality: 'rtg',
+      title: 'Podgłośniowe zapalenie krtani (Krup / Laryngotracheitis)',
+      short: 'RTG AP szyi: Objaw wieży kościoła (Steeple sign)',
+      mods: ['5'],
+      atlas: 'nagle',
+      sec: 'krup',
+      vignette: '2-letni chłopiec z nagłym szczekającym kaszlem, chrypką i świstem wdechowym (stridor) nasilającym się w nocy. Na radiogramie przednio-tylnym (AP) szyi widoczne podgłośniowe, stożkowate zwężenie słupa powietrza w krtani i tchawicy.',
+      svgType: 'rtg-croup',
+      hotspot: {
+        id: 'hotspot-steeple',
+        name: 'Objaw wieży kościoła (Steeple sign / Pencil point)',
+        targetX: 150,
+        targetY: 130,
+        radius: 35,
+        hint: 'Podgłośniowy obrzęk błony śluzowej krtani powoduje symetryczne, stożkowate zwężenie drogi oddechowej przypominające wieżę gotyckiego kościoła lub zaostrzony ołówek.'
+      },
+      clinicalQuestion: {
+        q: 'Jakie jest leczenie z wyboru u dziecka z podgłośniowym zapaleniem krtani i świstem wdechowym w spoczynku (krup umiarkowany/ciężki)?',
+        opts: [
+          'Deksametazon p.o./i.m. (0.15–0.6 mg/kg) + nebulizacja z L-adrenaliny (1 mg/ml 1:1000) w dawce 0.5 ml/kg (maks. 5 ml) z tlenem.',
+          'Wziewny antybiotyk beta-laktamowy i natychmiastowa bronchoskopia sztywna.',
+          'Podanie leków przeciwkaszlowych (kodeina) i ułożenie dziecka na płasko na plecach.',
+          'Empiryczna ampicylina z sulbaktamem i płukanie gardła solanką.'
+        ],
+        correct: 0,
+        explanation: 'Podstawą leczenia krupu jest sterydoterapia (deksametazon doustnie lub domięśniowo), która zmniejsza obrzęk podgłośniowy. W stanach duszności spoczynkowej natychmiast dołączamy nebulizację z nie-rozcieńczonej L-adrenaliny z tlenem (obkurcza naczynia błony śluzowej krtani w 10–30 min). Antybiotyki są bezcelowe, gdyż etiologia w >95% jest wirusowa (parainfluenza).',
+        pearl: 'Efekt adrenaliny w nebulizacji mija po ok. 2 godzinach (efekt odbicia / rebound)! Dziecko po inhalacji z adrenaliny musi pozostać pod obserwacją na oddziale przez minimum 3–4 godziny.'
+      }
+    },
+    {
+      id: 'rtg-pneumoperitoneum',
+      modality: 'rtg',
+      title: 'Perforacja przewodu pokarmowego (Pneumoperitoneum)',
+      short: 'RTG przeglądowe brzucha: Sierp powietrza pod przeponą',
+      mods: ['1', '6'],
+      atlas: 'brzuch',
+      sec: 'algorytm',
+      vignette: '14-letni chłopiec z nagłym, przeszywającym bólem w nadbrzuszu o charakterze „uderzenia nożem”, następowym stwardnieniem powłok brzusznych (brzuch deskowaty) i objawami wstrząsu. RTG klatki piersiowej i jamy brzusznej w pozycji stojącej.',
+      svgType: 'rtg-perforation',
+      hotspot: {
+        id: 'hotspot-crescent',
+        name: 'Sierp wolnego powietrza pod prawą kopułą przepony',
+        targetX: 215,
+        targetY: 85,
+        radius: 35,
+        hint: 'Półksiężycowaty rąbek przejrzystości gazowej pomiędzy górną powierzchnią wątroby a dolnym zarysem prawej kopuły przepony – pewny dowód perforacji narządu drążonego!'
+      },
+      clinicalQuestion: {
+        q: 'Obecność wolnego powietrza pod kopułą przepony (pneumoperitoneum) u pacjenta z objawami ostrego brzucha stanowi bezwzględne wskazanie do:',
+        opts: [
+          'Pilnej laparotomii / laparoskopii chirurgicznej w trybie natychmiastowym po wstępnej resuscytacji płynowej.',
+          'Planowej kolonoskopii diagnostycznej w znieczuleniu miejscowym.',
+          'Zgłębnikowania żołądka i podania doustnego kontrastu barytowego.',
+          'Wdrożenia leczenia zachowawczego inhibitorami pompy protonowej (IPP) p.o.'
+        ],
+        correct: 0,
+        explanation: 'Sierp powietrza pod przeponą w połączeniu z objawami otrzewnowymi (obrona mięśniowa, objaw Blumberga) to dowód przedziurawienia ściany żołądka, dwunastnicy lub jelita (np. pęknięty wrzód, perforacja wyrostka, uraz). Wymaga pilnej interwencji chirurgicznej. Podanie baru drogą pokarmową jest bezwzględnie przeciwwskazane (grozi chemicznym zapaleniem otrzewnej).',
+        pearl: 'Jeżeli pacjent nie może stać do zdjęcia RTG, wykonaj zdjęcie w pozycji leżącej na LEWYM boku promieniem poziomym – gaz zbierze się nad prawym brzegiem wątroby!'
+      }
+    },
+    {
+      id: 'rtg-ileus',
+      modality: 'rtg',
+      title: 'Mechaniczna niedrożność jelit (Ileus mechanicznym)',
+      short: 'RTG przeglądowe: Poziomy płynów i rozdęte pętle',
+      mods: ['1'],
+      atlas: 'brzuch',
+      sec: 'algorytm',
+      vignette: '7-letnia dziewczynka po operacji wyrostka robaczkowego 2 lata temu, przyjęta z narastającym bólem brzucha, wzdęciem, zatrzymaniem gazów i stolca oraz obfitymi wymiotami treścią zieloną (żółciową). RTG jamy brzusznej w projekcji AP.',
+      svgType: 'rtg-ileus',
+      hotspot: {
+        id: 'hotspot-fluid-levels',
+        name: 'Mnogie poziomy płynno-gazowe w pętlach jelitowych',
+        targetX: 155,
+        targetY: 155,
+        radius: 45,
+        hint: 'Układające się schodkowato poziome linie oddzielające płyn od gazu w rozdętych pętlach jelita cienkiego (obraz girland / schodów).'
+      },
+      clinicalQuestion: {
+        q: 'Jakie jest najczęstsze powikłanie odległe po przebytej w przeszłości laparotomii u dzieci, prowadzące do mechanicznej niedrożności jelit?',
+        opts: [
+          'Niedrożność ze zrostów otrzewnowych (pasma zrostowe uciskające światło jelita).',
+          'Wrodzony megacolon (choroba Hirschsprunga).',
+          'Pierwotna atrezja dwunastnicy.',
+          'Przerostowe stwardnienie tętnic krezkowych.'
+        ],
+        correct: 0,
+        explanation: 'U dzieci po wcześniejszych zabiegach chirurgicznych w jamie brzusznej (np. po zapaleniu wyrostka robaczkowego) najczęstszą przyczyną ostrej niedrożności mechanicznej są zrosty pooperacyjne (adhesions). Początkowe postępowanie to odbarczenie żołądka sondą, zakaz żywienia doustnego, krystaloidy i.v. i pilna konsultacja chirurgiczna.',
+        pearl: 'Wymioty o zabarwieniu żółciowym (zielone/brunatne) u dziecka z bólem brzucha są ZAWSZE objawem alarmowym niedrożności przewodu pokarmowego do czasu wykluczenia!'
+      }
+    },
+    {
+      id: 'rtg-mediastinum',
+      modality: 'rtg',
+      title: 'Guz przedniego śródpiersia (Chłoniak / Zespół SVCS)',
+      short: 'RTG klatki: Poszerzenie śródpiersia i ucisk tchawicy',
+      mods: ['11', '5'],
+      atlas: 'hemato',
+      sec: 'chloniaki',
+      vignette: '11-letni chłopiec z dusznością nasilającą się w pozycji leżącej (ortopnoe), obrzękiem i zaczerwienieniem twarzy („nalana twarz”), poszerzeniem żył szyjnych i suchym kaszlem. RTG klatki piersiowej wykazuje masywne poszerzenie cienia przednio-górnego śródpiersia z uciskiem tchawicy.',
+      svgType: 'rtg-mediastinum',
+      hotspot: {
+        id: 'hotspot-mediastinal-mass',
+        name: 'Masywne poszerzenie cienia śródpiersia z uciskiem dróg oddechowych',
+        targetX: 150,
+        targetY: 110,
+        radius: 50,
+        hint: 'Patologiczny cień w śródpiersiu przednim przekraczający 1/3 szerokości klatki piersiowej, zwężający i przemieszczający słup powietrza tchawicy w lewo.'
+      },
+      clinicalQuestion: {
+        q: 'Jakie jest kardynalne zalecenie bezpieczeństwa przed sedacją lub zabiegiem chirurgicznym u dziecka z podejrzeniem guza przedniego śródpiersia?',
+        opts: [
+          'Bezwzględny zakaz sedacji i znieczulenia ogólnego w pozycji na wznak przed dokładną oceną drożności dróg oddechowych (ryzyko nagłego uduszenia i NZK).',
+          'Natychmiastowe podanie morfiny i.v. w celu uspokojenia dziecka.',
+          'Ułożenie dziecka na plecach z uniesionymi nogami w pozycji Trendelenburga.',
+          'Planowe wykonanie biopsji otwartej w znieczuleniu miejscowym bez tlenoterapii.'
+        ],
+        correct: 0,
+        explanation: 'Guz przedniego śródpiersia (najczęściej chłoniak T-ALL lub chłoniak Hodgkina) pod wpływem sedacji i miorelaksacji traci napięcie mięśniowe podtrzymujące drogi oddechowe. Dochodzi do natychmiastowego zaciśnięcia tchawicy i pnia płucnego, co uniemożliwia wentylację i prowadzi do zgonu na stole operacyjnym. Dziecko musi być zdiagnozowane w pozycji siedzącej/półsiedzącej!',
+        pearl: 'Zasada onkologiczna: Każde dziecko z zespołem żyły głównej górnej (SVCS) lub dużą masą w śródpiersiu traktuj jako pacjenta z bezpośrednim zagrożeniem zatrzymania krążenia w znieczuleniu!'
+      }
+    },
+
+    // --- 📡 POCUS / USG (4 przypadki) ---
+    {
+      id: 'usg-intussusception',
+      modality: 'usg',
+      title: 'Wgłobienie jelitowe (Intussusception)',
+      short: 'USG brzucha: Objaw tarczy strzelniczej (Target sign)',
+      mods: ['1', '3'],
+      atlas: 'brzuch',
+      sec: 'choroby',
+      vignette: '7-miesięczne niemowlę z napadami nagłego, kurczowego płaczu z podkurczaniem nóżek, przeplatanymi okresami apatii. W stolcu pojawił się śluz podbarwiony krwią („galaretka porzeczkowa”). W badaniu USG jamy brzusznej głowicą liniową w prawym śródbrzuszu.',
+      svgType: 'usg-target',
+      hotspot: {
+        id: 'hotspot-target-sign',
+        name: 'Objaw tarczy strzelniczej / donuta (Target / Donut sign)',
+        targetX: 150,
+        targetY: 140,
+        radius: 45,
+        hint: 'Koncentryczne pierścienie w przekroju poprzecznym: zewnętrzny hipoechogenny cylinder wgłabiający (intussuscipiens) i wewnętrzny cylinder wgłobiony (intussusceptum) z krezką.'
+      },
+      clinicalQuestion: {
+        q: 'Jakie jest postępowanie pierwszego rzutu u stabilnego dziecka z niepowikłanym wgłobieniem jelitowym trwającym <24–48 godzin?',
+        opts: [
+          'Nieoperacyjne odprowadzenie wgłobienia (dezynwaginacja) metodą wlewu powietrznego lub soli fizjologicznej pod kontrolą USG/RTG.',
+          'Natychmiastowa resekcja jelita grubego z wyłonieniem stomii.',
+          'Leczenie zachowawcze antybiotykami i lekiem rozkurczowym p.o.',
+          'Intensywny masaż brzucha przez powłoki i podanie wlewki z parafiny.'
+        ],
+        correct: 0,
+        explanation: 'Złotym standardem diagnostyki wgłobienia jest USG (czułość bliska 100%). U dziecka stabilnego, bez objawów zapalenia otrzewnej i bez cech perforacji, leczeniem pierwszego wyboru jest pneumatyczna (powietrzem) lub hydrostatyczna (solą fizjologiczną) dezynwaginacja pod kontrolą USG lub fluoroskopii. Skuteczność wynosi 80–90%.',
+        pearl: 'Objaw tarczy w przekroju poprzecznym odpowiada objawowi pseudonerki (pseudokidney sign) lub kanapki (sandwich sign) w przekroju podłużnym!'
+      }
+    },
+    {
+      id: 'usg-appendicitis',
+      modality: 'usg',
+      title: 'Ostre zapalenie wyrostka robaczkowego',
+      short: 'USG: Nieściśliwy wyrostek > 6 mm i coprolith',
+      mods: ['1'],
+      atlas: 'brzuch',
+      sec: 'algorytm',
+      vignette: '10-letni chłopiec z bólem brzucha od 14 godzin, który rozpoczął się wokół pępka i przemieścił do prawego dołu biodrowego. Gorączka 38.2°C, dodatni objaw Jaworskiego i Blumberga. W badaniu USG prawego dołu biodrowego głowicą liniową z uciskiem.',
+      svgType: 'usg-appendix',
+      hotspot: {
+        id: 'hotspot-thick-appendix',
+        name: 'Pogrubiały, nieściśliwy wyrostek o średnicy > 6 mm z kamieniem kałowym',
+        targetX: 165,
+        targetY: 135,
+        radius: 40,
+        hint: 'Ślepo zakończona cewkowa struktura o zewnętrznej średnicy >6 mm, niepodatna na ucisk głowicą (non-compressible), z hiperechogennym kamieniem kałowym dającym cień akustyczny.'
+      },
+      clinicalQuestion: {
+        q: 'Które z poniższych kryteriów ultrasonograficznych NAJSILNIEJ potwierdza rozpoznanie ostrego zapalenia wyrostka robaczkowego u dziecka?',
+        opts: [
+          'Zewnętrzna średnica wyrostka > 6 mm mierzona od ściany do ściany przy ucisku głowicą oraz brak podatności na kompresję.',
+          'Obecność gazu w bańce odbytnicy.',
+          'Prawidłowa grubość błony śluzowej żołądka poniżej 5 mm.',
+          'Zmniejszenie przepływu nerkowego w badaniu Doppler.'
+        ],
+        correct: 0,
+        explanation: 'Podstawowe kryteria USG ostrego zapalenia wyrostka robaczkowego to: 1) średnica zewnętrzna > 6 mm przy ucisku, 2) brak podatności na kompresję głowicą (sztywny wałek), 3) pogrubienie ściany > 2 mm z przekrwieniem w color Dopplerze, 4) obecność kamienia kałowego (coprolith / appendicolith) z cieniem akustycznym, 5) hiperechogenna zapalnie zmieniona tkanka tłuszczowa krezki.',
+        pearl: 'USG jest badaniem z wyboru u dzieci z podejrzeniem zapalenia wyrostka robaczkowego ze względu na brak promieniowania jonizującego (w przeciwieństwie do TK)!'
+      }
+    },
+    {
+      id: 'usg-pyloric-stenosis',
+      modality: 'usg',
+      title: 'Przerostowe zwężenie odźwiernika (Pyloric Stenosis / HPS)',
+      short: 'USG odźwiernika: Grubość mięśniówki ≥ 3 mm, długość ≥ 15 mm',
+      mods: ['1', '3'],
+      atlas: 'gastro',
+      sec: 'biegunki',
+      vignette: '4-tygodniowy noworodek płci męskiej z chlustającymi wymiotami treścią pokarmową bez żółci po każdym karmieniu. Dziecko jest odwodnione, stale głodne. W gazometrii: zasadowica metaboliczna hipochloremiczna i hipokaliemiczna. W badaniu USG okolicy odźwiernika.',
+      svgType: 'usg-pylorus',
+      hotspot: {
+        id: 'hotspot-pylorus-muscle',
+        name: 'Przerost błony mięśniowej odźwiernika (grubość ≥ 3 mm)',
+        targetX: 155,
+        targetY: 130,
+        radius: 40,
+        hint: 'Pogrubiały pierścień mięśniówki odźwiernika o grubości ≥3 mm oraz wydłużony kanał odźwiernika ≥15 mm (objaw tarczy / podwójnej szyny).'
+      },
+      clinicalQuestion: {
+        q: 'Jakie jest bezwzględne postępowanie przedoperacyjne przed pyloromiotomią u dziecka z HPS?',
+        opts: [
+          'Wyrównanie zaburzeń wodno-elektrolitowych i kwasowo-zasadowych (nawodnienie 0.9% NaCl + KCl w celu skorygowania zasadowicy hipochloremicznej).',
+          'Natychmiastowa operacja w ciągu pierwszych 2 godzin bez wyrównywania elektrolitów.',
+          'Płukanie żołądka roztworem wodorowęglanu sodu.',
+          'Podanie leków prokinetycznych (metoklopramid) i kontynuacja karmienia piersią.'
+        ],
+        correct: 0,
+        explanation: 'Przerostowe zwężenie odźwiernika (HPS) NIE jest nagłym stanem chirurgicznym, lecz nagłym stanem METABOLICZNYM! Operacja pyloromiotomii metodą Fredeta-Ramstedta może być bezpiecznie przeprowadzona dopiero po całkowitym wyrównaniu odwodnienia i hipochloremicznej zasadowicy metabolicznej. Znieczulenie dziecka z niewyrównaną alkalozą grozi bezdechem ponarkozowym.',
+        pearl: 'Reguła liczbowa HPS do zapamiętania na testy: Liczba Pi (π ≈ 3.1415): grubość mięśniówki ≥ 3 mm, długość kanału ≥ 14–15 mm!'
+      }
+    },
+    {
+      id: 'usg-wilms',
+      modality: 'usg',
+      title: 'Guz Wilmsa vs Neuroblastoma w USG jamy brzusznej',
+      short: 'USG brzucha: Guz nerki vs linia pośrodkowa',
+      mods: ['10', '4'],
+      atlas: 'nowotwory',
+      sec: 'guzy',
+      vignette: '3-letnia dziewczynka, u której matka podczas kąpieli wyczuła niebolesny, gładki opór w lewym boku. Dziecko w stanie ogólnym dobrym, ciśnienie tętnicze 125/80 mmHg (podwyższone). USG jamy brzusznej wykazuje dużą, litą masę w lewej nerce z zachowanym rąbkiem zdrowego miąższu nerkowego (objaw pazura).',
+      svgType: 'usg-wilms',
+      hotspot: {
+        id: 'hotspot-wilms-mass',
+        name: 'Śródnerkowa masa guzowa nieprzekraczająca linii pośrodkowej',
+        targetX: 140,
+        targetY: 145,
+        radius: 50,
+        hint: 'Dobrze odgraniczony, jednorodny guz rozwijający się wewnątrz miąższu nerki (objaw szponu / claw sign), który przemieszcza naczynia, ale ich nie nacieka i nie przekracza linii pośrodkowej ciała.'
+      },
+      clinicalQuestion: {
+        q: 'Która z poniższych cech radiologicznych i klinicznych najsilniej przemawia za GUZEM WILMSA, a przeciwko NEUROBLASTOMA?',
+        opts: [
+          'Wychodzi z miąższu nerki, jest dobrze odgraniczony torebką, rzadko przekracza linię środkową i rzadko zawiera zwapnienia.',
+          'Wychodzi ze zwojów współczulnych, przekracza linię pośrodkową ciała i w 85% zawiera zwapnienia w TK/USG.',
+          'Objawia się podwyższonym wydalaniem kwasu wanilinomigdałowego (VMA) w dobowej zbiórce moczu.',
+          'Daje wczesne przerzuty do kości i szpiku z krwiakami okularowymi (racoon eyes).'
+        ],
+        correct: 0,
+        explanation: 'Guz Wilmsa (Nefroblastoma) rośnie śródnerkowo (objaw claw sign), jest gładki, otorbiony i typowo nie przekracza linii pośrodkowej ciała. Neuroblastoma (nerwiak zarodkowy) wywodzi się z rdzenia nadnercza lub pnia współczulnego, jest guzowaty, nieregularny, oblepia i nacieka naczynia, niemal zawsze przekracza linię środkową, w 85% zawiera zwapnienia i wydziela katecholaminy (VMA/HVA).',
+        pearl: 'Zasada badania fizykalnego: Podejrzenie guza Wilmsa to BEZWZGLĘDNY ZAKAZ głębokiej i powtarzanej palpacji brzucha (ryzyko pęknięcia torebki i rozsiewu nowotworu)!'
+      }
+    }
+  ];
+
   /* Stacje egzaminu praktycznego OSCE – badanie fizykalne i status praesens */
   const OSCE_STATIONS = [
     {
@@ -1327,5 +1708,5 @@ window.HUB_META = (function () {
 
   const modById = Object.fromEntries(MODS.map(m => [m.id, m]));
   const atById = Object.fromEntries(ATLASES.map(a => [a.id, a]));
-  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, modById, atById };
+  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, modById, atById };
 })();

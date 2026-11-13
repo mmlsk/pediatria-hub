@@ -1,5 +1,5 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v14';
+const CACHE_NAME = 'pediatria-hub-v15';
 
 const PRECACHE_ASSETS = [
   './',
