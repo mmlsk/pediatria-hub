@@ -1,7 +1,7 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, modById, atById } = window.HUB_META;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, modById, atById } = window.HUB_META;
 const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
 let CUSTOM_Q = [];
 try {
@@ -198,6 +198,18 @@ TRAPS.forEach(t => {
 const EDGES = Object.values(E);
 const edgeKey = (a, b) => (IDX[a] < IDX[b] ? a + '|' + b : b + '|' + a);
 
+const BACKLINKS = {};
+MODS.forEach(m => { BACKLINKS[m.id] = []; });
+if (WIKILINKS) {
+  Object.entries(WIKILINKS).forEach(([srcId, links]) => {
+    links.forEach(l => {
+      if (BACKLINKS[l.target]) {
+        BACKLINKS[l.target].push({ source: srcId, label: l.label, type: l.type, concept: l.concept });
+      }
+    });
+  });
+}
+
 function modStats(id) {
   const qs = Q.filter(q => q.pm === id); let att = 0, ok = 0;
   qs.forEach(q => { const a = S.ans[q.id]; if (a) { att++; if (a.last) ok++; } });
@@ -347,7 +359,7 @@ function route() {
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
   $$('#menu a').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
-  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, pacjent: viewPatient, kalkulator: viewCalculator, szczepienia: viewVaccines, badania: viewDiagnostics, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, postep: viewProgress }[name];
+  const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, pacjent: viewPatient, kalkulator: viewCalculator, szczepienia: viewVaccines, badania: viewDiagnostics, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, graf: viewKnowledgeGraph, postep: viewProgress }[name];
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
   if (!v) { location.hash = '#/'; return; }
@@ -481,69 +493,753 @@ function viewReader(parts) {
   $('.rtab.on').scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
-/* ---------- POŁĄCZENIA ---------- */
+/* ---------- POŁĄCZENIA MIĘDZYMODUŁOWE (2 MAPY) ---------- */
 function viewConnections(parts, params) {
+  let activeTab = params.tab === 'pytania' ? 'pytania' : 'atlas';
+
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Połączenia międzymodułowe</div><h2>Gdzie tematy się przecinają</h2>
-    <p class="lead">Grubość linii to liczba zadań oznaczonych obydwoma modułami. Turkusowe linie to pułapki kliniczne, w których jeden obraz wymaga wiedzy z kilku modułów.</p>
-    <div class="conn">
-      <div class="card" style="padding:.6rem"><div id="bigGraph"></div></div>
-      <div class="sticky"><div id="panel"></div></div>
+    <div class="eyebrow">Połączenia międzymodułowe</div>
+    <h2>Gdzie tematy się przecinają</h2>
+    <div class="conn-tabs" role="tablist">
+      <button class="conn-tab-btn ${activeTab === 'atlas' ? 'active' : ''}" data-tab="atlas" role="tab" aria-selected="${activeTab === 'atlas'}">🗺️ Mapa Atlasów i Modułów (Wikilinks)</button>
+      <button class="conn-tab-btn ${activeTab === 'pytania' ? 'active' : ''}" data-tab="pytania" role="tab" aria-selected="${activeTab === 'pytania'}">🎯 Mapa Zadań i Pułapek (Baza pytań)</button>
+      <a class="conn-tab-btn" href="#/graf" style="margin-left:auto;text-decoration:none">🕸️ Otwórz Graf wiedzy →</a>
+    </div>
+    <div id="connTabContent"></div>
+  </div></section>`;
+
+  const tabContent = $('#connTabContent');
+
+  function renderAtlasMap() {
+    tabContent.innerHTML = `
+      <p class="lead">Wizualizacja powiązań między modułami, sekcjami atlasów oraz powiązanymi pojęciami klinicznymi (Wikilinks & Backlinks). Kliknij moduł na mapie, aby prześwietlić jego odniesienia wychodzące i przychodzące.</p>
+      <div class="conn">
+        <div class="card" style="padding:.6rem"><div id="atlasGraph"></div></div>
+        <div class="sticky"><div id="atlasPanel"></div></div>
+      </div>
+      <div style="margin-top:2.4rem">
+        <h3>Kluczowe mosty wiedzy między atlasami</h3>
+        <p class="lead" style="margin-bottom:1rem">Pojęcia i jednostki chorobowe wymagające łączenia wiedzy z różnych atlasów kursu.</p>
+        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))" id="atlasBridgeGrid">
+          ${(SEMANTIC_GAPS || []).slice(0, 6).map(g => `
+            <div class="card" style="padding:1rem;cursor:pointer" data-mod="${g.from}">
+              <div class="pillrow" style="margin-bottom:.4rem">
+                ${g.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}] ${esc(SHORT[m])}</span>`).join('')}
+              </div>
+              <h4 style="font-size:1rem;margin-bottom:.3rem">${esc(g.title)}</h4>
+              <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 120))}…</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+
+    const panel = $('#atlasPanel');
+    const g = renderGraph($('#atlasGraph'), { mode: 'select', draw: true, onNode: selAtlasNode, onEdge: selAtlasEdge });
+
+    function introAtlas() {
+      g.pin(null);
+      panel.innerHTML = `<div class="card">
+        <h3>Mapa Atlasów i Wikilinków</h3>
+        <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł z koła powiązań. Panel pokaże odniesienia wychodzące (Wikilinks), odniesienia przychodzące (Backlinks) oraz sekcje atlasu.</p>
+        <div class="legend" style="margin:0">
+          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
+          <span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span>
+          <span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span>
+        </div>
+      </div>`;
+    }
+
+    function selAtlasNode(id) {
+      const m = modById[id];
+      if (!m) return;
+      g.pin([id]);
+      g.litNode(id);
+
+      const wikis = WIKILINKS[id] || [];
+      const backs = BACKLINKS[id] || [];
+      const at = atById[m.at];
+
+      panel.innerHTML = `<div class="card">
+        <div class="pillrow">
+          <span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span>
+          <span class="chip">${GROUPS[m.g].short}</span>
+        </div>
+        <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3>
+        <p class="muted">${esc(m.d)}</p>
+        <div class="acts" style="margin:.9rem 0">
+          ${m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Otwórz atlas [${esc(ASHORT[m.at])}] →</a>` : '<span class="chip">brak atlasu</span>'}
+          <a class="btn sec sm" href="#/trening?mods=${id}">Trening</a>
+          <a class="btn sec sm" href="#/pytania?mods=${id}">Zadania (${modStats(id).total})</a>
+        </div>
+
+        <div style="margin-top:1.2rem">
+          <div class="flab">Wikilinks (Odniesienia wychodzące: ${wikis.length})</div>
+          <div class="link-list">
+            ${wikis.map(w => `
+              <button class="link-item" data-goto="${w.target}" type="button">
+                <div class="link-item-header">
+                  <span class="link-item-title">${esc(w.label)}</span>
+                  <span class="chip m" style="color:${gOf(w.target).color};font-size:.72rem">[${w.target}] ${esc(SHORT[w.target])}</span>
+                </div>
+                <div class="link-item-concept">${esc(w.concept)}</div>
+              </button>
+            `).join('') || '<span class="muted" style="font-size:.85rem">Brak bezpośrednich odniesień wychodzących.</span>'}
+          </div>
+        </div>
+
+        <div style="margin-top:1.2rem">
+          <div class="flab">Backlinks (Odniesienia przychodzące: ${backs.length})</div>
+          <div class="link-list">
+            ${backs.map(b => `
+              <button class="link-item" data-goto="${b.source}" type="button">
+                <div class="link-item-header">
+                  <span class="link-item-title">${esc(b.label)}</span>
+                  <span class="chip m" style="color:${gOf(b.source).color};font-size:.72rem">[${b.source}] ${esc(SHORT[b.source])}</span>
+                </div>
+                <div class="link-item-concept">${esc(b.concept)}</div>
+              </button>
+            `).join('') || '<span class="muted" style="font-size:.85rem">Brak bezpośrednich odniesień przychodzących.</span>'}
+          </div>
+        </div>
+
+        ${at && at.secs ? `
+          <div style="margin-top:1.2rem">
+            <div class="flab">Sekcje w atlasie</div>
+            <div class="pillrow" style="margin-top:.4rem">
+              ${at.secs.map(s => `<a class="chip" href="#/atlas/${at.id}/${s[0]}" style="text-decoration:none">${esc(s[1])}</a>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>`;
+
+      // Obsługa kliknięć w linki do innych modułów w panelu
+      $$('.link-item[data-goto]', panel).forEach(btn => {
+        btn.addEventListener('click', () => selAtlasNode(btn.dataset.goto));
+      });
+    }
+
+    function selAtlasEdge(k) {
+      const e = E[k];
+      if (!e) return;
+      g.pin([e.a, e.b]);
+      g.lit([e.a, e.b]);
+      const wA = (WIKILINKS[e.a] || []).filter(w => w.target === e.b);
+      const wB = (WIKILINKS[e.b] || []).filter(w => w.target === e.a);
+
+      panel.innerHTML = `<div class="card">
+        <div class="pillrow">
+          <span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}] ${esc(SHORT[e.a])}</span>
+          <span aria-hidden="true">↔</span>
+          <span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}] ${esc(SHORT[e.b])}</span>
+        </div>
+        <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
+        <p class="muted" style="font-size:.88rem;margin-bottom:.8rem">Most semantyczny i powiązania między atlasami.</p>
+
+        ${[...wA, ...wB].map(w => `
+          <div class="link-item" style="cursor:default;margin-bottom:.5rem">
+            <div class="link-item-title" style="margin-bottom:.25rem">${esc(w.label)}</div>
+            <div class="link-item-concept">${esc(w.concept)}</div>
+          </div>
+        `).join('')}
+
+        <div class="acts" style="margin-top:1rem">
+          ${modById[e.a].at ? `<a class="btn pri sm" href="#/atlas/${modById[e.a].at}">Atlas [${e.a}]</a>` : ''}
+          ${modById[e.b].at ? `<a class="btn pri sm" href="#/atlas/${modById[e.b].at}">Atlas [${e.b}]</a>` : ''}
+          <button class="btn sec sm" id="clrAtlas">Wyczyść</button>
+        </div>
+      </div>`;
+      const c = $('#clrAtlas');
+      if (c) c.onclick = () => { introAtlas(); g.lit([]); };
+    }
+
+    introAtlas();
+    if (params.mod && modById[params.mod]) selAtlasNode(params.mod);
+
+    // Kafelki mostów na dole
+    $('#atlasBridgeGrid').addEventListener('click', ev => {
+      const card = ev.target.closest('[data-mod]');
+      if (card && card.dataset.mod) {
+        selAtlasNode(card.dataset.mod);
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  }
+
+  function renderQuestionsMap() {
+    tabContent.innerHTML = `
+      <p class="lead">Grubość linii to liczba zadań oznaczonych obydwoma modułami (baza ${Q.length} pytań). Turkusowe linie to pułapki kliniczne, w których jeden obraz wymaga wiedzy z kilku modułów.</p>
+      <div class="conn">
+        <div class="card" style="padding:.6rem"><div id="bigGraph"></div></div>
+        <div class="sticky"><div id="panel"></div></div>
+      </div>
+      <div style="margin-top:2.4rem">
+        <h2>Pułapki kliniczne</h2>
+        <p class="lead">Kliknij pułapkę, aby podświetlić powiązane moduły na mapie.</p>
+        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))" id="traps">
+          ${TRAPS.map((t, i) => `<button class="trap" data-t="${i}"><h4>${esc(t.t)}</h4><div class="pillrow">${t.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}]</span>`).join('')}</div><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span></button>`).join('')}
+        </div>
+      </div>
+      <div style="margin-top:2.4rem">
+        <h2>Macierz współwystępowania</h2>
+        <p class="lead">Ile zadań łączy dwa moduły. Kliknij komórkę, aby wybrać parę.</p>
+        <div class="card" style="overflow:auto"><div id="matrix"></div></div>
+      </div>`;
+
+    const panel = $('#panel');
+    const g = renderGraph($('#bigGraph'), { mode: 'select', draw: true, onNode: selNode, onEdge: selEdge });
+
+    function intro() {
+      g.pin(null);
+      panel.innerHTML = `<div class="card"><h3>Jak czytać mapę pytań</h3><p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł albo linię. Panel pokaże powiązane tematy, pułapki i zadania łączące oba moduły.</p>
+        <div class="legend" style="margin:0">${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}<span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span><span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span></div></div>`;
+    }
+
+    function selNode(id) {
+      const m = modById[id]; g.pin([id]); g.litNode(id);
+      const conn = EDGES.filter(e => e.a === id || e.b === id).map(e => ({ o: e.a === id ? e.b : e.a, e })).sort((x, y) => y.e.w - x.e.w);
+      panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span><span class="chip">${GROUPS[m.g].short}</span></div>
+        <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3><p class="muted">${esc(m.d)}</p>
+        <div class="acts" style="margin:.9rem 0">${m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Atlas</a>` : '<span class="chip">brak atlasu</span>'}<a class="btn sec sm" href="#/pytania?mods=${id}">Zadania</a>${m.at ? `<a class="btn sec sm" href="#/trening?mods=${id}">Trening</a>` : ''}</div>
+        <div class="flab" style="margin-bottom:.4rem">Powiązane moduły</div>
+        <div class="pillrow">${conn.map(c => `<button class="tgl" data-e="${c.e.a}|${c.e.b}">[${c.o}] ${esc(SHORT[c.o])} <b>${c.e.w}</b>${c.e.traps.length ? ' ●' : ''}</button>`).join('') || '<span class="muted">brak</span>'}</div></div>`;
+    }
+
+    function selEdge(k) {
+      const e = E[k]; if (!e) return; g.pin([e.a, e.b]); g.lit([e.a, e.b]);
+      panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}]</span><span aria-hidden="true">↔</span><span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}]</span></div>
+        <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
+        <p><b>${e.w}</b> ${e.w === 1 ? 'zadanie łączy' : 'zadań łączy'} oba moduły.</p>
+        ${e.traps.map(t => `<div class="trap on" style="margin-top:.6rem;cursor:default"><h4>${esc(t.t)}</h4><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span><span class="eq">${esc(t.tip)}</span></div>`).join('')}
+        <div class="acts" style="margin-top:.9rem">${e.w ? `<a class="btn pri sm" href="#/pytania?mods=${e.a},${e.b}&all=1">Pokaż zadania</a>` : ''}<button class="btn sec sm" id="clr">Wyczyść</button></div></div>`;
+      const c = $('#clr'); if (c) c.onclick = () => { intro(); g.lit([]); };
+    }
+
+    panel.addEventListener('click', ev => { const b = ev.target.closest('[data-e]'); if (b) selEdge(b.dataset.e); });
+    $('#traps').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-t]'); if (!b) return; const t = TRAPS[+b.dataset.t];
+      $$('#traps .trap').forEach(x => x.classList.toggle('on', x === b)); g.pin(t.mods); g.lit(t.mods);
+      panel.innerHTML = `<div class="card"><div class="eyebrow">Pułapka</div><h3 style="font-size:1.3rem;font-family:var(--font-display);margin-bottom:.4rem">${esc(t.t)}</h3><p>${esc(t.eq)}</p><p style="color:var(--red);font-weight:800;margin:.4rem 0">→ ${esc(t.out)}</p><p class="muted">${esc(t.tip)}</p>
+        <div class="acts" style="margin-top:.9rem">${t.mods.map(m => modById[m].at ? `<a class="btn sec sm" href="#/atlas/${modById[m].at}/${modById[m].a}">[${m}] ${esc(SHORT[m])}</a>` : `<span class="chip">[${m}] ${esc(SHORT[m])} · brak atlasu</span>`).join('')}</div></div>`;
+      if (innerWidth < 1000) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    const ids = MODS.map(m => m.id); const mx = Math.max(...EDGES.map(e => e.w));
+    $('#matrix').innerHTML = `<table class="matrix"><tr><th></th>${ids.map(i => `<th style="color:${gOf(i).color}">${i}</th>`).join('')}</tr>${ids.map((r, ri) => `<tr><th style="text-align:right;color:${gOf(r).color}">${r}</th>${ids.map((c, ci) => {
+      if (ci > ri) return '<td></td>'; if (ci === ri) return `<td style="background:${gOf(r).soft}"></td>`;
+      const e = E[edgeKey(r, c)]; const w = e ? e.w : 0;
+      return `<td data-e="${e ? e.a + '|' + e.b : ''}" style="background:${w ? `rgba(12,122,133,${(.14 + .86 * w / mx).toFixed(2)})` : 'var(--line-2)'};color:${w / mx > .5 ? '#fff' : 'var(--ink-2)'};${e ? 'cursor:pointer' : ''}" title="[${r}] ↔ [${c}]: ${w}">${w || ''}</td>`;
+    }).join('')}</tr>`).join('')}</table>`;
+    $('#matrix').addEventListener('click', ev => { const td = ev.target.closest('td[data-e]'); if (td && td.dataset.e) selEdge(td.dataset.e); });
+
+    intro();
+    if (params.mod && modById[params.mod]) selNode(params.mod);
+    else if (params.trap != null && TRAPS[+params.trap]) { const b = $(`#traps [data-t="${+params.trap}"]`); b && b.click(); }
+  }
+
+  // Przełączanie zakładek
+  $$('.conn-tab-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      if (tab === activeTab) return;
+      activeTab = tab;
+      $$('.conn-tab-btn[data-tab]').forEach(b => {
+        const isActive = b.dataset.tab === tab;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      if (tab === 'atlas') renderAtlasMap();
+      else renderQuestionsMap();
+    });
+  });
+
+  if (activeTab === 'atlas') renderAtlasMap();
+  else renderQuestionsMap();
+}
+
+/* ---------- KNOWLEDGE GRAPH (Graf wiedzy & Luki semantyczne) ---------- */
+const KG_DATA = (function () {
+  const nodes = [
+    // --- KLASTER A: Stany nagłe & zakażenia (gr: 'A', hex: '#C23B2A') ---
+    { id: 'm1',  type: 'mod',  mid: '1',   n: 'Ból brzucha',               g: 'A', x: 410, y: 150 },
+    { id: 'm2',  type: 'mod',  mid: '2',   n: 'Zakażenia u dzieci',        g: 'A', x: 190, y: 130 },
+    { id: 'm5',  type: 'mod',  mid: '5',   n: 'Stany nagłe',               g: 'A', x: 290, y: 220 },
+    { id: 'm0',  type: 'mod',  mid: '0',   n: 'Ogólna pediatria',          g: 'A', x: 110, y: 250 },
+    { id: 'd_dka',    type: 'dis', n: 'Kwasica ketonowa (DKA)',       g: 'A', x: 350, y: 300, icon: '⚡' },
+    { id: 'd_krup',   type: 'dis', n: 'Krup (podgłośniowe ZK)',        g: 'A', x: 190, y: 60,  icon: '🫁' },
+    { id: 'd_sepsa',  type: 'dis', n: 'Sepsa meningokokowa',          g: 'A', x: 260, y: 110, icon: '🩸' },
+    { id: 'd_zomr',   type: 'dis', n: 'Ropne ZOMR',                   g: 'A', x: 110, y: 160, icon: '🧠' },
+    { id: 'p_pals',   type: 'proc',n: 'PALS / Resuscytacja',          g: 'A', x: 250, y: 290, icon: '🚨' },
+    { id: 'b_pmr',    type: 'diag',n: 'Badanie PMR (punkcja)',        g: 'A', x: 90,  y: 80,  icon: '🔬' },
+    { id: 'b_gazo',   type: 'diag',n: 'Gazometria krwi',              g: 'A', x: 420, y: 260, icon: '🧪' },
+
+    // --- KLASTER B: Gastroenterologia & alergie (gr: 'B', hex: '#B8730F') ---
+    { id: 'm3',  type: 'mod',  mid: '3',   n: 'Biegunki i odwodnienie',    g: 'B', x: 600, y: 130 },
+    { id: 'm6',  type: 'mod',  mid: '6',   n: 'Choroba wrzodowa',          g: 'B', x: 740, y: 100 },
+    { id: 'm7',  type: 'mod',  mid: '7',   n: 'IBD (ChLC / WZJG)',         g: 'B', x: 790, y: 180 },
+    { id: 'm8',  type: 'mod',  mid: '8',   n: 'Alergie pokarmowe',         g: 'B', x: 610, y: 240 },
+    { id: 'd_wglob',  type: 'dis', n: 'Wgłobienie jelitowe',          g: 'B', x: 500, y: 140, icon: '🌀' },
+    { id: 'd_fpies',  type: 'dis', n: 'Zespół FPIES',                 g: 'B', x: 520, y: 270, icon: '⚠️' },
+    { id: 'd_celiak', type: 'dis', n: 'Celiakia i enteropatia',       g: 'B', x: 720, y: 250, icon: '🌾' },
+    { id: 'b_usg',    type: 'diag',n: 'USG jamy brzusznej',           g: 'B', x: 490, y: 200, icon: '📡' },
+
+    // --- KLASTER C: Nefrologia (gr: 'C', hex: '#2B63AE') ---
+    { id: 'm4',  type: 'mod',  mid: '4',   n: 'Kłębuszkowe ZN (KZN)',      g: 'C', x: 630, y: 440 },
+    { id: 'm14', type: 'mod',  mid: '14',  n: 'ZUM u dzieci',              g: 'C', x: 780, y: 450 },
+    { id: 'm15', type: 'mod',  mid: '15',  n: 'AKI i PChN',                g: 'C', x: 660, y: 570 },
+    { id: 'd_zn',     type: 'dis', n: 'Zespół nerczycowy',            g: 'C', x: 540, y: 480, icon: '💧' },
+    { id: 'd_hus',    type: 'dis', n: 'Zespół HUS (STEC)',            g: 'C', x: 530, y: 590, icon: '⚠️' },
+    { id: 'b_mocz',   type: 'diag',n: 'Badanie moczu i osad',         g: 'C', x: 740, y: 540, icon: '🧪' },
+
+    // --- KLASTER D: Onkologia, hemato, odporność (gr: 'D', hex: '#6E4CB0') ---
+    { id: 'm9',   type: 'mod', mid: '9',   n: 'Guzy mózgu',                g: 'D', x: 190, y: 400 },
+    { id: 'm10',  type: 'mod', mid: '10',  n: 'Nowotwory lite',            g: 'D', x: 330, y: 430 },
+    { id: 'm11',  type: 'mod', mid: '11',  n: 'Nowotwory krwiotwórcze',    g: 'D', x: 210, y: 500 },
+    { id: 'm12',  type: 'mod', mid: '12',  n: 'Skazy krwotoczne',          g: 'D', x: 340, y: 530 },
+    { id: 'm13a', type: 'mod', mid: '13a', n: 'Niedokrwistości',           g: 'D', x: 160, y: 600 },
+    { id: 'm13b', type: 'mod', mid: '13b', n: 'Zaburzenia odporności',     g: 'D', x: 250, y: 620 },
+    { id: 'd_wilms',  type: 'dis', n: 'Guz Wilmsa (Nefroblastoma)',   g: 'D', x: 430, y: 440, icon: '🪨' },
+    { id: 'd_igav',   type: 'dis', n: 'Plamica Schönleina-Henocha',   g: 'D', x: 440, y: 560, icon: '🟣' },
+    { id: 'b_rozmaz', type: 'diag',n: 'Morfologia z rozmazem',        g: 'D', x: 250, y: 560, icon: '🩸' }
+  ];
+
+  const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+  const edges = [
+    { from: 'm1', to: 'd_wglob' }, { from: 'm1', to: 'b_usg' }, { from: 'm1', to: 'm3' },
+    { from: 'm2', to: 'd_sepsa' }, { from: 'm2', to: 'd_krup' }, { from: 'm2', to: 'd_zomr' }, { from: 'd_zomr', to: 'b_pmr' },
+    { from: 'm5', to: 'd_sepsa' }, { from: 'm5', to: 'd_dka' }, { from: 'm5', to: 'p_pals' }, { from: 'm5', to: 'b_gazo' }, { from: 'd_dka', to: 'b_gazo' },
+    { from: 'm3', to: 'd_wglob' }, { from: 'm3', to: 'd_celiak' }, { from: 'm3', to: 'm7' },
+    { from: 'm6', to: 'm7' }, { from: 'm7', to: 'd_celiak' }, { from: 'm7', to: 'b_usg' },
+    { from: 'm8', to: 'd_fpies' }, { from: 'm8', to: 'm5' },
+    { from: 'm4', to: 'd_zn' }, { from: 'm4', to: 'b_mocz' }, { from: 'm4', to: 'm14' },
+    { from: 'm14', to: 'b_mocz' }, { from: 'm15', to: 'b_mocz' }, { from: 'm15', to: 'd_hus' },
+    { from: 'm9', to: 'b_pmr' }, { from: 'm10', to: 'd_wilms' }, { from: 'd_wilms', to: 'b_usg' },
+    { from: 'm11', to: 'b_rozmaz' }, { from: 'm12', to: 'b_rozmaz' }, { from: 'm12', to: 'd_igav' },
+    { from: 'm13a', to: 'b_rozmaz' }, { from: 'm13b', to: 'b_rozmaz' }
+  ];
+
+  const gapEdges = [
+    { from: 'm1',     to: 'd_dka',   gapId: 'gap-1' },
+    { from: 'm2',     to: 'm15',     gapId: 'gap-2' },
+    { from: 'd_zn',   to: 'm12',     gapId: 'gap-3' },
+    { from: 'm13b',   to: 'm2',      gapId: 'gap-4' },
+    { from: 'd_wilms',to: 'm4',      gapId: 'gap-5' },
+    { from: 'm9',     to: 'm5',      gapId: 'gap-6' },
+    { from: 'm3',     to: 'd_fpies', gapId: 'gap-7' },
+    { from: 'd_igav', to: 'm1',      gapId: 'gap-8' }
+  ];
+
+  return { nodes, edges, gapEdges, nodeById };
+})();
+
+function viewKnowledgeGraph(parts, params) {
+  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
+    <div class="eyebrow">Graf wiedzy klinicznej · Knowledge Graph</div>
+    <h2>Globalna mapa pojęć i mostów myślowych</h2>
+    <p class="lead">Połączona sieć 17 modułów, kluczowych chorób i procedur. 8 pulsujących linii przerywanych to luki semantyczne (pułapki międzymodułowe PES/LĘK). Kliknij węzeł lub linię, aby zbadać powiązania.</p>
+
+    <div class="kg-wrap">
+      <div class="kg-canvas-card">
+        <div class="kg-toolbar">
+          <div class="kg-filter-group" id="kgFilters">
+            <button class="kg-filter-btn active" data-filter="all">🔘 Wszystkie (34)</button>
+            <button class="kg-filter-btn" data-filter="mod">📚 Moduły (17)</button>
+            <button class="kg-filter-btn" data-filter="dis">🩺 Choroby (11)</button>
+            <button class="kg-filter-btn" data-filter="diag">🔬 Badania (6)</button>
+            <button class="kg-filter-btn" data-filter="gaps" style="border-color:var(--teal);color:var(--teal-d);font-weight:800">💡 Luki wiedzy (8)</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <input type="search" id="kgSearch" placeholder="Szukaj encji..." style="border:1.5px solid var(--line);border-radius:999px;padding:.28rem .75rem;font-size:.8rem;background:var(--surface);color:var(--ink);outline:none">
+            <button class="btn sec sm" id="kgResetBtn" style="padding:.28rem .65rem;font-size:.78rem">↺ Reset</button>
+          </div>
+        </div>
+        <div id="kgSvgHost"></div>
+      </div>
+      <div class="sticky"><div id="kgInspector"></div></div>
     </div>
   </div></section>
+
   <section class="blk"><div class="wrap">
-    <h2>Pułapki kliniczne</h2><p class="lead">Kliknij pułapkę, aby podświetlić powiązane moduły na mapie.</p>
-    <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))" id="traps">${TRAPS.map((t, i) => `<button class="trap" data-t="${i}"><h4>${esc(t.t)}</h4><div class="pillrow">${t.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}]</span>`).join('')}</div><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span></button>`).join('')}</div>
-  </div></section>
-  <section class="blk"><div class="wrap">
-    <h2>Macierz współwystępowania</h2><p class="lead">Ile zadań łączy dwa moduły. Kliknij komórkę, aby wybrać parę.</p>
-    <div class="card" style="overflow:auto"><div id="matrix"></div></div>
+    <div class="eyebrow">Analiza pułapek klinicznych</div>
+    <h2>💡 8 Kluczowych luk semantycznych (Mosty myślowe)</h2>
+    <p class="lead">Kliknij dowolną kartę, aby podświetlić most wiedzy na grafie i otworzyć dedykowaną analizę patomechanizmu oraz pułapki egzaminacyjnej.</p>
+    <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))" id="kgGapsGrid">
+      ${(SEMANTIC_GAPS || []).map((g, idx) => `
+        <div class="kg-gap-card-box" data-gap="${g.id}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+            <span class="kg-gap-badge">Most #${idx + 1}</span>
+            <div class="pillrow" style="margin:0">
+              ${g.mods.map(m => `<span class="chip m" style="color:${gOf(m).color};font-size:.72rem">[${m}]</span>`).join('')}
+            </div>
+          </div>
+          <h4 style="font-size:1.02rem;margin-bottom:.35rem">${esc(g.title)}</h4>
+          <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</p>
+          <div style="margin-top:.7rem;font-size:.8rem;color:var(--teal);font-weight:700">Pokaż na grafie & szczegóły →</div>
+        </div>
+      `).join('')}
+    </div>
   </div></section>`;
-  const panel = $('#panel');
-  const g = renderGraph($('#bigGraph'), { mode: 'select', draw: true, onNode: selNode, onEdge: selEdge });
-  function intro() {
-    g.pin(null);
-    panel.innerHTML = `<div class="card"><h3>Jak czytać mapę</h3><p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł albo linię. Panel pokaże powiązane tematy, pułapki i zadania łączące oba moduły.</p>
-      <div class="legend" style="margin:0">${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}<span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span><span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span></div></div>`;
+
+  const svgHost = $('#kgSvgHost');
+  const inspector = $('#kgInspector');
+  const { nodes, edges, gapEdges, nodeById } = KG_DATA;
+  const gapById = Object.fromEntries((SEMANTIC_GAPS || []).map(g => [g.id, g]));
+
+  // Renderowanie SVG
+  function renderSvg(filter = 'all', filterTerm = '') {
+    const term = norm(filterTerm);
+
+    const isNodeVisible = (n) => {
+      if (term && !norm(n.n).includes(term) && !norm(n.mid || '').includes(term)) return false;
+      if (filter === 'all') return true;
+      if (filter === 'mod') return n.type === 'mod';
+      if (filter === 'dis') return n.type === 'dis';
+      if (filter === 'diag') return n.type === 'diag' || n.type === 'proc';
+      if (filter === 'gaps') {
+        return gapEdges.some(ge => ge.from === n.id || ge.to === n.id);
+      }
+      return true;
+    };
+
+    // Oblicz krawędzie stałe
+    const renderedEdges = edges.map(e => {
+      const p1 = nodeById[e.from], p2 = nodeById[e.to];
+      if (!p1 || !p2) return '';
+      const visible = filter !== 'gaps' && isNodeVisible(p1) && isNodeVisible(p2);
+      return `<line class="kg-edge" data-e="${e.from}|${e.to}" data-from="${e.from}" data-to="${e.to}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" style="${visible ? '' : 'display:none'}" />`;
+    }).join('');
+
+    // Oblicz krawędzie przerywane (luki semantyczne)
+    const renderedGaps = gapEdges.map(e => {
+      const p1 = nodeById[e.from], p2 = nodeById[e.to];
+      if (!p1 || !p2) return '';
+      const gap = gapById[e.gapId];
+      // Łuk krzywej Beziera wygięty w stronę środka (480, 360)
+      const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+      const kx = mx + (480 - mx) * 0.35, ky = my + (360 - my) * 0.35;
+      const d = `M ${p1.x} ${p1.y} Q ${kx.toFixed(1)} ${ky.toFixed(1)} ${p2.x} ${p2.y}`;
+      const visible = isNodeVisible(p1) || isNodeVisible(p2) || filter === 'all' || filter === 'gaps';
+      return `<g class="kg-gap-group" data-gap="${e.gapId}" style="${visible ? '' : 'display:none'}">
+        <path class="kg-edge dashed gap-pulse" data-gap="${e.gapId}" data-from="${e.from}" data-to="${e.to}" d="${d}" />
+        <path d="${d}" fill="none" stroke="transparent" stroke-width="24" style="cursor:pointer" data-hitgap="${e.gapId}">
+          <title>Most wiedzy: ${gap ? esc(gap.title) : ''}</title>
+        </path>
+      </g>`;
+    }).join('');
+
+    // Oblicz węzły
+    const renderedNodes = nodes.map(n => {
+      const visible = isNodeVisible(n);
+      const grp = GROUPS[n.g] || GROUPS.A;
+      const displayStyle = visible ? '' : 'display:none';
+
+      if (n.type === 'mod') {
+        return `<g class="kg-node" data-nid="${n.id}" data-type="mod" data-mid="${n.mid}" tabindex="0" role="button" aria-label="Moduł ${n.mid}: ${esc(n.n)}" style="${displayStyle}">
+          <circle cx="${n.x}" cy="${n.y}" r="22" fill="${grp.hex}" stroke="${grp.hex}" stroke-width="2.5" />
+          <text x="${n.x}" y="${n.y + 1}" font-size="12px" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.mid}</text>
+          <text x="${n.x}" y="${n.y + 36}" font-size="11.5px" font-weight="700" fill="var(--ink-2)" text-anchor="middle" pointer-events="none">${esc(SHORT[n.mid] || n.n)}</text>
+        </g>`;
+      } else if (n.type === 'dis') {
+        return `<g class="kg-node" data-nid="${n.id}" data-type="dis" tabindex="0" role="button" aria-label="Choroba: ${esc(n.n)}" style="${displayStyle}">
+          <rect x="${n.x - 22}" y="${n.y - 18}" width="44" height="36" rx="10" fill="var(--surface)" stroke="${grp.hex}" stroke-width="2.2" />
+          <text x="${n.x}" y="${n.y + 1}" font-size="16px" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.icon || '🩺'}</text>
+          <text x="${n.x}" y="${n.y + 32}" font-size="10.5px" font-weight="700" fill="var(--ink)" text-anchor="middle" pointer-events="none">${esc(n.n.length > 18 ? n.n.slice(0, 16) + '…' : n.n)}</text>
+        </g>`;
+      } else {
+        return `<g class="kg-node" data-nid="${n.id}" data-type="${n.type}" tabindex="0" role="button" aria-label="Badanie/Procedura: ${esc(n.n)}" style="${displayStyle}">
+          <circle cx="${n.x}" cy="${n.y}" r="17" fill="var(--bg)" stroke="var(--line-2)" stroke-width="2" />
+          <text x="${n.x}" y="${n.y + 1}" font-size="14px" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.icon || '🔬'}</text>
+          <text x="${n.x}" y="${n.y + 28}" font-size="10px" font-weight="700" fill="var(--muted)" text-anchor="middle" pointer-events="none">${esc(n.n.length > 18 ? n.n.slice(0, 16) + '…' : n.n)}</text>
+        </g>`;
+      }
+    }).join('');
+
+    svgHost.innerHTML = `
+      <svg class="kg-svg" viewBox="-10 -10 960 720" role="group" aria-label="Graf wiedzy klinicznej">
+        <!-- Tła klastrów -->
+        <rect x="20" y="20" width="440" height="320" rx="20" fill="var(--red)" opacity="0.04" pointer-events="none" />
+        <text x="35" y="45" font-size="11px" font-weight="800" fill="var(--red)" letter-spacing="0.06em" opacity="0.6">KLASTER A · STANY NAGŁE I ZAKAŻENIA</text>
+
+        <rect x="480" y="20" width="440" height="320" rx="20" fill="var(--amber)" opacity="0.04" pointer-events="none" />
+        <text x="495" y="45" font-size="11px" font-weight="800" fill="var(--amber)" letter-spacing="0.06em" opacity="0.6">KLASTER B · GASTRO I ALERGIE</text>
+
+        <rect x="480" y="360" width="440" height="320" rx="20" fill="var(--blue)" opacity="0.04" pointer-events="none" />
+        <text x="495" y="385" font-size="11px" font-weight="800" fill="var(--blue)" letter-spacing="0.06em" opacity="0.6">KLASTER C · NEFROLOGIA</text>
+
+        <rect x="20" y="360" width="440" height="320" rx="20" fill="var(--violet)" opacity="0.04" pointer-events="none" />
+        <text x="35" y="385" font-size="11px" font-weight="800" fill="var(--violet)" letter-spacing="0.06em" opacity="0.6">KLASTER D · ONKOLOGIA I HEMATOLOGIA</text>
+
+        <!-- Krawędzie -->
+        <g class="kg-edges">${renderedEdges}</g>
+        <g class="kg-gaps">${renderedGaps}</g>
+        <!-- Węzły -->
+        <g class="kg-nodes">${renderedNodes}</g>
+      </svg>
+    `;
+
+    bindSvgEvents();
   }
-  function selNode(id) {
-    const m = modById[id]; g.pin([id]); g.litNode(id);
-    const conn = EDGES.filter(e => e.a === id || e.b === id).map(e => ({ o: e.a === id ? e.b : e.a, e })).sort((x, y) => y.e.w - x.e.w);
-    panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span><span class="chip">${GROUPS[m.g].short}</span></div>
-      <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3><p class="muted">${esc(m.d)}</p>
-      <div class="acts" style="margin:.9rem 0">${m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Atlas</a>` : '<span class="chip">brak atlasu</span>'}<a class="btn sec sm" href="#/pytania?mods=${id}">Zadania</a>${m.at ? `<a class="btn sec sm" href="#/trening?mods=${id}">Trening</a>` : ''}</div>
-      <div class="flab" style="margin-bottom:.4rem">Powiązane moduły</div>
-      <div class="pillrow">${conn.map(c => `<button class="tgl" data-e="${c.e.a}|${c.e.b}">[${c.o}] ${esc(SHORT[c.o])} <b>${c.e.w}</b>${c.e.traps.length ? ' ●' : ''}</button>`).join('') || '<span class="muted">brak</span>'}</div></div>`;
+
+  function bindSvgEvents() {
+    const svg = $('svg.kg-svg', svgHost);
+    if (!svg) return;
+
+    const clearHighlight = () => {
+      svg.classList.remove('hl');
+      $$('.on', svg).forEach(el => el.classList.remove('on'));
+      $$('.selected', svg).forEach(el => el.classList.remove('selected'));
+    };
+
+    const highlightNode = (nid) => {
+      clearHighlight();
+      svg.classList.add('hl');
+      const connNodes = new Set([nid]);
+
+      $$('.kg-edge', svg).forEach(ed => {
+        const from = ed.dataset.from, to = ed.dataset.to;
+        if (from === nid || to === nid) {
+          ed.classList.add('on');
+          connNodes.add(from);
+          connNodes.add(to);
+        }
+      });
+
+      $$('.kg-node', svg).forEach(nd => {
+        if (connNodes.has(nd.dataset.nid)) nd.classList.add('on');
+      });
+    };
+
+    // Hover na węzłach
+    $$('.kg-node', svg).forEach(nd => {
+      const nid = nd.dataset.nid;
+      nd.addEventListener('pointerenter', () => highlightNode(nid));
+      nd.addEventListener('pointerleave', () => { if (!pinnedEntity) clearHighlight(); else restorePinned(); });
+      nd.addEventListener('click', () => selKgNode(nid));
+      nd.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selKgNode(nid); } });
+    });
+
+    // Kliknięcie w linię przerywaną (lukę)
+    $$('[data-hitgap]', svg).forEach(hit => {
+      hit.addEventListener('click', () => selKgGap(hit.dataset.hitgap));
+      hit.addEventListener('pointerenter', () => {
+        const gid = hit.dataset.hitgap;
+        clearHighlight();
+        svg.classList.add('hl');
+        const gapEl = $(`path.kg-edge[data-gap="${gid}"]`, svg);
+        if (gapEl) {
+          gapEl.classList.add('on');
+          const from = gapEl.dataset.from, to = gapEl.dataset.to;
+          $$(`.kg-node[data-nid="${from}"], .kg-node[data-nid="${to}"]`, svg).forEach(x => x.classList.add('on'));
+        }
+      });
+      hit.addEventListener('pointerleave', () => { if (!pinnedEntity) clearHighlight(); else restorePinned(); });
+    });
   }
-  function selEdge(k) {
-    const e = E[k]; if (!e) return; g.pin([e.a, e.b]); g.lit([e.a, e.b]);
-    panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}]</span><span aria-hidden="true">↔</span><span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}]</span></div>
-      <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
-      <p><b>${e.w}</b> ${e.w === 1 ? 'zadanie łączy' : 'zadań łączy'} oba moduły.</p>
-      ${e.traps.map(t => `<div class="trap on" style="margin-top:.6rem;cursor:default"><h4>${esc(t.t)}</h4><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span><span class="eq">${esc(t.tip)}</span></div>`).join('')}
-      <div class="acts" style="margin-top:.9rem">${e.w ? `<a class="btn pri sm" href="#/pytania?mods=${e.a},${e.b}&all=1">Pokaż zadania</a>` : ''}<button class="btn sec sm" id="clr">Wyczyść</button></div></div>`;
-    const c = $('#clr'); if (c) c.onclick = () => { intro(); g.lit([]); };
+
+  let pinnedEntity = null; // { type: 'node'|'gap', id: '...' }
+
+  function restorePinned() {
+    const svg = $('svg.kg-svg', svgHost);
+    if (!svg) return;
+    svg.classList.remove('hl');
+    $$('.on', svg).forEach(el => el.classList.remove('on'));
+    if (!pinnedEntity) return;
+
+    svg.classList.add('hl');
+    if (pinnedEntity.type === 'node') {
+      const nid = pinnedEntity.id;
+      const targetNode = $(`.kg-node[data-nid="${nid}"]`, svg);
+      if (targetNode) targetNode.classList.add('selected', 'on');
+      $$('.kg-edge', svg).forEach(ed => {
+        if (ed.dataset.from === nid || ed.dataset.to === nid) {
+          ed.classList.add('on');
+          const other = ed.dataset.from === nid ? ed.dataset.to : ed.dataset.from;
+          const onEl = $(`.kg-node[data-nid="${other}"]`, svg);
+          if (onEl) onEl.classList.add('on');
+        }
+      });
+    } else if (pinnedEntity.type === 'gap') {
+      const gid = pinnedEntity.id;
+      const gapEl = $(`path.kg-edge[data-gap="${gid}"]`, svg);
+      if (gapEl) {
+        gapEl.classList.add('on');
+        const from = gapEl.dataset.from, to = gapEl.dataset.to;
+        $$(`.kg-node[data-nid="${from}"], .kg-node[data-nid="${to}"]`, svg).forEach(x => x.classList.add('selected', 'on'));
+      }
+    }
   }
-  panel.addEventListener('click', ev => { const b = ev.target.closest('[data-e]'); if (b) selEdge(b.dataset.e); });
-  $('#traps').addEventListener('click', ev => {
-    const b = ev.target.closest('[data-t]'); if (!b) return; const t = TRAPS[+b.dataset.t];
-    $$('#traps .trap').forEach(x => x.classList.toggle('on', x === b)); g.pin(t.mods); g.lit(t.mods);
-    panel.innerHTML = `<div class="card"><div class="eyebrow">Pułapka</div><h3 style="font-size:1.3rem;font-family:var(--font-display);margin-bottom:.4rem">${esc(t.t)}</h3><p>${esc(t.eq)}</p><p style="color:var(--red);font-weight:800;margin:.4rem 0">→ ${esc(t.out)}</p><p class="muted">${esc(t.tip)}</p>
-      <div class="acts" style="margin-top:.9rem">${t.mods.map(m => modById[m].at ? `<a class="btn sec sm" href="#/atlas/${modById[m].at}/${modById[m].a}">[${m}] ${esc(SHORT[m])}</a>` : `<span class="chip">[${m}] ${esc(SHORT[m])} · brak atlasu</span>`).join('')}</div></div>`;
-    if (innerWidth < 1000) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  function introInspector() {
+    pinnedEntity = null;
+    restorePinned();
+    inspector.innerHTML = `<div class="card">
+      <div class="eyebrow">Graf wiedzy klinicznej</div>
+      <h3 style="font-family:var(--font-display);font-size:1.25rem;margin:.2rem 0 .5rem">Eksploracja sieci pojęć</h3>
+      <p class="muted" style="font-size:.88rem;line-height:1.45;margin-bottom:1rem">
+        Graf wizualizuje 34 kluczowe encje programu pediatrii oraz 8 krytycznych luk semantycznych (thinking bridges).
+      </p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem">
+        <div style="font-size:.84rem">🔴 <b>Klaster A</b>: Stany nagłe, zakażenia, PALS</div>
+        <div style="font-size:.84rem">🟠 <b>Klaster B</b>: Gastro, alergologia, ból brzucha</div>
+        <div style="font-size:.84rem">🔵 <b>Klaster C</b>: Nefrologia, ZUM, AKI i PChN</div>
+        <div style="font-size:.84rem">🟣 <b>Klaster D</b>: Onkologia, hematologia, odporność</div>
+      </div>
+      <div style="padding:.75rem;background:var(--bg);border-radius:var(--r);border:1px solid var(--line);font-size:.82rem;line-height:1.4">
+        💡 <b>Wskazówka</b>: Kliknij linię przerywaną lub wybierz filtr <b>„Luki wiedzy”</b>, aby przeanalizować pułapki PES i kolokwiów.
+      </div>
+    </div>`;
+  }
+
+  function selKgNode(nid) {
+    const n = nodeById[nid];
+    if (!n) return;
+    pinnedEntity = { type: 'node', id: nid };
+    restorePinned();
+
+    const isMod = n.type === 'mod';
+    const m = isMod ? modById[n.mid] : null;
+    const grp = GROUPS[n.g] || GROUPS.A;
+
+    // Znajdź połączone encje
+    const neighbors = [];
+    edges.forEach(e => {
+      if (e.from === nid) neighbors.push(nodeById[e.to]);
+      if (e.to === nid) neighbors.push(nodeById[e.from]);
+    });
+    const connectedGaps = gapEdges.filter(ge => ge.from === nid || ge.to === nid).map(ge => gapById[ge.gapId]).filter(Boolean);
+
+    inspector.innerHTML = `<div class="card">
+      <div class="pillrow">
+        <span class="chip" style="background:${grp.hex};color:#fff;border:0">${isMod ? 'Moduł [' + n.mid + ']' : (n.type === 'dis' ? 'Choroba' : 'Badanie')}</span>
+        <span class="chip">${grp.short}</span>
+      </div>
+      <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(n.n)}</h3>
+      <p class="muted" style="font-size:.88rem;line-height:1.4">${m ? esc(m.d) : 'Węzeł wiedzy klinicznej zintegrowany z modułami i badaniami.'}</p>
+
+      <div class="acts" style="margin:.9rem 0">
+        ${m && m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Otwórz atlas →</a>` : ''}
+        ${m ? `<a class="btn sec sm" href="#/trening?mods=${m.id}">Trening</a><a class="btn sec sm" href="#/pytania?mods=${m.id}">Zadania (${modStats(m.id).total})</a>` : ''}
+        <button class="btn sec sm" id="kgClearPin">Odznacz</button>
+      </div>
+
+      ${connectedGaps.length ? `
+        <div style="margin-top:1rem">
+          <div class="flab">Luki wiedzy związane z tym węzłem</div>
+          <div class="link-list">
+            ${connectedGaps.map(g => `
+              <button class="link-item" data-showgap="${g.id}" type="button">
+                <div class="link-item-header">
+                  <span class="link-item-title" style="color:var(--teal)">💡 ${esc(g.title)}</span>
+                </div>
+                <div class="link-item-concept">${esc(g.clinicalReason.slice(0, 100))}…</div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="margin-top:1rem">
+        <div class="flab">Powiązane pojęcia (${neighbors.length})</div>
+        <div class="pillrow" style="margin-top:.4rem">
+          ${neighbors.map(nb => `
+            <button class="tgl" data-jump="${nb.id}" style="font-size:.8rem;padding:.2rem .6rem">
+              ${nb.type === 'mod' ? `[${nb.mid}] ${esc(SHORT[nb.mid])}` : esc(nb.n)}
+            </button>
+          `).join('') || '<span class="muted" style="font-size:.84rem">Brak bezpośrednich połączeń.</span>'}
+        </div>
+      </div>
+    </div>`;
+
+    const clr = $('#kgClearPin', inspector);
+    if (clr) clr.onclick = introInspector;
+    $$('[data-showgap]', inspector).forEach(b => b.onclick = () => selKgGap(b.dataset.showgap));
+    $$('[data-jump]', inspector).forEach(b => b.onclick = () => selKgNode(b.dataset.jump));
+  }
+
+  function selKgGap(gid) {
+    const gap = gapById[gid];
+    if (!gap) return;
+    pinnedEntity = { type: 'gap', id: gid };
+    restorePinned();
+
+    inspector.innerHTML = `<div class="card" style="border-top:4px solid var(--teal)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.4rem">
+        <span class="kg-gap-badge">💡 Luka semantyczna</span>
+        <div class="pillrow" style="margin:0">
+          ${gap.mods.map(m => `<span class="chip m" style="color:${gOf(m).color};font-size:.72rem">[${m}]</span>`).join('')}
+        </div>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:1.25rem;margin:.2rem 0 .5rem">${esc(gap.title)}</h3>
+      <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);margin-bottom:.8rem">
+        ${esc(gap.fromName)} ⤏ ${esc(gap.toName)}
+      </div>
+
+      <div style="margin-bottom:.85rem">
+        <div class="flab">Mechanizm kliniczny</div>
+        <p style="font-size:.88rem;line-height:1.45;color:var(--ink)">${esc(gap.clinicalReason)}</p>
+      </div>
+
+      <div class="gap-exam-warning">
+        <b>⚠️ Pułapka egzaminacyjna (PES/LEK):</b>
+        <span>${esc(gap.examTrap)}</span>
+      </div>
+
+      <div class="acts" style="margin-top:1.1rem;display:flex;flex-direction:column;gap:.4rem">
+        <a class="btn pri sm" href="#/trening?mods=${gap.mods.join(',')}" style="text-align:center">Ćwicz powiązane pytania w Treningu →</a>
+        <div style="display:flex;gap:.4rem">
+          <a class="btn sec sm" href="#/pytania?mods=${gap.mods.join(',')}&all=1" style="flex:1;text-align:center">Baza pytań</a>
+          <button class="btn sec sm" id="kgClearGap" style="flex:none">Odznacz</button>
+        </div>
+      </div>
+    </div>`;
+
+    const clr = $('#kgClearGap', inspector);
+    if (clr) clr.onclick = introInspector;
+  }
+
+  // Obsługa filtrów paska narzędzi
+  let currentFilter = 'all';
+  $$('.kg-filter-btn', svgHost.parentElement).forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.kg-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      currentFilter = btn.dataset.filter;
+      renderSvg(currentFilter, $('#kgSearch').value);
+      restorePinned();
+    });
   });
-  // macierz
-  const ids = MODS.map(m => m.id); const mx = Math.max(...EDGES.map(e => e.w));
-  $('#matrix').innerHTML = `<table class="matrix"><tr><th></th>${ids.map(i => `<th style="color:${gOf(i).color}">${i}</th>`).join('')}</tr>${ids.map((r, ri) => `<tr><th style="text-align:right;color:${gOf(r).color}">${r}</th>${ids.map((c, ci) => {
-    if (ci > ri) return '<td></td>'; if (ci === ri) return `<td style="background:${gOf(r).soft}"></td>`;
-    const e = E[edgeKey(r, c)]; const w = e ? e.w : 0;
-    return `<td data-e="${e ? e.a + '|' + e.b : ''}" style="background:${w ? `rgba(12,122,133,${(.14 + .86 * w / mx).toFixed(2)})` : 'var(--line-2)'};color:${w / mx > .5 ? '#fff' : 'var(--ink-2)'};${e ? 'cursor:pointer' : ''}" title="[${r}] ↔ [${c}]: ${w}">${w || ''}</td>`;
-  }).join('')}</tr>`).join('')}</table>`;
-  $('#matrix').addEventListener('click', ev => { const td = ev.target.closest('td[data-e]'); if (td && td.dataset.e) selEdge(td.dataset.e); });
-  intro();
-  if (params.mod && modById[params.mod]) selNode(params.mod);
-  else if (params.trap != null && TRAPS[+params.trap]) { const b = $(`#traps [data-t="${+params.trap}"]`); b && b.click(); }
+
+  $('#kgSearch').addEventListener('input', (e) => {
+    renderSvg(currentFilter, e.target.value);
+    restorePinned();
+  });
+
+  $('#kgResetBtn').onclick = () => {
+    $('#kgSearch').value = '';
+    $$('.kg-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+    currentFilter = 'all';
+    renderSvg('all', '');
+    introInspector();
+  };
+
+  // Kafelki luk na dole strony
+  $('#kgGapsGrid').addEventListener('click', ev => {
+    const card = ev.target.closest('[data-gap]');
+    if (card && card.dataset.gap) {
+      selKgGap(card.dataset.gap);
+      inspector.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+
+  renderSvg('all', '');
+  introInspector();
+
+  if (params.gap && gapById[params.gap]) {
+    selKgGap(params.gap);
+  } else if (params.node && nodeById[params.node]) {
+    selKgNode(params.node);
+  }
 }
+
 
 /* ---------- PARSER IMPORTU PYTAŃ ---------- */
 function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
@@ -5728,11 +6424,13 @@ const VIEWS = [
   ['Baza pytań', '#/pytania'],
   ['Notatki Markdown', '#/notatki'],
   ['Mapa powiązań', '#/polaczenia'],
+  ['Graf wiedzy', '#/graf'],
   ['Postęp i historia', '#/postep']
 ];
 const ALL = [
   ...VIEWS.map(v => ({ k: 'Widok', t: v[0], h: v[1], n: norm(v[0]) })),
   ...PATIENT_CASES.map(c => ({ k: 'Pacjent SOR', t: c.title, h: '#/pacjent/' + c.id, n: norm(c.shortTitle + ' ' + c.title + ' ' + c.category + ' ' + c.debrief.diagnosis) })),
+  ...(SEMANTIC_GAPS || []).map(g => ({ k: 'Luka wiedzy', t: g.title, h: `#/graf?gap=${g.id}`, n: norm(`${g.title} ${g.clinicalReason} ${g.examTrap}`) })),
   ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
   ...ATLASES.flatMap(a => a.secs.map(s => ({ k: 'Sekcja', t: `${ASHORT[a.id]} › ${s[1]}`, h: `#/atlas/${a.id}/${s[0]}`, n: norm(`${ASHORT[a.id]} ${s[1]}`) }))),
   ...Q.map(q => ({ k: 'Zadanie', t: q.stem.length > 120 ? q.stem.slice(0, 118) + '…' : q.stem, h: `#/pytania?q=${encodeURIComponent(q.stem.slice(0, 40))}`, n: q._n }))
