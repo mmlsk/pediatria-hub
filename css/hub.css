@@ -2967,3 +2967,246 @@ body.reader footer.ft{display:none}
   line-height: 1.45;
   color: var(--ink);
 }
+
+/* ---------- ATLAS OSUTEK DZIECIĘCYCH (PEDIATRIC RASH ENGINE) ---------- */
+.rash-module-wrap {
+  margin-top: 1rem;
+}
+.rash-mode-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+.rash-pills-row {
+  display: flex;
+  gap: .45rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+  margin-bottom: 1.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+.rash-pills-row::-webkit-scrollbar {
+  display: none;
+}
+.rash-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .85rem;
+  border-radius: 9px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.rash-pill-btn:hover {
+  border-color: var(--teal);
+  color: var(--ink);
+}
+.rash-pill-btn.active {
+  border-color: var(--teal);
+  background: var(--teal-l);
+  color: var(--teal-d);
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--teal);
+}
+.rash-pill-btn.alert-pill {
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.rash-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .rash-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rash-visual-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.2rem;
+}
+.rash-silhouette-container {
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: .6rem;
+  text-align: center;
+  position: relative;
+}
+.rash-svg-canvas {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}
+
+.rash-glass-result {
+  margin-top: .8rem;
+  padding: .75rem 1rem;
+  border-radius: 8px;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+.rash-glass-result.blanching {
+  background: var(--green-l);
+  border: 1px solid var(--green);
+  color: var(--ink);
+}
+.rash-glass-result.vesicle {
+  background: var(--blue-l);
+  border: 1px solid var(--blue);
+  color: var(--ink);
+}
+.rash-glass-result.non_blanching {
+  background: var(--red-l);
+  border: 2px solid var(--red);
+  color: var(--red-d);
+  animation: pulseAlarm 2s infinite ease-in-out;
+}
+@keyframes pulseAlarm {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+
+.rash-zone-badge {
+  padding: .4rem .65rem;
+  background: var(--surface-2);
+  border-left: 3px solid var(--teal);
+  border-radius: 5px;
+  font-size: .8rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.rash-details-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+.rash-info-sections {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+.rash-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  font-size: .86rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.rash-info-label {
+  font-weight: 800;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.rash-pearl-box {
+  margin-top: .4rem;
+  padding: .65rem .85rem;
+  background: var(--bg);
+  border-radius: 8px;
+  border-left: 3px solid var(--amber);
+  font-size: .84rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* Matryca porównawcza */
+.rash-matrix-wrap {
+  margin-top: .6rem;
+}
+.rash-matrix-filters {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.rash-compare-picker {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .75rem 1rem;
+  margin-bottom: 1rem;
+}
+.rash-matrix-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.rash-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .86rem;
+}
+.rash-matrix-table th, .rash-matrix-table td {
+  padding: .75rem .9rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.45;
+}
+.rash-matrix-table th {
+  background: var(--surface);
+  border-bottom: 2px solid var(--line-2);
+}
+.rash-matrix-table .feature-col {
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface-2);
+  width: 150px;
+}
+
+/* Trening zagadek */
+.rash-puzzles-wrap {
+  margin-top: .6rem;
+}
+.rash-puzzle-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.3rem;
+}
+.rash-puzzle-body-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.2rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+@media (max-width: 780px) {
+  .rash-puzzle-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.rash-puzzle-svg-box {
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: .8rem;
+  text-align: center;
+}
+.rash-puzzle-vignette {
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+}

@@ -1,7 +1,7 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, PEDIATRIC_DRUG_DATABASE, PRESCRIPTION_CHALLENGES, modById, atById } = window.HUB_META;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, PEDIATRIC_DRUG_DATABASE, PRESCRIPTION_CHALLENGES, PEDIATRIC_RASH_DATABASE, RASH_PUZZLES, modById, atById } = window.HUB_META;
 const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
 let CUSTOM_Q = [];
 try {
@@ -508,6 +508,7 @@ function viewStart() {
         <a class="btn sec" href="#/trening?auto=1">Trening mieszany · 10 pytań</a>
         <a class="btn sec" href="#/pacjent" style="border-color:var(--teal);color:var(--teal-d);font-weight:700">🩺 Wirtualny Pacjent (SOR)</a>
         <a class="btn sec" href="#/kalkulator?tab=recepty" style="border-color:var(--blue);color:var(--blue-d);font-weight:700">💊 Apteczka & Recepty</a>
+        <a class="btn sec" href="#/badania?tab=osutki" style="border-color:var(--violet);color:var(--violet-d);font-weight:700">🧬 Atlas Osutek</a>
       </div>
       <div class="stats" aria-label="Zakres hubu">
         <div class="stat"><b data-n="${ATLASES.length}">${ATLASES.length}</b><span>atlasów</span></div>
@@ -9392,7 +9393,34 @@ function viewVaccines(parts, params) {
 }
 
 /* ---------- ATLAS BADAŃ LABORATORYJNYCH I OBRAZOWYCH ---------- */
-let DIAG_TAB = 'pmr'; // 'pmr' | 'gas' | 'urine' | 'cbc' | 'imaging'
+let DIAG_TAB = 'pmr'; // 'pmr' | 'gas' | 'urine' | 'cbc' | 'imaging' | 'osutki'
+
+/* ---------- ATLAS OSUTEK DZIECIĘCYCH (RASH ENGINE) ---------- */
+const RASH_STORE_KEY = 'pediatria_hub_rashes_v1';
+let RASH_STATE = {
+  subTab: 'catalog', // 'catalog' | 'matrix' | 'puzzles'
+  selectedId: 'odra',
+  glassTestActive: false,
+  matrixFilter: 'all',
+  selectedForCompare: ['odra', 'plonica'],
+  puzzleIdx: 0,
+  puzzleStep: 1,
+  puzzleAnswers: {},
+  puzzlesDone: []
+};
+try {
+  const rsRaw = localStorage.getItem(RASH_STORE_KEY);
+  if (rsRaw) {
+    const parsed = JSON.parse(rsRaw);
+    Object.assign(RASH_STATE, parsed);
+    if (!RASH_STATE.puzzleAnswers) RASH_STATE.puzzleAnswers = {};
+    if (!RASH_STATE.puzzlesDone) RASH_STATE.puzzlesDone = [];
+    if (!RASH_STATE.selectedForCompare) RASH_STATE.selectedForCompare = ['odra', 'plonica'];
+  }
+} catch (e) { /* ignoruj */ }
+function saveRashState() {
+  try { localStorage.setItem(RASH_STORE_KEY, JSON.stringify(RASH_STATE)); } catch (e) {}
+}
 const IMAGING_STORE_KEY = 'pediatria_hub_imaging_v1';
 let IMAGING_PROGRESS = {};
 try {
@@ -9408,8 +9436,12 @@ let IMAGING_SHOW_HINT = false;
 let IMAGING_LAST_FEEDBACK = null;
 
 function viewDiagnostics(parts, params) {
-  if (params && params.tab && ['pmr', 'gas', 'urine', 'cbc', 'imaging'].includes(params.tab)) {
+  if (params && params.tab && ['pmr', 'gas', 'urine', 'cbc', 'imaging', 'osutki'].includes(params.tab)) {
     DIAG_TAB = params.tab;
+  }
+  if (params && params.osutka) {
+    RASH_STATE.selectedId = params.osutka;
+    DIAG_TAB = 'osutki';
   }
   if (params && params.case) {
     ACTIVE_IMAGING_CASE_ID = params.case;
@@ -9432,7 +9464,8 @@ function viewDiagnostics(parts, params) {
         <button class="calc-tab-btn ${DIAG_TAB === 'gas' ? 'active' : ''}" data-dtab="gas">🫁 Gazometria & Luka Anionowa</button>
         <button class="calc-tab-btn ${DIAG_TAB === 'urine' ? 'active' : ''}" data-dtab="urine">🧪 Badanie i Osad Moczu</button>
         <button class="calc-tab-btn ${DIAG_TAB === 'cbc' ? 'active' : ''}" data-dtab="cbc">🩸 Morfologia & Anemie</button>
-        <button class="calc-tab-btn ${DIAG_TAB === 'imaging' ? 'active' : ''}" data-dtab="imaging">🔬 EKG, RTG & USG Trainer</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'imaging' ? 'active' : ''}" data-dtab="imaging">🔬 EKG, RTG & USG</button>
+        <button class="calc-tab-btn ${DIAG_TAB === 'osutki' ? 'active' : ''}" data-dtab="osutki">🧬 Osutki Dziecięce</button>
       </div>
 
       <!-- Treść zakładki -->
@@ -9458,6 +9491,7 @@ function viewDiagnostics(parts, params) {
       case 'urine': return renderDiagUrine();
       case 'cbc': return renderDiagCBC();
       case 'imaging': return renderDiagImaging();
+      case 'osutki': return renderDiagRashes();
       default: return renderDiagPMR();
     }
   };
@@ -10102,6 +10136,677 @@ function viewDiagnostics(parts, params) {
     </div>`;
   };
 
+
+  /* 6. Osutki Dziecięce & Pediatric Rash Engine */
+  const renderDiagRashes = () => {
+    const rState = RASH_STATE || {};
+    const subTab = rState.subTab || 'catalog';
+    const doneCount = (rState.puzzlesDone || []).length;
+    const totalPuzzles = (RASH_PUZZLES || []).length;
+
+    let subHtml = '';
+    if (subTab === 'catalog') subHtml = renderRashCatalog(rState);
+    else if (subTab === 'matrix') subHtml = renderRashMatrix(rState);
+    else subHtml = renderRashPuzzles(rState);
+
+    return `<div class="rash-module-wrap">
+      <div class="rash-mode-bar">
+        <div class="presc-mode-toggle">
+          <button class="presc-mode-btn ${subTab === 'catalog' ? 'active' : ''}" data-rtab="catalog">
+            📋 Katalog & Mapy Ciała (10)
+          </button>
+          <button class="presc-mode-btn ${subTab === 'matrix' ? 'active' : ''}" data-rtab="matrix">
+            ⚖️ Matryca Różnicowa Side-by-Side
+          </button>
+          <button class="presc-mode-btn ${subTab === 'puzzles' ? 'active' : ''}" data-rtab="puzzles">
+            🎯 Trening Diagnostyczny (10)
+            <span class="chip ${doneCount === totalPuzzles ? 'm' : ''}" style="margin-left:.4rem;background:${doneCount === totalPuzzles ? 'var(--green-l)' : 'var(--teal-l)'};color:${doneCount === totalPuzzles ? 'var(--green-d)' : 'var(--teal-d)'};font-size:.74rem;padding:.15rem .45rem;border:0">
+              ${doneCount}/${totalPuzzles} zaliczone
+            </span>
+          </button>
+        </div>
+      </div>
+      ${subHtml}
+    </div>`;
+  };
+
+  const getRashSvgOverlay = (rashId, isGlass) => {
+    const isBlanching = ['odra', 'plonica', 'rozyczka', 'rumien_zakazny', 'rumien_nagly', 'kawasaki'].includes(rashId);
+    const isVesicle = ['ospa_wietrzna', 'hfmd'].includes(rashId);
+    const isNonBlanching = ['plamica_iga', 'meningokokemia'].includes(rashId);
+
+    const baseOpacity = isGlass ? (isBlanching ? '0.12' : (isVesicle ? '0.2' : '1.0')) : '0.9';
+    const vesicleOpacity = isGlass ? '0.95' : '0.9';
+
+    let elements = '';
+
+    if (rashId === 'odra') {
+      elements = `
+        <!-- Odra: Gruboplamisto-grudkowa zstępująca zlewająca się -->
+        <g opacity="${baseOpacity}">
+          <!-- Przód -->
+          <circle cx="76" cy="26" r="3" fill="#e11d48"/><circle cx="85" cy="22" r="3" fill="#be123c"/><circle cx="94" cy="26" r="3" fill="#e11d48"/>
+          <circle cx="70" cy="36" r="3.5" fill="#be123c"/><circle cx="100" cy="36" r="3.5" fill="#be123c"/>
+          <circle cx="85" cy="38" r="3" fill="#e11d48"/><circle cx="78" cy="46" r="3" fill="#e11d48"/><circle cx="92" cy="46" r="3" fill="#e11d48"/>
+          <circle cx="82" cy="58" r="3.5" fill="#be123c"/><circle cx="88" cy="62" r="3" fill="#e11d48"/>
+          <!-- Klatka i brzuch zlewające się -->
+          <circle cx="75" cy="74" r="4.5" fill="#e11d48"/><circle cx="85" cy="76" r="5" fill="#be123c"/><circle cx="95" cy="74" r="4.5" fill="#e11d48"/>
+          <circle cx="70" cy="88" r="5" fill="#be123c"/><circle cx="82" cy="90" r="5.5" fill="#e11d48"/><circle cx="94" cy="88" r="5" fill="#be123c"/>
+          <circle cx="74" cy="104" r="5" fill="#e11d48"/><circle cx="86" cy="106" r="5.5" fill="#be123c"/><circle cx="98" cy="102" r="4.5" fill="#e11d48"/>
+          <circle cx="78" cy="120" r="4.5" fill="#be123c"/><circle cx="90" cy="120" r="4.5" fill="#e11d48"/>
+          <!-- Ręce -->
+          <circle cx="56" cy="84" r="3.5" fill="#e11d48"/><circle cx="48" cy="104" r="3.5" fill="#be123c"/><circle cx="42" cy="126" r="3" fill="#e11d48"/>
+          <circle cx="114" cy="84" r="3.5" fill="#e11d48"/><circle cx="122" cy="104" r="3.5" fill="#be123c"/><circle cx="128" cy="126" r="3" fill="#e11d48"/>
+          <circle cx="39" cy="152" r="2.5" fill="#be123c"/><circle cx="131" cy="152" r="2.5" fill="#be123c"/>
+          <!-- Nogi -->
+          <circle cx="72" cy="148" r="4" fill="#e11d48"/><circle cx="98" cy="148" r="4" fill="#be123c"/>
+          <circle cx="70" cy="172" r="4" fill="#be123c"/><circle cx="100" cy="172" r="4" fill="#e11d48"/>
+          <circle cx="68" cy="198" r="3.5" fill="#e11d48"/><circle cx="102" cy="198" r="3.5" fill="#be123c"/>
+          <circle cx="68" cy="224" r="3" fill="#be123c"/><circle cx="102" cy="224" r="3" fill="#e11d48"/>
+          <circle cx="65" cy="244" r="2.5" fill="#e11d48"/><circle cx="105" cy="244" r="2.5" fill="#be123c"/>
+
+          <!-- Tył -->
+          <circle cx="226" cy="26" r="3" fill="#e11d48"/><circle cx="244" cy="26" r="3" fill="#e11d48"/>
+          <circle cx="220" cy="36" r="3.5" fill="#be123c"/><circle cx="250" cy="36" r="3.5" fill="#be123c"/>
+          <circle cx="235" cy="58" r="3.5" fill="#be123c"/>
+          <circle cx="225" cy="74" r="5" fill="#e11d48"/><circle cx="245" cy="74" r="5" fill="#be123c"/>
+          <circle cx="220" cy="90" r="5.5" fill="#be123c"/><circle cx="235" cy="92" r="5" fill="#e11d48"/><circle cx="250" cy="90" r="5.5" fill="#be123c"/>
+          <circle cx="224" cy="106" r="5" fill="#e11d48"/><circle cx="246" cy="106" r="5" fill="#be123c"/>
+          <circle cx="228" cy="120" r="4.5" fill="#be123c"/><circle cx="242" cy="120" r="4.5" fill="#e11d48"/>
+          <circle cx="222" cy="165" r="4" fill="#e11d48"/><circle cx="248" cy="165" r="4" fill="#be123c"/>
+          <circle cx="220" cy="195" r="3.5" fill="#be123c"/><circle cx="250" cy="195" r="3.5" fill="#e11d48"/>
+        </g>`;
+    } else if (rashId === 'plonica') {
+      elements = `
+        <!-- Płonica: drobnoplamista, szorstka, trójkąt Fiłatowa, linie Pastii -->
+        <g opacity="${baseOpacity}">
+          <!-- Policzki rumiane -->
+          <ellipse cx="76" cy="36" rx="6" ry="5" fill="#dc2626" opacity=".65"/>
+          <ellipse cx="94" cy="36" rx="6" ry="5" fill="#dc2626" opacity=".65"/>
+          <!-- Blady trójkąt Fiłatowa (wokół ust) -->
+          <polygon points="85,38 78,50 92,50" fill="var(--surface-2)" stroke="var(--teal)" stroke-width="1" stroke-dasharray="2,2"/>
+          <!-- Drobny gęsty stippling na klatce i brzuchu -->
+          ${[
+            [72,70],[80,68],[88,71],[96,69],[70,80],[78,82],[86,79],[94,81],[102,78],
+            [68,92],[76,95],[84,91],[92,94],[100,92],[72,106],[80,104],[88,107],[96,105],
+            [70,118],[78,121],[86,117],[94,119],[102,116],[76,128],[84,130],[92,127]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#dc2626"/>`).join('')}
+          <!-- Pachwiny mocno zagęszczone -->
+          <circle cx="75" cy="136" r="2.2" fill="#b91c1c"/><circle cx="85" cy="138" r="2.2" fill="#b91c1c"/><circle cx="95" cy="136" r="2.2" fill="#b91c1c"/>
+          <!-- Linie Pastii w zgięciach łokciowych (przód) -->
+          <line x1="40" y1="112" x2="52" y2="104" stroke="#991b1b" stroke-width="3" stroke-linecap="round"/>
+          <line x1="118" y1="104" x2="130" y2="112" stroke="#991b1b" stroke-width="3" stroke-linecap="round"/>
+          <!-- Tył stippling -->
+          ${[
+            [222,70],[230,68],[238,71],[246,69],[220,82],[228,80],[236,83],[244,79],[252,81],
+            [222,94],[230,96],[238,93],[246,95],[224,108],[232,106],[240,109],[248,107],
+            [226,122],[234,124],[242,121],[250,123]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#dc2626"/>`).join('')}
+        </g>`;
+    } else if (rashId === 'rozyczka') {
+      elements = `
+        <!-- Różyczka: bladoróżowa, drobnoplamista, powiększone węzły podpotyliczne -->
+        <g opacity="${baseOpacity}">
+          ${[
+            [80,28],[90,26],[76,38],[94,38],[85,46],[78,60],[88,58],
+            [74,74],[84,72],[94,76],[70,86],[80,88],[90,84],[100,88],
+            [76,102],[86,100],[96,104],[72,116],[82,118],[92,114],
+            [54,88],[46,108],[116,88],[124,108],[74,155],[96,155],[72,185],[98,185]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fb7185"/>`).join('')}
+          <!-- Tył węzły podpotyliczne powiększone (charakterystyczne!) -->
+          <circle cx="218" cy="44" r="5" fill="#8b5cf6" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="252" cy="44" r="5" fill="#8b5cf6" stroke="#fff" stroke-width="1.5"/>
+          <text x="235" y="52" font-size="7" font-weight="800" text-anchor="middle" fill="#8b5cf6">Węzły zauszne</text>
+          ${[
+            [226,74],[236,72],[246,76],[222,88],[232,86],[242,90],[250,86],
+            [224,104],[234,102],[244,106],[226,118],[236,120],[246,116]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fb7185"/>`).join('')}
+        </g>`;
+    } else if (rashId === 'rumien_zakazny') {
+      elements = `
+        <!-- Rumień zakaźny: spoliczkowane dziecko + girlandy na kończynach -->
+        <g opacity="${baseOpacity}">
+          <!-- Policzki płonące (spoliczkowane dziecko) -->
+          <ellipse cx="75" cy="38" rx="8" ry="7" fill="#ef4444" opacity=".85"/>
+          <ellipse cx="95" cy="38" rx="8" ry="7" fill="#ef4444" opacity=".85"/>
+          <!-- Girlandowate/koronkowate pętle na ramionach -->
+          <path d="M48,80 Q40,90 48,100 Q40,110 46,120 Q38,130 42,140" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+          <path d="M122,80 Q130,90 122,100 Q130,110 124,120 Q132,130 128,140" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+          <!-- Girlandy na udach -->
+          <path d="M68,145 Q62,160 70,175 Q62,190 68,205" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+          <path d="M102,145 Q108,160 100,175 Q108,190 102,205" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+          <!-- Tył ramiona girlandy -->
+          <path d="M198,80 Q190,90 198,100 Q190,110 196,120" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+          <path d="M272,80 Q280,90 272,100 Q280,110 274,120" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-dasharray="4,2"/>
+        </g>`;
+    } else if (rashId === 'rumien_nagly') {
+      elements = `
+        <!-- Rumień nagły: tylko tułów, twarz i kończyny wolne! -->
+        <g opacity="${baseOpacity}">
+          ${[
+            [74,72],[84,70],[94,74],[70,82],[78,84],[88,80],[96,82],[102,80],
+            [68,94],[76,96],[86,92],[94,95],[100,93],[72,108],[82,106],[90,110],[98,107],
+            [74,120],[84,122],[94,118],[80,128],[90,129]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.5" fill="#f43f5e"/>`).join('')}
+          ${[
+            [224,72],[234,70],[244,74],[220,84],[230,82],[240,85],[250,81],
+            [222,96],[232,94],[242,97],[252,95],[224,110],[234,108],[244,112],
+            [226,122],[236,124],[246,120]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.5" fill="#f43f5e"/>`).join('')}
+          <!-- Wskazanie na wolną twarz -->
+          <circle cx="85" cy="38" r="16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <text x="85" y="16" font-size="7" font-weight="700" text-anchor="middle" fill="var(--green)">Twarz czysta</text>
+        </g>`;
+    } else if (rashId === 'ospa_wietrzna') {
+      elements = `
+        <!-- Ospa wietrzna: polimorfizm (plamki, pęcherzyki, strupki), owłosiona skóra głowy -->
+        <!-- Plamki rumieniowe -->
+        <g opacity="${baseOpacity}">
+          ${[[78,32],[92,34],[80,80],[95,100],[70,110],[120,95],[74,165],[100,190],[225,85],[245,105]].map(([x,y]) =>
+            `<circle cx="${x}" cy="${y}" r="3" fill="#ef4444"/>`).join('')}
+          <!-- Strupki wysuszone -->
+          ${[[88,26],[72,92],[90,115],[44,120],[98,155],[235,32],[220,100],[240,120]].map(([x,y]) =>
+            `<circle cx="${x}" cy="${y}" r="2.4" fill="#78350f"/>`).join('')}
+        </g>
+        <!-- Pęcherzyki "kropla rosy" (zostają widoczne przy szkiełku) -->
+        <g opacity="${vesicleOpacity}">
+          ${[
+            [84,24],[76,44],[88,42],[74,72],[86,88],[96,76],[82,102],[92,108],[48,95],[124,115],
+            [70,145],[96,170],[72,210],[102,215],[228,26],[242,28],[232,74],[248,80],[228,95],[244,115]
+          ].map(([x,y]) => `
+            <circle cx="${x}" cy="${y}" r="3.6" fill="#38bdf8" stroke="#ef4444" stroke-width="1.2"/>
+            <circle cx="${x - 1}" cy="${y - 1}" r="1" fill="#ffffff"/>
+          `).join('')}
+          <!-- Znacznik owłosionej skóry głowy -->
+          <circle cx="85" cy="22" r="8" fill="none" stroke="var(--blue)" stroke-width="1.2" stroke-dasharray="2,2"/>
+          <text x="85" y="11" font-size="6.5" font-weight="700" text-anchor="middle" fill="var(--blue-d)">Włosy zajęte!</text>
+        </g>`;
+    } else if (rashId === 'hfmd') {
+      elements = `
+        <!-- HFMD: pęcherzyki na dłoniach, podeszwach stóp, w buzi, na pośladkach -->
+        <g opacity="${vesicleOpacity}">
+          <!-- Jama ustna -->
+          <circle cx="85" cy="46" r="3.5" fill="#f87171" stroke="#dc2626" stroke-width="1"/>
+          <!-- Dłonie (przód i tył) -->
+          <ellipse cx="38" cy="152" rx="4.5" ry="3" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="132" cy="152" rx="4.5" ry="3" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="188" cy="152" rx="4.5" ry="3" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="282" cy="152" rx="4.5" ry="3" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <!-- Podeszwy stóp -->
+          <ellipse cx="65" cy="244" rx="5" ry="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="105" cy="244" rx="5" ry="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="215" cy="244" rx="5" ry="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <ellipse cx="255" cy="244" rx="5" ry="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.5"/>
+          <!-- Pośladki (tył) -->
+          <circle cx="226" cy="138" r="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.2"/>
+          <circle cx="244" cy="138" r="3.5" fill="#cbd5e1" stroke="#dc2626" stroke-width="1.2"/>
+          <text x="38" y="166" font-size="6.5" font-weight="800" text-anchor="middle" fill="#dc2626">Dłonie</text>
+          <text x="65" y="258" font-size="6.5" font-weight="800" text-anchor="middle" fill="#dc2626">Stopy</text>
+        </g>`;
+    } else if (rashId === 'kawasaki') {
+      elements = `
+        <!-- Choroba Kawasakiego: czerwone oczy bez ropy, malinowe usta, obrzęk dłoni/stóp, osutka krocza -->
+        <g opacity="${baseOpacity}">
+          <!-- Przekrwione spojówki bez wydzieliny -->
+          <circle cx="79" cy="34" r="3.5" fill="#dc2626"/><circle cx="91" cy="34" r="3.5" fill="#dc2626"/>
+          <!-- Czerwone spierzchnięte wargi / język truskawkowy -->
+          <ellipse cx="85" cy="45" rx="5" ry="2.5" fill="#b91c1c"/>
+          <!-- Węzeł chłonny szyjny powiększony jednostronnie (>1.5 cm) -->
+          <circle cx="98" cy="56" r="5" fill="#eab308" stroke="#ca8a04" stroke-width="1.5"/>
+          <!-- Polimorficzna osutka na tułowiu i w pachwinach -->
+          ${[[74,76],[86,74],[96,78],[70,90],[84,92],[98,88],[76,108],[88,106],[78,124],[92,126],[85,136]].map(([x,y]) =>
+            `<circle cx="${x}" cy="${y}" r="3.5" fill="#ef4444"/>`).join('')}
+          <!-- Obrzęk i bolesny rumień dłoni i stóp (bardzo charakterystyczne!) -->
+          <circle cx="39" cy="152" r="8" fill="#dc2626" opacity=".75"/>
+          <circle cx="131" cy="152" r="8" fill="#dc2626" opacity=".75"/>
+          <ellipse cx="65" cy="244" rx="10" ry="6" fill="#dc2626" opacity=".75"/>
+          <ellipse cx="105" cy="244" rx="10" ry="6" fill="#dc2626" opacity=".75"/>
+          <text x="39" y="168" font-size="6.5" font-weight="800" text-anchor="middle" fill="#dc2626">Obrzęk rąk</text>
+        </g>`;
+    } else if (rashId === 'plamica_iga') {
+      elements = `
+        <!-- Plamica IgA (Schönlein-Henoch): purpura palpabilis, grawitacyjnie na pośladkach i nogach -->
+        <g opacity="${baseOpacity}">
+          <!-- PRZÓD: podudzia, stawy skokowe -->
+          ${[
+            [68,160],[72,170],[66,180],[70,190],[68,205],[72,215],[66,225],[70,235],
+            [98,160],[102,170],[96,180],[100,190],[98,205],[102,215],[96,225],[100,235],
+            [64,244],[106,244]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="${Math.random() > 0.5 ? 3.5 : 4.5}" fill="#7e22ce" stroke="#581c87" stroke-width="1"/>`).join('')}
+          <!-- TYŁ: masywne skupienie na pośladkach i tylnych powierzchniach ud -->
+          ${[
+            [224,128],[232,130],[240,127],[248,131],[220,138],[228,140],[236,136],[244,141],[252,137],
+            [222,150],[230,152],[242,150],[250,153],[218,165],[226,168],[244,166],[252,169],
+            [218,185],[224,192],[248,188],[254,195],[216,210],[222,220],[250,215],[254,225]
+          ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="${Math.random() > 0.5 ? 3.8 : 4.8}" fill="#7e22ce" stroke="#581c87" stroke-width="1"/>`).join('')}
+          <!-- Bolesne obrzęki stawów skokowych -->
+          <circle cx="68" cy="235" r="9" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <circle cx="100" cy="235" r="9" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <text x="85" y="260" font-size="7" font-weight="800" text-anchor="middle" fill="#7e22ce">Purpura palpabilis (nie blednie!)</text>
+        </g>`;
+    } else if (rashId === 'meningokokemia') {
+      elements = `
+        <!-- Meningokokemia: gwiazdkowate wybroczyny, petechiae, plamica fulminans, zimne kończyny -->
+        <g opacity="${baseOpacity}">
+          <!-- Asymetryczne wybroczyny i wylewy podskórne -->
+          <polygon points="76,82 82,78 86,84 81,89" fill="#4a044e" stroke="#2e1065" stroke-width="1"/>
+          <polygon points="92,98 100,94 104,102 96,106" fill="#4a044e" stroke="#2e1065" stroke-width="1"/>
+          <polygon points="70,112 76,108 80,116 72,120" fill="#3b0764" stroke="#2e1065" stroke-width="1"/>
+          <polygon points="68,160 76,155 80,165 71,172" fill="#4a044e" stroke="#2e1065" stroke-width="1"/>
+          <polygon points="98,185 106,178 110,190 101,196" fill="#3b0764" stroke="#2e1065" stroke-width="1"/>
+          <polygon points="66,215 74,210 78,222 69,228" fill="#4a044e" stroke="#2e1065" stroke-width="1"/>
+          <!-- Drobne petechiae na ciele -->
+          ${[[85,74],[70,95],[94,86],[88,124],[74,185],[98,150],[102,220],[232,84],[244,100],[228,145],[250,175]].map(([x,y]) =>
+            `<circle cx="${x}" cy="${y}" r="2" fill="#581c87"/>`).join('')}
+          <!-- Zimne, sine dłonie i stopy (centralizacja krążenia we wstrząsie) -->
+          <circle cx="39" cy="152" r="7" fill="#64748b" opacity=".8"/>
+          <circle cx="131" cy="152" r="7" fill="#64748b" opacity=".8"/>
+          <ellipse cx="65" cy="244" rx="9" ry="5" fill="#64748b" opacity=".8"/>
+          <ellipse cx="105" cy="244" rx="9" ry="5" fill="#64748b" opacity=".8"/>
+          <text x="85" y="260" font-size="7" font-weight="900" text-anchor="middle" fill="#dc2626">ALARM: Wybroczyny nie bledną!</text>
+        </g>`;
+    }
+
+    // Dodaj szkiełko ucisku jeśli włączone
+    let glassLens = '';
+    if (isGlass) {
+      glassLens = `
+        <g class="glass-lens-overlay">
+          <circle cx="85" cy="95" r="42" fill="rgba(255,255,255,0.4)" stroke="var(--blue)" stroke-width="3"/>
+          <circle cx="85" cy="95" r="39" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+          <line x1="115" y1="125" x2="140" y2="150" stroke="var(--blue-d)" stroke-width="5" stroke-linecap="round"/>
+          <text x="85" y="100" font-size="8" font-weight="900" text-anchor="middle" fill="${isNonBlanching ? 'var(--red)' : (isVesicle ? 'var(--blue-d)' : 'var(--green)')}">
+            ${isNonBlanching ? 'NIE BLEDNIE!' : (isVesicle ? 'PĘCHERZYK' : 'BLEDNIE')}
+          </text>
+        </g>`;
+    }
+
+    return `<svg viewBox="0 0 350 270" class="rash-svg-canvas" role="img" aria-label="Anatomiczny rozkład osutki: ${rashId}">
+      <!-- Kontury ciała przód -->
+      <g class="body-anterior">
+        <circle cx="85" cy="38" r="20" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1.5"/>
+        <circle cx="63" cy="38" r="4.5" fill="var(--surface-2)" stroke="var(--line-2)"/>
+        <circle cx="107" cy="38" r="4.5" fill="var(--surface-2)" stroke="var(--line-2)"/>
+        <rect x="79" y="58" width="12" height="8" rx="2" fill="var(--surface-2)"/>
+        <path d="M66,66 L104,66 L108,132 L62,132 Z" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1.5"/>
+        <path d="M66,68 L44,110 L40,146" stroke="var(--surface-2)" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M104,68 L126,110 L130,146" stroke="var(--surface-2)" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <circle cx="39" cy="152" r="6.5" fill="var(--surface-2)"/>
+        <circle cx="131" cy="152" r="6.5" fill="var(--surface-2)"/>
+        <path d="M72,135 L70,195 L68,236" stroke="var(--surface-2)" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <path d="M98,135 L100,195 L102,236" stroke="var(--surface-2)" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <ellipse cx="65" cy="244" rx="8" ry="4.5" fill="var(--surface-2)"/>
+        <ellipse cx="105" cy="244" rx="8" ry="4.5" fill="var(--surface-2)"/>
+        <text x="85" y="265" font-size="8" font-weight="700" text-anchor="middle" fill="var(--muted)">PRZÓD</text>
+      </g>
+
+      <!-- Kontury ciała tył -->
+      <g class="body-posterior">
+        <circle cx="235" cy="38" r="20" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1.5"/>
+        <circle cx="213" cy="38" r="4.5" fill="var(--surface-2)" stroke="var(--line-2)"/>
+        <circle cx="257" cy="38" r="4.5" fill="var(--surface-2)" stroke="var(--line-2)"/>
+        <rect x="229" y="58" width="12" height="8" rx="2" fill="var(--surface-2)"/>
+        <path d="M216,66 L254,66 L258,132 L212,132 Z" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1.5"/>
+        <path d="M212,130 Q223,148 235,134 Q247,148 258,130 Z" fill="var(--surface-2)" stroke="var(--line-2)"/>
+        <path d="M216,68 L194,110 L190,146" stroke="var(--surface-2)" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M254,68 L276,110 L280,146" stroke="var(--surface-2)" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <circle cx="189" cy="152" r="6.5" fill="var(--surface-2)"/>
+        <circle cx="281" cy="152" r="6.5" fill="var(--surface-2)"/>
+        <path d="M222,135 L220,195 L218,236" stroke="var(--surface-2)" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <path d="M248,135 L250,195 L252,236" stroke="var(--surface-2)" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <ellipse cx="215" cy="244" rx="8" ry="4.5" fill="var(--surface-2)"/>
+        <ellipse cx="255" cy="244" rx="8" ry="4.5" fill="var(--surface-2)"/>
+        <text x="235" y="265" font-size="8" font-weight="700" text-anchor="middle" fill="var(--muted)">TYŁ</text>
+      </g>
+
+      <!-- Warstwa wykwitów choroby -->
+      ${elements}
+
+      <!-- Szkiełko uciskowe (jeśli aktywne) -->
+      ${glassLens}
+    </svg>`;
+  };
+
+  const renderRashCatalog = rState => {
+    const list = PEDIATRIC_RASH_DATABASE || [];
+    const activeRash = list.find(r => r.id === rState.selectedId) || list[0];
+    const isGlass = !!rState.glassTestActive;
+
+    return `<div class="rash-catalog-wrap">
+      <!-- Pigułki wyboru choroby -->
+      <div class="rash-pills-row">
+        ${list.map(r => {
+          const isSel = r.id === activeRash.id;
+          const isAlert = r.glassTest === 'non_blanching';
+          return `<button class="rash-pill-btn ${isSel ? 'active' : ''} ${isAlert ? 'alert-pill' : ''}" data-rash-id="${r.id}">
+            <span>${esc(r.name.split('/')[0])}</span>
+            ${isAlert ? '<span class="chip" style="font-size:.65rem;background:var(--red-l);color:var(--red);border-color:var(--red);padding:.05rem .3rem">Nieblednąca</span>' : ''}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <!-- Obszar roboczy karty choroby -->
+      <div class="rash-card-grid">
+        <!-- Kolumna lewa: Sylwetka SVG + Test Szklankowy -->
+        <div class="rash-visual-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+            <div>
+              <strong style="font-size:1rem;color:var(--ink)">Rozkład wykwitów na ciele</strong>
+              <div class="srcline">Model anatomiczny dziecka (przód / tył)</div>
+            </div>
+            <button class="btn ${isGlass ? 'pri' : 'sec'} sm" id="btnToggleGlassTest">
+              🔍 ${isGlass ? 'Zdejmij szkiełko' : 'Test szklankowy (ucisk)'}
+            </button>
+          </div>
+
+          <div class="rash-silhouette-container">
+            ${getRashSvgOverlay(activeRash.id, isGlass)}
+          </div>
+
+          <!-- Wynik testu szklankowego -->
+          <div class="rash-glass-result ${activeRash.glassTest}">
+            <div style="font-weight:800;font-size:.85rem;margin-bottom:.2rem">
+              ${activeRash.glassTest === 'non_blanching'
+                ? '🚨 TEST SZKLANKOWY UJEMNY / ALARMOWY:'
+                : (activeRash.glassTest === 'vesicle' ? '💧 WYKWITY PĘCHERZYKOWE:' : '✅ TEST SZKLANKOWY DODATNI:')}
+            </div>
+            <p style="margin:0;font-size:.84rem;line-height:1.45">${esc(activeRash.glassTestNote)}</p>
+          </div>
+
+          <!-- Strefy charakterystyczne -->
+          ${(activeRash.specialZones || []).length ? `
+          <div style="margin-top:.9rem">
+            <label class="muted" style="font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em">Strefy patognomoniczne:</label>
+            <div style="display:flex;flex-direction:column;gap:.35rem;margin-top:.4rem">
+              ${activeRash.specialZones.map(z => `
+                <div class="rash-zone-badge">
+                  <b>${esc(z.label)}:</b> <span>${esc(z.desc)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>` : ''}
+        </div>
+
+        <!-- Kolumna prawa: Kompendium wiedzy klinicznej -->
+        <div class="rash-details-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.8rem">
+            <div>
+              <div class="srcline">${esc(activeRash.altName || 'Choroba osutkowa')}</div>
+              <h3 style="margin:.15rem 0 .2rem;font-size:1.25rem;color:var(--ink)">${esc(activeRash.name)}</h3>
+              <div class="muted" style="font-size:.82rem"><b>Etiologia:</b> ${esc(activeRash.etiology)}</div>
+            </div>
+            <span class="chip" style="background:var(--teal-l);color:var(--teal-d);border:0;font-weight:700">Wylęganie: ${esc(activeRash.incubation)}</span>
+          </div>
+
+          <!-- Sekcje wiedzy -->
+          <div class="rash-info-sections">
+            <!-- 1. Zwiastuny -->
+            <div class="rash-info-row">
+              <span class="rash-info-label">🤒 Zwiastuny (prodrom):</span>
+              <span>${esc(activeRash.prodrome)}</span>
+            </div>
+
+            <!-- 2. Morfologia i dynamika -->
+            <div class="rash-info-row">
+              <span class="rash-info-label">🎨 Morfologia wykwitów:</span>
+              <span><b>${esc(activeRash.rashType)}</b></span>
+            </div>
+
+            <div class="rash-info-row">
+              <span class="rash-info-label">📍 Kierunek i kolejność siewu:</span>
+              <span>${esc(activeRash.spread)}</span>
+            </div>
+
+            <div class="rash-info-row">
+              <span class="rash-info-label">⏳ Ewolucja i zejście:</span>
+              <span>${esc(activeRash.evolution)}</span>
+            </div>
+
+            <!-- 3. Objaw patognomoniczny -->
+            <div class="rash-info-row" style="background:var(--surface-2);padding:.6rem .8rem;border-radius:8px;border-left:3px solid var(--teal)">
+              <span class="rash-info-label" style="color:var(--teal-d)">⭐ Objaw patognomoniczny:</span>
+              <span style="font-weight:700">${esc(activeRash.pathognomonic)}</span>
+            </div>
+
+            <!-- 4. Powikłania -->
+            <div class="rash-info-row">
+              <span class="rash-info-label" style="color:var(--red)">⚠️ Groźne powikłania:</span>
+              <span>${esc(activeRash.complications)}</span>
+            </div>
+
+            <!-- 5. Leczenie i izolacja -->
+            <div class="rash-info-row">
+              <span class="rash-info-label">💊 Leczenie 1. rzutu:</span>
+              <span>${esc(activeRash.treatment)}</span>
+            </div>
+
+            <div class="rash-info-row">
+              <span class="rash-info-label">🛡️ Izolacja i Sanepid:</span>
+              <span>${esc(activeRash.isolation)}</span>
+            </div>
+          </div>
+
+          <!-- Złota perła -->
+          <div class="rash-pearl-box">
+            <strong>💡 Perła egzaminacyjna:</strong> ${esc(activeRash.pearl)}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const renderRashMatrix = rState => {
+    const list = PEDIATRIC_RASH_DATABASE || [];
+    const filter = rState.matrixFilter || 'all';
+
+    let filtered = list;
+    if (filter === 'non_blanching') filtered = list.filter(r => r.glassTest === 'non_blanching');
+    else if (filter === 'vesicular') filtered = list.filter(r => r.glassTest === 'vesicle');
+    else if (filter === 'descending') filtered = list.filter(r => ['odra', 'rozyczka'].includes(r.id));
+    else if (filter === 'post_fever') filtered = list.filter(r => r.id === 'rumien_nagly');
+    else if (filter === 'palms_soles') filtered = list.filter(r => ['plonica', 'hfmd', 'kawasaki', 'odra'].includes(r.id));
+    else if (filter === 'sanepid') filtered = list.filter(r => ['odra', 'meningokokemia'].includes(r.id));
+
+    const selectedIds = rState.selectedForCompare || ['odra', 'plonica'];
+    const compared = list.filter(r => selectedIds.includes(r.id));
+
+    return `<div class="rash-matrix-wrap">
+      <div style="margin-bottom:1rem">
+        <h3 style="margin:0 0 .3rem;font-size:1.15rem">Porównanie różnicowe osutek dziecięcych</h3>
+        <p class="lead" style="font-size:.88rem;margin:0">Filtruj wg cech lub wybierz od 2 do 3 chorób do szczegółowego zestawienia Side-by-Side.</p>
+      </div>
+
+      <!-- Filtry cech klinicznych -->
+      <div class="rash-matrix-filters">
+        <button class="calc-pill ${filter === 'all' ? 'active' : ''}" data-rfilter="all">Wszystkie (10)</button>
+        <button class="calc-pill ${filter === 'non_blanching' ? 'active' : ''}" data-rfilter="non_blanching">🚨 Nieblednące (Plamica/Posocznica)</button>
+        <button class="calc-pill ${filter === 'vesicular' ? 'active' : ''}" data-rfilter="vesicular">💧 Pęcherzykowe (Ospa/HFMD)</button>
+        <button class="calc-pill ${filter === 'descending' ? 'active' : ''}" data-rfilter="descending">⬇️ Zstępujące od głowy (Odra/Różyczka)</button>
+        <button class="calc-pill ${filter === 'post_fever' ? 'active' : ''}" data-rfilter="post_fever">🌡️ Po spadku gorączki (Rumień nagły)</button>
+        <button class="calc-pill ${filter === 'palms_soles' ? 'active' : ''}" data-rfilter="palms_soles">✋ Dłonie i stopy</button>
+        <button class="calc-pill ${filter === 'sanepid' ? 'active' : ''}" data-rfilter="sanepid">📋 Pilny Sanepid</button>
+      </div>
+
+      <!-- Wybór chorób do porównania -->
+      <div class="rash-compare-picker">
+        <span class="srcline" style="font-weight:700">Wybierz 2–3 choroby do porównania Side-by-Side:</span>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+          ${list.map(r => {
+            const isChecked = selectedIds.includes(r.id);
+            return `<button class="calc-pill ${isChecked ? 'active' : ''}" data-rcompare-toggle="${r.id}">
+              ${isChecked ? '✓ ' : ''}${esc(r.name.split('/')[0])}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Tabela Side-by-Side -->
+      <div class="rash-matrix-table-wrap">
+        <table class="rash-matrix-table">
+          <thead>
+            <tr>
+              <th style="min-width:140px">Cecha kliniczna</th>
+              ${compared.map(r => `
+                <th style="min-width:220px;text-align:left">
+                  <div style="font-weight:800;font-size:.95rem;color:var(--ink)">${esc(r.name)}</div>
+                  <span class="chip" style="font-size:.7rem;margin-top:.2rem">${esc(r.etiology.split('(')[0])}</span>
+                </th>
+              `).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-col">Zwiastuny & Gorączka</td>
+              ${compared.map(r => `<td>${esc(r.prodrome)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Morfologia wykwitu</td>
+              ${compared.map(r => `<td><b>${esc(r.rashType)}</b></td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Kolejność siewu</td>
+              ${compared.map(r => `<td>${esc(r.spread)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Test szklankowy</td>
+              ${compared.map(r => `<td>
+                <span class="chip ${r.glassTest === 'non_blanching' ? 'm' : ''}" style="background:${r.glassTest === 'non_blanching' ? 'var(--red-l)' : (r.glassTest === 'vesicle' ? 'var(--blue-l)' : 'var(--green-l)')};color:${r.glassTest === 'non_blanching' ? 'var(--red)' : (r.glassTest === 'vesicle' ? 'var(--blue-d)' : 'var(--green-d)')};font-weight:800">
+                  ${r.glassTest === 'non_blanching' ? 'NIE BLEDNIE' : (r.glassTest === 'vesicle' ? 'Pęcherzyki' : 'Blednie')}
+                </span>
+                <div class="srcline" style="margin-top:.2rem">${esc(r.glassTestNote)}</div>
+              </td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Objaw patognomoniczny</td>
+              ${compared.map(r => `<td style="font-weight:700;color:var(--teal-d)">${esc(r.pathognomonic)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Zejście i łuszczenie</td>
+              ${compared.map(r => `<td>${esc(r.evolution)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Groźne powikłanie</td>
+              ${compared.map(r => `<td style="color:var(--red-d)">${esc(r.complications)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="feature-col">Leczenie & Izolacja</td>
+              ${compared.map(r => `<td><b>${esc(r.treatment)}</b><div class="srcline" style="margin-top:.2rem">${esc(r.isolation)}</div></td>`).join('')}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  };
+
+  const renderRashPuzzles = rState => {
+    const puzzles = RASH_PUZZLES || [];
+    const pIdx = Math.max(0, Math.min(puzzles.length - 1, rState.puzzleIdx || 0));
+    const puz = puzzles[pIdx] || puzzles[0];
+    const stepNum = rState.puzzleStep || 1;
+    const ans = (rState.puzzleAnswers && rState.puzzleAnswers[puz.id]) || {};
+
+    const curStepObj = stepNum === 1 ? puz.step1 : puz.step2;
+    const hasAns = ans[stepNum] !== undefined;
+
+    return `<div class="rash-puzzles-wrap">
+      <div style="margin-bottom:1rem">
+        <h3 style="margin:0 0 .2rem;font-size:1.15rem">Trening Diagnostyczny: 10 Zagadek Klinicznych</h3>
+        <p class="lead" style="font-size:.88rem;margin:0">Przeanalizuj wywiad, zobacz rozkład osutki na sylwetce pacjenta i podejmij właściwą decyzję kliniczną krok po kroku.</p>
+      </div>
+
+      <!-- Pigułki zagadek -->
+      <div class="rash-pills-row">
+        ${puzzles.map((p, idx) => {
+          const isSel = idx === pIdx;
+          const isDone = (rState.puzzlesDone || []).includes(p.id);
+          return `<button class="chal-pill-btn ${isSel ? 'active' : ''} ${isDone ? 'done' : ''}" data-rpuz-sel="${idx}">
+            <span class="chal-num">${idx + 1}</span>
+            <span>Przypadek ${idx + 1}</span>
+            ${isDone ? '<span class="chal-check">✓</span>' : ''}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <!-- Karta aktywnej zagadki -->
+      <div class="rash-puzzle-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem;border-bottom:1px solid var(--line);padding-bottom:.8rem">
+          <div>
+            <span class="chip" style="background:var(--teal-l);color:var(--teal-d);font-weight:800">Przypadek ${pIdx + 1} z ${puzzles.length}</span>
+            <h3 style="margin:.3rem 0 .2rem;font-size:1.15rem">${esc(puz.title)}</h3>
+          </div>
+          <div class="srcline" style="font-weight:700">Krok ${stepNum} z 2</div>
+        </div>
+
+        <div class="rash-puzzle-body-grid">
+          <!-- Mini sylwetka pacjenta -->
+          <div class="rash-puzzle-svg-box">
+            <div style="font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem">Rozkład wykwitów u pacjenta:</div>
+            <div style="max-width:240px;margin:0 auto">
+              ${getRashSvgOverlay(puz.rashId, false)}
+            </div>
+          </div>
+
+          <!-- Opis i pytania -->
+          <div class="rash-puzzle-content-box">
+            <div class="rash-puzzle-vignette">
+              <strong style="color:var(--teal-d)">📋 Wywiad i badanie fizykalne:</strong>
+              <p style="margin:.3rem 0 0;font-size:.9rem;line-height:1.5">${esc(puz.vignette)}</p>
+            </div>
+
+            <!-- Pytanie bieżącego kroku -->
+            <div style="margin-top:1rem">
+              <div style="font-weight:800;font-size:.95rem;color:var(--ink);margin-bottom:.6rem">
+                ${stepNum === 1 ? 'Krok 1: Rozpoznanie' : 'Krok 2: Postępowanie i wytyczne'} – ${esc(curStepObj.q)}
+              </div>
+              <div class="chal-options-stack">
+                ${curStepObj.opts.map((opt, optIdx) => {
+                  let optClass = 'chal-opt-btn';
+                  if (hasAns) {
+                    if (optIdx === curStepObj.correct) optClass += ' correct';
+                    else if (optIdx === ans[stepNum]) optClass += ' wrong';
+                    else optClass += ' disabled';
+                  }
+                  return `<button class="${optClass}" ${hasAns ? 'disabled' : `data-rpuz-opt="${optIdx}"`}>
+                    <span class="chal-opt-letter">${String.fromCharCode(65 + optIdx)}.</span>
+                    <span>${esc(opt)}</span>
+                  </button>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Feedback po odpowiedzi -->
+            ${hasAns ? `
+            <div class="chal-explanation-box ${ans[stepNum] === curStepObj.correct ? 'ok' : 'err'}">
+              <div style="font-weight:800;margin-bottom:.25rem">
+                ${ans[stepNum] === curStepObj.correct ? '✅ Doskonale! Prawidłowa odpowiedź' : '❌ Pomyłka kliniczna'}
+              </div>
+              <p style="margin:0;font-size:.88rem;line-height:1.45">${esc(curStepObj.explanation)}</p>
+            </div>
+
+            <div style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+              ${ans[stepNum] === curStepObj.correct ? `
+                ${stepNum === 1 ? `
+                  <button class="btn pri" id="btnRashPuzNextStep">Przejdź do Kroku 2 (Postępowanie) →</button>
+                ` : `
+                  <div class="chal-congrats-banner">
+                    <div style="font-weight:800;color:var(--green-d)">🎉 Gratulacje! Przypadek rozwiązany bezbłędnie!</div>
+                    <div class="chal-pearl-box">
+                      <strong>⭐ Złota Perła Egzaminacyjna:</strong> ${esc(puz.pearl)}
+                    </div>
+                  </div>
+                  <button class="btn pri" id="btnRashPuzNextCase">Przejdź do kolejnego przypadku →</button>
+                `}
+              ` : `
+                <button class="btn sec" id="btnRashPuzRetryStep">↺ Spróbuj ponownie ten krok</button>
+              `}
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
   /* Mini-Quiz */
   const renderLabQuiz = () => {
     return `<div id="labQuizBox">
@@ -10388,6 +11093,121 @@ function viewDiagnostics(parts, params) {
 
     if (DIAG_TAB === 'pmr') updatePMRCalc();
     if (DIAG_TAB === 'gas') updateGasCalc();
+
+    // Obsługa Atlasu Osutek Dziecięcych
+    if (DIAG_TAB === 'osutki') {
+      $$('[data-rtab]').forEach(b => {
+        b.onclick = () => {
+          RASH_STATE.subTab = b.dataset.rtab;
+          saveRashState();
+          render();
+        };
+      });
+
+      $$('[data-rash-id]').forEach(b => {
+        b.onclick = () => {
+          RASH_STATE.selectedId = b.dataset.rashId;
+          RASH_STATE.glassTestActive = false;
+          saveRashState();
+          render();
+        };
+      });
+
+      const glassBtn = $('#btnToggleGlassTest');
+      if (glassBtn) {
+        glassBtn.onclick = () => {
+          RASH_STATE.glassTestActive = !RASH_STATE.glassTestActive;
+          saveRashState();
+          render();
+        };
+      }
+
+      $$('[data-rfilter]').forEach(b => {
+        b.onclick = () => {
+          RASH_STATE.matrixFilter = b.dataset.rfilter;
+          saveRashState();
+          render();
+        };
+      });
+
+      $$('[data-rcompare-toggle]').forEach(b => {
+        b.onclick = () => {
+          const rid = b.dataset.rcompareToggle;
+          let sel = RASH_STATE.selectedForCompare || ['odra', 'plonica'];
+          if (sel.includes(rid)) {
+            if (sel.length > 2) sel = sel.filter(x => x !== rid);
+            else toast('Wybierz co najmniej 2 choroby do porównania');
+          } else {
+            if (sel.length >= 3) sel = [sel[1], sel[2], rid];
+            else sel.push(rid);
+          }
+          RASH_STATE.selectedForCompare = sel;
+          saveRashState();
+          render();
+        };
+      });
+
+      $$('[data-rpuz-sel]').forEach(b => {
+        b.onclick = () => {
+          RASH_STATE.puzzleIdx = +b.dataset.rpuzSel;
+          RASH_STATE.puzzleStep = 1;
+          saveRashState();
+          render();
+        };
+      });
+
+      $$('[data-rpuz-opt]').forEach(b => {
+        b.onclick = () => {
+          const optIdx = +b.dataset.rpuzOpt;
+          const puz = (RASH_PUZZLES || [])[RASH_STATE.puzzleIdx || 0];
+          const stepNum = RASH_STATE.puzzleStep || 1;
+          if (!RASH_STATE.puzzleAnswers) RASH_STATE.puzzleAnswers = {};
+          if (!RASH_STATE.puzzleAnswers[puz.id]) RASH_STATE.puzzleAnswers[puz.id] = {};
+          RASH_STATE.puzzleAnswers[puz.id][stepNum] = optIdx;
+
+          const stepObj = stepNum === 1 ? puz.step1 : puz.step2;
+          if (optIdx === stepObj.correct && stepNum === 2) {
+            if (!RASH_STATE.puzzlesDone.includes(puz.id)) {
+              RASH_STATE.puzzlesDone.push(puz.id);
+            }
+          }
+          saveRashState();
+          render();
+        };
+      });
+
+      const puzNextStepBtn = $('#btnRashPuzNextStep');
+      if (puzNextStepBtn) {
+        puzNextStepBtn.onclick = () => {
+          RASH_STATE.puzzleStep = 2;
+          saveRashState();
+          render();
+        };
+      }
+
+      const puzRetryBtn = $('#btnRashPuzRetryStep');
+      if (puzRetryBtn) {
+        puzRetryBtn.onclick = () => {
+          const puz = (RASH_PUZZLES || [])[RASH_STATE.puzzleIdx || 0];
+          const sNum = RASH_STATE.puzzleStep || 1;
+          if (RASH_STATE.puzzleAnswers && RASH_STATE.puzzleAnswers[puz.id]) {
+            delete RASH_STATE.puzzleAnswers[puz.id][sNum];
+            saveRashState();
+            render();
+          }
+        };
+      }
+
+      const puzNextCaseBtn = $('#btnRashPuzNextCase');
+      if (puzNextCaseBtn) {
+        puzNextCaseBtn.onclick = () => {
+          RASH_STATE.puzzleIdx = ((RASH_STATE.puzzleIdx || 0) + 1) % (RASH_PUZZLES || []).length;
+          RASH_STATE.puzzleStep = 1;
+          saveRashState();
+          render();
+        };
+      }
+    }
   };
 
   render();

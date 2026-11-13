@@ -2566,7 +2566,539 @@ window.HUB_META = (function () {
     }
   ];
 
+
+  /* ---------- ATLAS OSUTEK I ZAKAŻEŃ DZIECIĘCYCH (PEDIATRIC RASH DATABASE) ---------- */
+  const PEDIATRIC_RASH_DATABASE = [
+    {
+      id: 'odra',
+      name: 'Odra (Morbilli)',
+      altName: 'Choroba pierwsza',
+      etiology: 'Wirus odry (Morbillivirus, ssRNA(-))',
+      incubation: '8–12 dni do zwiastunów, ok. 14 dni do pojawienia się osutki',
+      prodrome: '3–4 dni wysoka gorączka (39–40°C), katar, szczekający suchy kaszel, obfite zapalenie spojówek ze światłowstrętem ("pies szczeka, oczy płaczą")',
+      pathognomonic: 'Plamki Koplika – białe wykwity wielkości ziaren piasku na przekrwionej śluzówce policzków przy dolnych trzonowcach (pojawiają się 24–48h przed osutką, znikają w 2. dobie wysypki)',
+      rashType: 'Gruboplamisto-grudkowa, zlewająca się, żywoczerwona (skóra między wykwitami zmieniona rumieniowo)',
+      spread: 'Zstępująca (od góry do dołu): dzień 1 – za uszami, linia włosów, twarz, szyja; dzień 2 – klatka piersiowa, brzuch, plecy; dzień 3 – ramiona, dłonie, uda, podudzia i stopy',
+      evolution: 'Trwa 5–6 dni; ustępuje w tej samej kolejności (od głowy w dół), pozostawiając brunatne przebarwienia (złogi hemosyderyny) oraz drobne otrębiaste łuszczenie',
+      glassTest: 'blanching',
+      glassTestNote: 'Wykwity bledną pod uciskiem szkiełka (osutka rumieniowo-zapalna, brak wynaczynienia krwi)',
+      bodyRegions: ['face', 'ears', 'neck', 'chest', 'back', 'arms', 'hands', 'legs', 'feet'],
+      specialZones: [
+        { label: 'Plamki Koplika', desc: 'Błona śluzowa policzków naprzeciw dolnych zębów trzonowych' },
+        { label: 'Początek za uszami', desc: 'Wykwity zaczynają się za małżowinami usznymi na linii włosów' }
+      ],
+      complications: 'Zapalenie ucha środkowego (najczęstsze), zapalenie płuc (olbrzymiokomórkowe Hechta lub bakteryjne – główna przyczyna zgonu), zapalenie mózgu (1:1000), podostre stwardniające zapalenie mózgu (SSPE, 1:10 000 po 7–10 latach)',
+      treatment: 'Objawowe; suplementacja witaminy A w wysokiej dawce (200 000 j.m. u dzieci >1 r.ż.) zmniejsza śmiertelność i powikłania oczne',
+      isolation: 'Izolacja chorego przez 4 dni od wystąpienia wysypki. BEZWZGLĘDNY OBOWIĄZEK natychmiastowego zgłoszenia do Sanepidu (PSSE)!',
+      pearl: 'Odra jest jedną z najbardziej zakaźnych chorób świata (R0 = 12–18). Brunatnienie i otrębiaste łuszczenie to znak rozpoznawczy fazy ustępowania.'
+    },
+    {
+      id: 'plonica',
+      name: 'Płonica / Szkarlatyna (Scarlatina)',
+      altName: 'Choroba druga',
+      etiology: 'Streptococcus pyogenes (PBHA – paciorkowiec beta-hemolizujący grupy A) wytwarzający toksyny erytrogenne (pirogenne SpeA/B/C)',
+      incubation: '1–5 dni (bardzo krótki!)',
+      prodrome: 'Nagły początek: wysoka gorączka (>39°C), dreszcze, silny ból gardła (angina paciorkowcowa), wymioty, ból brzucha',
+      pathognomonic: 'Trójkąt Fiłatowa (bladość wokół ust przy płonących policzkach), linie Pastii (wybroczyny w zgięciach łokciowych/pachwinowych), język malinowy od 3.–4. doby',
+      rashType: 'Drobniutko plamisto-grudkowa (wielkości łebka od szpilki), szorstka w dotyku jak "papier ścierny" lub "skóra gęsia"',
+      spread: 'Najgęstsza na tułowiu, podbrzuszu, pośladkach, w dołach pachowych i pachwinach; twarz z rumieniem policzków i bladym trójkątem wokół ust',
+      evolution: 'Ustępuje po 3–6 dniach; po 2–3 tygodniach występuje charakterystyczne GRUBOPŁATOWE łuszczenie naskórka (szczególnie dłoni i stóp)',
+      glassTest: 'blanching',
+      glassTestNote: 'Drobna osutka blednie pod uciskiem szkiełka; linie Pastii w fałdach zgięciowych nie bledną całkowicie z powodu mikrowylewów krwawych',
+      bodyRegions: ['cheeks', 'chest', 'abdomen', 'back', 'groin', 'elbows', 'thighs'],
+      specialZones: [
+        { label: 'Trójkąt Fiłatowa', desc: 'Blada skóra wokół ust i skrzydełek nosa wolna od wykwitów' },
+        { label: 'Linie Pastii', desc: 'Ciemnoczerwone pasma wybroczynowe w zgięciach łokciowych i pachwinowych' },
+        { label: 'Język malinowy', desc: 'Żywoczerwony język z przerosłymi brodawkami od 3.–4. dnia' }
+      ],
+      complications: 'Wczesne ropne: ropień okołomigdałkowy, zapalenie ucha środkowego; Późne immunologiczne: gorączka reumatyczna, ostre kłębuszkowe zapalenie nerek (PSGN)',
+      treatment: 'Fenoksymetylopenicylina (Penicylina V) p.o. 100 000 j.m./kg/dobę w 2 dawkach co 12h przez PEŁNE 10 DNI (zapobieganie gorączce reumatycznej!)',
+      isolation: 'Izolacja przez 24 godziny od podania pierwszej skutecznej dawki penicyliny (po 24h pacjent nie zakaża).',
+      pearl: 'Pamiętaj: Skrócenie kuracji penicyliną z 10 do 5–7 dni to kardynalny błąd – nie eradykuje paciorkowca z krypt migdałków i grozi gorączką reumatyczną!'
+    },
+    {
+      id: 'rozyczka',
+      name: 'Różyczka (Rubella)',
+      altName: 'Choroba trzecia',
+      etiology: 'Wirus różyczki (Rubivirus, Togaviridae, ssRNA(+))',
+      incubation: '14–21 dni (średnio 16–18 dni)',
+      prodrome: 'Bardzo łagodny: stan podgorączkowy, złe samopoczucie, bolesne powiększenie węzłów chłonnych karkowych, podpotylicznych i zausznych (często 24h przed wysypką)',
+      pathognomonic: 'Bolesne powiększenie węzłów chłonnych podpotylicznych i zausznych + plamki Forchheimera (drobne wybroczynki na podniebieniu miękkim)',
+      rashType: 'Bladoróżowa, drobno- i średnioplamisto-grudkowa, NIE ZLEWA SIĘ (w odróżnieniu od odry)',
+      spread: 'Zstępująca: pojawia się na twarzy i w ciągu 24h szybko rozprzestrzenia się na tułów i kończyny; trwa krótko (2–3 dni)',
+      evolution: 'Znika szybko bez pozostawiania przebarwień i bez łuszczenia',
+      glassTest: 'blanching',
+      glassTestNote: 'Blednie całkowicie pod uciskiem szkiełka (osutka rumieniowa)',
+      bodyRegions: ['face', 'neck_lymph', 'chest', 'back', 'arms', 'legs'],
+      specialZones: [
+        { label: 'Węzły podpotyliczne', desc: 'Bolesne, powiększone węzły chłonne zauszne i karkowe' },
+        { label: 'Plamki Forchheimera', desc: 'Drobne czerwone plamki na podniebieniu miękkim' }
+      ],
+      complications: 'Zapalenie stawów (zwłaszcza u dziewcząt i kobiet), małopłytkowość poinfekcyjna; ZESPÓŁ RÓŻYCZKI WRODZONEJ (zespół Gregga: wady serca, zaćma, głuchota) u płodów matek zakażonych w I trymestrze ciąży',
+      treatment: 'Objawowe; bezwzględna ochrona kobiet ciężarnych',
+      isolation: 'Izolacja chorego przez 7 dni od wystąpienia wysypki. Zakaz kontaktu z ciężarnymi!',
+      pearl: 'Powiększenie węzłów chłonnych podpotylicznych i zausznych to najczulszy kliniczny drogowskaz różyczki w teście i na oddziale.'
+    },
+    {
+      id: 'rumien_zakazny',
+      name: 'Rumień zakaźny / Parwowirus B19',
+      altName: 'Choroba piąta (Erythema infectiosum)',
+      etiology: 'Parwowirus B19 (ssDNA) – tropizm do erytroblastów szpiku',
+      incubation: '4–14 dni (do 21 dni)',
+      prodrome: 'Brak lub bardzo dyskretny (stan podgorączkowy, katar)',
+      pathognomonic: '"Spoliczkowane dziecko" (jaskrawoczerwony rumień na policzkach) + girlandowata/koronkowata osutka na ramionach i udach nasilająca się pod wpływem ciepła i kąpieli',
+      rashType: 'Trzyetapowa: 1) rumień policzków z bladością okołoustną; 2) girlandowata, siateczkowata osutka na kończynach; 3) zmienność i nawroty po kąpieli/wysiłku',
+      spread: 'Twarz (policzki) ➔ ramiona, uda, pośladki; dłonie i stopy zazwyczaj wolne',
+      evolution: 'Może nawracać i blednąć przez 1–3 tygodnie pod wpływem ciepłej wody, słońca lub emocji; nie łuszczy się',
+      glassTest: 'blanching',
+      glassTestNote: 'Blednie całkowicie pod uciskiem szkiełka',
+      bodyRegions: ['cheeks', 'arms', 'thighs', 'buttocks'],
+      specialZones: [
+        { label: 'Spoliczkowane dziecko', desc: 'Intensywnie czerwony, lśniący rumień obu policzków' },
+        { label: 'Koronka / Girlanda', desc: 'Siateczkowate, girlandowate zmiany na zewnętrznej powierzchni ramion i ud' }
+      ],
+      complications: 'Przełom aplastyczny (u osób z przewlekłą hemolizą, np. sferocytozą), zespół rękawiczek i skarpetek, obrzęk uogólniony płodu (hydrops fetalis) u ciężarnych',
+      treatment: 'Objawowe; pacjent z chwilą pojawienia się wysypki NIE JEST JUŻ ZAKAŹNY (faza zakaźna to wiremia przed osutką)',
+      isolation: 'Dziecko NIE WYMAGA izolacji i może chodzić do przedszkola/szkoły. Bezwzględny zakaz kontaktu z kobietami w ciąży!',
+      pearl: 'Gdy pojawia się "spoliczkowana twarz", zakaźność minęła! Dziecko nie zakaża rówieśników w klasie, ale zakażenie jest śmiertelnie groźne dla płodu.'
+    },
+    {
+      id: 'rumien_nagly',
+      name: 'Rumień nagły / Gorączka trzydniowa',
+      altName: 'Choroba szósta (Exanthema subitum)',
+      etiology: 'Ludzki herpeswirus typu 6 (HHV-6B), rzadziej HHV-7',
+      incubation: '9–10 dni',
+      prodrome: '3–5 dni bardzo wysokiej gorączki (39.5–40.5°C) przy zaskakująco dobrym stanie ogólnym, bez kataru czy kaszlu; częste drgawki gorączkowe!',
+      pathognomonic: 'Błyskawiczne pojawienie się bladoróżowej osutki W MOMENCIE GWAŁTOWNEGO SPADKU GORĄCZKI ("kryzys temperaturowy")',
+      rashType: 'Drobne, bladoróżowe plamki i grudki wielkości 2–3 mm, nie zlewają się',
+      spread: 'Przede wszystkim TUŁÓW (klatka piersiowa, brzuch, plecy), rzadziej szyja i nasady ramion; TWARZ I KOŃCZYNY DOLNE SĄ OSZCZĘDZONE',
+      evolution: 'Trwa zaledwie 24–48 godzin i znika bez śladu, bez przebarwień i bez łuszczenia',
+      glassTest: 'blanching',
+      glassTestNote: 'Blednie całkowicie pod uciskiem szkiełka',
+      bodyRegions: ['chest', 'abdomen', 'back', 'neck'],
+      specialZones: [
+        { label: 'Tułów centralnie', desc: 'Wykwity skupione głównie na klatce piersiowej i brzuchu' },
+        { label: 'Twarz wolna', desc: 'Twarz i nogi pozostają całkowicie wolne od wysypki' }
+      ],
+      complications: 'Drgawki gorączkowe (w fazie gwałtownego narastania gorączki), bardzo rzadko zapalenie mózgu',
+      treatment: 'Objawowe (leki przeciwgorączkowe, nawadnianie doustne); brak wskazań do antybiotykoterapii',
+      isolation: 'Dziecko przestaje zakażać z chwilą normalizacji temperatury ciała.',
+      pearl: 'Złota zasada pediatrii: Gdy gorączka nagle spada do normy i pojawia się wysypka na brzuszku – to rumień nagły. Antybiotyk jest tu błędem w sztuce!'
+    },
+    {
+      id: 'ospa_wietrzna',
+      name: 'Ospa wietrzna (Varicella)',
+      altName: 'Wiatrówka',
+      etiology: 'Wirus ospy wietrznej i półpaśca (VZV – Varicella Zoster Virus, HHV-3)',
+      incubation: '10–21 dni (najczęściej 14–16 dni)',
+      prodrome: '1–2 dni stan podgorączkowy, ból głowy, spadek apetytu',
+      pathognomonic: 'Polimorfizm wykwitów (plamka ➔ grudka ➔ pęcherzyk "kropla rosy" ➔ krostka ➔ strupek) w kilku rzutach ("gwiaździste niebo") + zajęcie owłosionej skóry głowy i śluzówek',
+      rashType: 'Pęcherzykowa na podłożu rumieniowym, silnie swędząca; wykwity wielopostaciowe na jednym obszarze',
+      spread: 'Zaczyna się na tułowiu i owłosionej skórze głowy, potem twarz i kończyny (rozkład dośrodkowy: więcej na tułowiu niż dystalnie na kończynach)',
+      evolution: 'Rzuty co 24–48h przez 3–5 dni; pęcherzyki zasychają w strupki po 6–8 dniach; strupki odpadają po 1–2 tygodniach bez blizn (chyba że doszło do nadkażenia bakteryjnego)',
+      glassTest: 'vesicle',
+      glassTestNote: 'Pęcherzyki nie znikają pod uciskiem (zawierają płyn bogaty w cząstki wirusa); rumień wokół pęcherzyka blednie',
+      bodyRegions: ['scalp', 'face', 'chest', 'back', 'abdomen', 'arms', 'legs', 'mucosa'],
+      specialZones: [
+        { label: 'Owłosiona skóra głowy', desc: 'Obecność pęcherzyków na głowie we włosach to kluczowa cecha różnicowa' },
+        { label: 'Błony śluzowe', desc: 'Bolesne nadżerki w jamie ustnej i okolicy narządów płciowych' }
+      ],
+      complications: 'Bakteryjne zakażenia skóry (liszajec, martwicze zapalenie powięzi!), ostra ataksja móżdżkowa (chód na szerokiej podstawie), zapalenie płuc, zespół Reye\'a (po kwasie acetylosalicylowym)',
+      treatment: 'Objawowe: Paracetamol na gorączkę (BEZWZGLĘDNY ZAKAZ IBUPROFENU/NLPZ!), kąpiele odkażające, leki p/świądowe; Acyklowir w grupach ryzyka',
+      isolation: 'Pacjent zakaża od 1–2 dni PRZED pojawieniem się osutki aż do zaschnięcia WSZYSTKICH pęcherzyków w strupki. Strupki nie są zakaźne!',
+      pearl: 'PUŁAPKA LEK: Ibuprofen w ospie jest ZAKAZANY – dramatycznie zwiększa ryzyko inwazyjnych zakażeń paciorkowcowych i martwiczego zapalenia powięzi!'
+    },
+    {
+      id: 'hfmd',
+      name: 'Choroba dłoni, stóp i jamy ustnej (HFMD)',
+      altName: 'Bostonka (Hand, Foot and Mouth Disease)',
+      etiology: 'Enterowirusy, najczęściej Coxsackie A16 oraz Enterowirus 71 (EV71)',
+      incubation: '3–6 dni',
+      prodrome: 'Stan podgorączkowy, ból gardła, ślinotok, odmowa jedzenia i picia (bolesne afty)',
+      pathognomonic: 'Owalne, podłużne, szarawe pęcherzyki otoczone czerwoną obwódką na dłoniach, podeszwach stóp i pośladkach + bolesne afty i nadżerki w jamie ustnej (herpangina)',
+      rashType: 'Pęcherzykowa: małe, twarde pęcherzyki układające się wzdłuż linii papilarnych, nie pękają łatwo',
+      spread: 'Dłonie (powierzchnia dłoniowa), podeszwy stóp, błona śluzowa jamy ustnej, pośladki, rzadziej kolana i łokcie',
+      evolution: 'Trwa 7–10 dni, pęcherzyki wchłaniają się bez pękania; po 4–8 tygodniach może wystąpić bezbolesne odklejanie się płytek paznokciowych (onychomadesis)',
+      glassTest: 'vesicle',
+      glassTestNote: 'Szare pęcherzyki są wyczuwalne i widoczne pod uciskiem szkiełka; obwódka rumieniowa blednie',
+      bodyRegions: ['palms', 'soles', 'mouth', 'buttocks'],
+      specialZones: [
+        { label: 'Powierzchnia dłoniowa', desc: 'Szarawe pęcherzyki wzdłuż linii zgięciowych dłoni' },
+        { label: 'Podeszwy stóp', desc: 'Bolesne pęcherzyki na podeszwach utrudniające chodzenie' },
+        { label: 'Onychomadesis (późne)', desc: 'Oddzielanie się i schodzenie paznokci 1–2 miesiące po chorobie' }
+      ],
+      complications: 'Odwodnienie z powodu bolesności połykania (odmowa picia); przy enterowirusie 71: aseptyczne ZOMR, zapalenie pnia mózgu, obrzęk płuc',
+      treatment: 'Wyłącznie objawowe: leki przeciwbólowe (paracetamol, ibuprofen), chłodne płyny, unikanie kwaśnych pokarmów',
+      isolation: 'W okresie gorączkowym i świeżych wykwitów. Wirus wydala się ze stolcem przez kilka tygodni.',
+      pearl: 'Schodzące paznokcie (onychomadesis) po kilku tygodniach od gorączki to późny objaw przebytej bostonki – nie wymaga leczenia przeciwgrzybiczego!'
+    },
+    {
+      id: 'kawasaki',
+      name: 'Choroba Kawasakiego (Kawasaki Disease)',
+      altName: 'Zespół skórno-śluzówkowo-węzłowy (MCLS)',
+      etiology: 'Ostre, uogólnione zapalenie naczyń średniego kalibru o podłożu autoimmunologicznym wyzwalane przez infekcję',
+      incubation: 'Nie dotyczy (choroba naczyniowa niezakaźna bezpośrednio)',
+      prodrome: 'Wysoka gorączka trwająca ≥5 dni (nie ustępuje po paracetamolu i antybiotykach!) u dziecka typowo w wieku 6 m.ż. – 5 lat',
+      pathognomonic: 'Gorączka ≥5 dni + min. 4 z 5 kryteriów: 1) bezwysiękowe zapalenie spojówek; 2) truskawkowy język i spierzchnięte wargi; 3) polimorficzna osutka (nie pęcherzykowa!); 4) obrzęk i rumień dłoni/stóp; 5) węzeł szyjny >1.5 cm',
+      rashType: 'Polimorficzna: najczęściej plamisto-grudkowa, rumieniowa lub tarczowata; nasilona w okolicy pieluszkowej; NIGDY NIE JEST PĘCHERZYKOWA',
+      spread: 'Tułów, okolica krocza, kończyny, bez pęcherzyków',
+      evolution: 'W fazie podostrej (po 2–3 tygodniach) charakterystyczne płatowe łuszczenie naskórka rozpoczynające się wokół płytek paznokciowych dłoni i stóp',
+      glassTest: 'blanching',
+      glassTestNote: 'Rumień i osutka bledną pod uciskiem szkiełka',
+      bodyRegions: ['eyes', 'lips', 'neck_lymph', 'chest', 'groin', 'hands_edema', 'feet_edema'],
+      specialZones: [
+        { label: 'Oczy bez ropy', desc: 'Obustronne przekrwienie spojówek bez wydzieliny ropnej (oszczędza rąbek rogówki)' },
+        { label: 'Wargi i język', desc: 'Spierzchnięte, krwawiące wargi i żywoczerwony język truskawkowy' },
+        { label: 'Obrzęk dłoni i stóp', desc: 'Twardy, bolesny obrzęk i rumień grzbietów rąk i stóp' }
+      ],
+      complications: 'TĘTNIAKI TĘTNIC WIEŃCOWYCH (u 25% nieleczonych dzieci!), zawał mięśnia sercowego, zapalenie mięśnia sercowego, tętniaki naczyń obwodowych',
+      treatment: 'PILNE podanie Immunoglobulin i.v. (IVIG) 2 g/kg m.c. w pojedynczym wlewie w ciągu pierwszych 10 dni gorączki + Kwas acetylosalicylowy (ASA) w dawce p/zapalnej, potem p/płytkowej',
+      isolation: 'Choroba NIE JEST zakaźna. Wymaga natychmiastowej hospitalizacji i kontroli echokardiograficznej (ECHO serca)!',
+      pearl: 'Gorączka trwająca >5 dni u malucha + czerwone oczy bez ropy + język malinowy = natychmiast zleć ECHO serca i podaj IVIG. Walczysz o tętnice wieńcowe!'
+    },
+    {
+      id: 'plamica_iga',
+      name: 'Plamica związana z IgA (Schönleina-Henocha)',
+      altName: 'Zapalenie naczyń związane z IgA (IgAV)',
+      etiology: 'Zapalenie małych naczyń krwionośnych z odkładaniem kompleksów IgA1; często po przebytej infekcji dróg oddechowych',
+      incubation: 'Objawy pojawiają się zwykle 1–3 tygodnie po infekcji gardła',
+      prodrome: 'Złe samopoczucie, stan podgorączkowy, pobolewania stawów lub brzucha',
+      pathognomonic: 'Uniesiona plamica (purpura palpabilis) nieblednąca pod uciskiem, zlokalizowana grawitacyjnie na pośladkach i wyprostnych powierzchniach kończyn dolnych + PRAWIDŁOWE PŁYTKI KRWI',
+      rashType: 'Wybroczyny i uniesione grudki krwotoczne (purpura palpabilis), początkowo czerwone, potem purpurowe i brunatne; wyczuwalne palpacyjnie',
+      spread: 'Ściśle grawitacyjna i symetryczna: pośladki, tylne powierzchnie ud, podudzia, stawy skokowe; tułów i twarz zazwyczaj wolne',
+      evolution: 'Nowe rzuty wykwitów mogą pojawiać się przy pionizacji; ustępuje w ciągu 4–6 tygodni',
+      glassTest: 'non_blanching',
+      glassTestNote: 'NIE BLEDNIE POD UCISKIEM SZKIEŁKA (wynaczynienie krwinek czerwonych do skóry właściwej na skutek leukocytoklastycznego zapalenia naczyń)',
+      bodyRegions: ['buttocks', 'thighs_back', 'shins', 'ankles'],
+      specialZones: [
+        { label: 'Pośladki i łydki', desc: 'Symetryczne skupiska purpura palpabilis na wyprostnych powierzchniach nóg i pośladkach' },
+        { label: 'Obrzęk stawów', desc: 'Bolesny obrzęk okołostawowy bez ucieplenia (zwłaszcza stawy skokowe)' }
+      ],
+      complications: 'Nefropatia IgA (krwinkomocz, białkomocz, niewydolność nerek – decyduje o rokowaniu!), wgłobienie jelitowe (intussusception), krwawienie z przewodu pokarmowego',
+      treatment: 'Odpoczynek w łóżku, unikanie pionizacji w fazie ostrej, nawadnianie; glikokortykosteroidy w ciężkim bólu brzucha lub zapaleniu nerek; kontrola moczu i ciśnienia przez 6 miesięcy',
+      isolation: 'Choroba niezakaźna.',
+      pearl: 'Nieblednąca wysypka na pośladkach + prawidłowa morfologia z normalną liczbą płytek krwi = plamica Schönleina-Henocha. Zawsze monitoruj mocz przez 6 miesięcy!'
+    },
+    {
+      id: 'meningokokemia',
+      name: 'Meningokokemia / Posocznica meningokokowa',
+      altName: 'Inwazyjna Choroba Meningokokowa (IChM)',
+      etiology: 'Neisseria meningitidis (meningokoki grupy B, C, W, Y) – Gram-ujemna dwoinka',
+      incubation: '2–10 dni (zwykle 3–4 dni)',
+      prodrome: 'Piorunujący początek: wysoka gorączka, dreszcze, silny ból mięśni nóg, bladość powłok, sinica wokół ust, zimne stopy i dłonie, tachykardia, skrajna apatia',
+      pathognomonic: 'Osutka wybroczynowa i martwicza (petechiae / purpura fulminans) – NIE BLEDNIE W TEŚCIE SZKLANKOWYM i błyskawicznie powiększa się w ciągu minut/godzin!',
+      rashType: 'Początkowo drobne czerwone wybroczynki (jak ukłucia szpilką), szybko przechodzące w zlewające się, podbiegnięte krwawo plamy o nieregularnym, gwiazdkowatym kształcie z siną martwicą centralną',
+      spread: 'Dowolna lokalizacja: tułów, kończyny (szczególnie podudzia), pośladki, spojówki',
+      evolution: 'Gwałtowny postęp w ciągu 2–6 godzin od pierwszych wybroczyn do rozległej martwicy krwotocznej i wstrząsu septycznego',
+      glassTest: 'non_blanching',
+      glassTestNote: 'BEZWZGLĘDNIE NIE BLEDNIE POD UCISKIEM SZKIEŁKA (test szklankowy ujemny) – stan bezpośredniego zagrożenia życia!',
+      bodyRegions: ['chest', 'abdomen', 'arms', 'shins', 'feet', 'petechiae_all'],
+      specialZones: [
+        { label: 'Gwiazdkowate wybroczyny', desc: 'Nieregularne, sine podbiegnięcia krwawe nieblednące pod uciskiem' },
+        { label: 'Zimne dłonie i stopy', desc: 'Objaw centralizacji krążenia we wczesnym wstrząsie septycznym' }
+      ],
+      complications: 'Wstrząs septyczny, zespół Waterhouse\'a-Friderichsena (krwotoczna martwica nadnerczy), DIC, amputacje kończyn z powodu martwicy, zgon w ciągu kilkunastu godzin',
+      treatment: 'NATYCHMIASTOWE podanie Ceftriaksonu (100 mg/kg i.v./i.m.) lub penicyliny krystalicznej – NIE CZEKAĆ na wyniki badań ani transport! Wezwanie ZRM z kodem pilności 1.',
+      isolation: 'Izolacja kropelkowa przez pierwsze 24h antybiotykoterapii. Chemioprofilaktyka osób z bliskiego kontaktu (Ceftriakson, Ryfampicyna lub Ciprofloksacyna).',
+      pearl: 'ZASADA TESTU SZKLANKOWEGO: Jeśli gorączkujące dziecko ma choć jedną wybroczynę nieblednącą pod szklanką – natychmiast wstrzyknij Ceftriakson i wezwij erkę!'
+    }
+  ];
+
+  /* ---------- TRENING DIAGNOSTYCZNY OSUTEK (10 ZAGADEK KLINICZNYCH) ---------- */
+  const RASH_PUZZLES = [
+    {
+      id: 'puz_odra',
+      title: 'Przypadek 1: 4-letni Antoś z wysoką gorączką i zapaleniem spojówek',
+      vignette: '4-letni nieszczepiony chłopiec zostaje przyprowadzony do poradni z powodu gorączki 40°C od 4 dni, męczącego szczekającego kaszlu, kataru i silnego zapalenia spojówek ze światłowstrętem. Dziś rano za uszami i na czole pojawiła się zlewająca, żywoczerwona osutka plamisto-grudkowa. W badaniu jamy ustnej na wysokości dolnych zębów trzonowych widoczne białe punkciki na czerwonym tle.',
+      rashId: 'odra',
+      step1: {
+        q: 'Jakie jest najbardziej prawdopodobne rozpoznanie?',
+        opts: [
+          'Odra (Morbilli)',
+          'Płonica (Szkarlatyna)',
+          'Rumień nagły (HHV-6)',
+          'Choroba Kawasakiego'
+        ],
+        correct: 0,
+        explanation: 'Obraz kliniczny: wysoka gorączka z triadą zwiastunową (kaszel, katar, zapalenie spojówek ze światłowstrętem – "pies szczeka, oczy płaczą"), plamki Koplika na błonie śluzowej policzków oraz zstępująca zlewająca się osutka gruboplamisto-grudkowa za uszami są patognomoniczne dla odry.'
+      },
+      step2: {
+        q: 'Jakie jest właściwe postępowanie kliniczne i sanitarne?',
+        opts: [
+          'Leczenie objawowe, podanie witaminy A w wysokiej dawce, izolacja do 4 dni po wysypce i natychmiastowe zgłoszenie do Sanepidu',
+          'Przepisanie amoksycyliny doustnie na 10 dni',
+          'Podanie acyklowiru i kąpiele w nadmanganianie potasu',
+          'Zlecenie testów alergicznych i podanie sterydów systemowych'
+        ],
+        correct: 0,
+        explanation: 'W odrze stosuje się leczenie objawowe oraz suplementację witaminy A, która redukuje ryzyko powikłań płucnych i śmiertelności. Odra podlega obowiązkowemu, natychmiastowemu zgłoszeniu do Sanepidu (PSSE), a pacjent wymaga izolacji do 4. doby od wystąpienia osutki.'
+      },
+      pearl: 'Pamiętaj: Plamki Koplika znikają już w 2. dobie wysypki. W fazie zdrowienia osutka odrowa brunatnieje i łuszczy się otrębiasto!'
+    },
+    {
+      id: 'puz_plonica',
+      title: 'Przypadek 2: 6-letnia Zuzia z nagłym bólem gardła i szorstką wysypką',
+      vignette: '6-letnia dziewczynka gorączkuje od wczoraj do 39.4°C, skarży się na silny ból gardła przy połykaniu i dwukrotnie zwymiotowała. W badaniu: migdałki powiększone, krwistoczerwone z ropnymi nalotami. Na tułowiu i w pachwinach drobnoplamista osutka szorstka w dotyku jak papier ścierny. Twarz zaczerwieniona z wyraźną bladością wokół ust. W zgięciach łokciowych widoczne ciemnoczerwone pasma.',
+      rashId: 'plonica',
+      step1: {
+        q: 'Jakie rozpoznanie i objawy patognomoniczne opisano w tym przypadku?',
+        opts: [
+          'Płonica (Szkarlatyna) – trójkąt Fiłatowa i linie Pastii',
+          'Odra – plamki Koplika',
+          'Różyczka – plamki Forchheimera',
+          'Rumień zakaźny – objaw spoliczkowanego dziecka'
+        ],
+        correct: 0,
+        explanation: 'Etiologia paciorkowcowa (PBHA), angina z wymiotami, szorstka drobnoplamista osutka, blady trójkąt wokół ust (trójkąt Fiłatowa) oraz linijne wybroczyny w zgięciach łokciowych (linie Pastii) jednoznacznie definiują płonicę (szkarlatynę).'
+      },
+      step2: {
+        q: 'Jaki antybiotyk i jaki czas leczenia należy bezwzględnie zastosować?',
+        opts: [
+          'Penicylina V (fenoksymetylopenicylina) doustnie przez pełne 10 dni',
+          'Amoksycylina z kwasem klawulanowym przez 5 dni',
+          'Azytromycyna przez 3 dni',
+          'Cefuroksym aksetyl przez 7 dni'
+        ],
+        correct: 0,
+        explanation: 'Lekiem z wyboru w płonicy jest penicylina V stosowana przez PEŁNE 10 DNI. Skrócenie czasu leczenia grozi nawrotem zakażenia i rozwojem późnych powikłań immunologicznych (gorączki reumatycznej i kłębuszkowego zapalenia nerek).'
+      },
+      pearl: 'Płatowe łuszczenie naskórka na dłoniach i stopach pojawia się dopiero po 2–3 tygodniach od początku szkarlatyny i potwierdza przebycie zakażenia.'
+    },
+    {
+      id: 'puz_ospa',
+      title: 'Przypadek 3: 3-letni Jaś z wielopostaciową swędzącą wysypką',
+      vignette: '3-letni Jaś z gorączką 38.5°C od 2 dni. Mama zauważyła na ciele wykwity w różnym stadium: obok czerwonych plamek i grudek występują pęcherzyki z przezroczystym płynem na czerwonym tle oraz przysychające strupki. Wykwity obecne są na tułowiu, twarzy, a pojedyncze pęcherzyki znaleziono we włosach na skórze głowy i na podniebieniu.',
+      rashId: 'ospa_wietrzna',
+      step1: {
+        q: 'Jakie jest rozpoznanie kliniczne?',
+        opts: [
+          'Ospa wietrzna (Varicella)',
+          'Opryszczkowe zapalenie jamy ustnej',
+          'Liszajec zakaźny',
+          'Choroba bostońska (HFMD)'
+        ],
+        correct: 0,
+        explanation: 'Polimorfizm wykwitów (równoczesna obecność plamek, pęcherzyków "kropli rosy" i strupków – obraz "gwiaździstego nieba") oraz kluczowa lokalizacja na owłosionej skórze głowy i błonach śluzowych to cechy charakterystyczne ospy wietrznej.'
+      },
+      step2: {
+        q: 'Który powszechny lek przeciwgorączkowy jest BEZWZGLĘDNIE PRZECIWWSKAZANY w tym schorzeniu?',
+        opts: [
+          'Ibuprofen (i inne NLPZ)',
+          'Paracetamol',
+          'Kwas askorbinowy',
+          'Dimebon'
+        ],
+        correct: 0,
+        explanation: 'Ibuprofen i inne NLPZ są bezwzględnie przeciwwskazane w ospie wietrznej, ponieważ wielokrotnie zwiększają ryzyko ciężkich inwazyjnych zakażeń paciorkowcowych tkanek miękkich i martwiczego zapalenia powięzi (Necrotizing Fasciitis). Jedynym bezpiecznym lekiem przeciwgorączkowym jest paracetamol!'
+      },
+      pearl: 'Zasada izolacji w ospie: Pacjent przestaje zakażać dopiero wtedy, gdy WSZYSTKIE pęcherzyki zaschną w strupki (zwykle po 6–7 dniach od pierwszego wysiewu).'
+    },
+    {
+      id: 'puz_rumien_nagly',
+      title: 'Przypadek 4: 9-miesięczna Martynka z osutką po ustąpieniu gorączki',
+      vignette: '9-miesięczne niemowlę gorączkowało przez 3 dni do 40.2°C. W badaniu fizykalnym nie stwierdzano żadnych uchwytnych przyczyn gorączki, dziecko piło płyny i było w niezłym stanie ogólnym. Czwartego dnia temperatura spadła gwałtownie do 36.8°C i natychmiast na klatce piersiowej i brzuszku pojawiła się drobna, bladoróżowa osutka plamisto-grudkowa. Twarz i nóżki pozostały zupełnie gładkie.',
+      rashId: 'rumien_nagly',
+      step1: {
+        q: 'Jaki patogen wywołał ten stan chorobowy?',
+        opts: [
+          'Ludzki herpeswirus typu 6 (HHV-6)',
+          'Parwowirus B19',
+          'Wirus Coxsackie A16',
+          'Streptococcus pyogenes'
+        ],
+        correct: 0,
+        explanation: 'Rumień nagły (gorączka trzydniowa, choroba szósta) wywoływany jest przez ludzkiego wirusa opryszczki typu 6 (HHV-6B). Klasyczna dynamika to gwałtowny spadek wysokiej gorączki z jednoczesnym wysiewem osutki na tułowiu.'
+      },
+      step2: {
+        q: 'Jakie postępowanie należy wdrożyć w tym momencie?',
+        opts: [
+          'Uspokojenie rodziców, brak wskazań do antybiotykoterapii czy badań, powrót do normalnej aktywności',
+          'Wdrożenie amoksycyliny z kwasem klawulanowym',
+          'Pobranie płynu mózgowo-rdzeniowego z nakłucia lędźwiowego',
+          'Podanie acyklowiru dożylnie'
+        ],
+        correct: 0,
+        explanation: 'Pojawienie się osutki w rumieniu nagłym oznacza koniec choroby! Dziecko jest już zdrowe, nie wymaga żadnych leków ani antybiotyków. Wdrożenie antybiotyku w tym momencie to błąd, który często prowadzi do błędnego rozpoznania "alergii na antybiotyk".'
+      },
+      pearl: 'Złota zasada: Gdy przychodzi niemowlę po 3 dniach gorączki z wysypką na tułowiu, zbadaj uszy i gardło, uspokój mamę i NIE ZAPISUJ ANTYBIOTYKU.'
+    },
+    {
+      id: 'puz_rumien_zakazny',
+      title: 'Przypadek 5: 8-letni Michał z "płonącymi" policzkami i siateczką na rękach',
+      vignette: '8-letni chłopiec bez gorączki i bez żadnych dolegliwości przyszedł ze szkoły z intensywnie czerwonymi, zlewającymi się rumieniami na obu policzkach, wyglądającymi jak po wymierzeniu silnego policzka. Następnego dnia na ramionach i udach pojawiła się girlandowata, siateczkowata osutka, która mocno ściemniała i stała się wyraźniejsza po wieczornej ciepłej kąpieli.',
+      rashId: 'rumien_zakazny',
+      step1: {
+        q: 'Jakie jest rozpoznanie kliniczne?',
+        opts: [
+          'Rumień zakaźny (Piąta choroba / Parwowirus B19)',
+          'Toczeń rumieniowaty układowy (SLE)',
+          'Płonica (Szkarlatyna)',
+          'Reakcja fototoksyczna'
+        ],
+        correct: 0,
+        explanation: 'Klasyczny objaw "spoliczkowanego dziecka" (slapped cheek) oraz girlandowata/koronkowata osutka na kończynach nasilająca się pod wpływem ciepła są patognomoniczne dla rumienia zakaźnego (zakażenie Parwowirusem B19).'
+      },
+      step2: {
+        q: 'Dlaczego zakażenie to stanowi szczególne zagrożenie dla kobiet w ciąży?',
+        opts: [
+          'Parwowirus niszczy komórki prekursorowe erytrocytów płodu, powodując ciężką niedokrwistość, obrzęk uogólniony płodu (hydrops fetalis) i wewnątrzmaciczne obumarcie',
+          'Wywołuje wady cewy nerwowej w I trymestrze',
+          'Powoduje wrodzoną zaćmę i głuchotę',
+          'Prowadzi do przedwczesnego zarośnięcia przewodu tętniczego'
+        ],
+        correct: 0,
+        explanation: 'Parwowirus B19 wykazuje tropizm do antygenu P na komórkach linii czerwonokrwinkowej w wątrobie i szpiku płodu. Zakażenie ciężarnej może wywołać aplazję erytrocytarną, ciężką niedokrwistość, uogólniony obrzęk płodu (hydrops fetalis) i śmierć wewnątrzmaciczną.'
+      },
+      pearl: 'Zapamiętaj: Pacjent z rumieniem zakaźnym w chwili pojawienia się osutki na twarzy NIE JEST JUŻ ZAKAŹNY. Może uczęszczać do szkoły, lecz musi unikać kontaktu z ciężarnymi.'
+    },
+    {
+      id: 'puz_hfmd',
+      title: 'Przypadek 6: 2-letnia Julka z bolesnymi pęcherzykami na dłoniach i w buzi',
+      vignette: '2-letnia dziewczynka od wczoraj nie chce pić ani jeść, obficie się ślini i ma stan podgorączkowy 37.9°C. W badaniu jamy ustnej widoczne bolesne afty i nadżerki na języku i błonie śluzowej policzków. Na powierzchni dłoniowej rączek oraz podeszwach stóp widoczne podłużne, szarawe pęcherzyki o średnicy 3–5 mm otoczone czerwoną obwódką.',
+      rashId: 'hfmd',
+      step1: {
+        q: 'Jakie jest rozpoznanie?',
+        opts: [
+          'Choroba dłoni, stóp i jamy ustnej (HFMD / Bostonka)',
+          'Ospa wietrzna z nietypową lokalizacją',
+          'Rumień wielopostaciowy (EM)',
+          'Opryszczkowe zapalenie jamy ustnej (HSV)'
+        ],
+        correct: 0,
+        explanation: 'Triada: owrzodzenia w jamie ustnej (herpangina) + podłużne szare pęcherzyki na dłoniach i podeszwach stóp (oraz pośladkach) to klasyczny obraz choroby dłoni, stóp i jamy ustnej wywołanej przez enterowirusy (Coxsackie A16 / EV71).'
+      },
+      step2: {
+        q: 'Jaki późny objaw może wystąpić za 4–8 tygodni, o którym warto uprzedzić zaniepokojonych rodziców?',
+        opts: [
+          'Onychomadesis – bezbolesne oddzielanie się i schodzenie płytek paznokciowych',
+          'Przewlekłe zapalenie stawów',
+          'Przebarwienia hemosyderynowe skóry',
+          'Łysienie plackowate'
+        ],
+        correct: 0,
+        explanation: 'Onychomadesis (schodzenie paznokci) to łagodne, późne powikłanie HFMD wynikające z przejściowego zahamowania macierzy paznokcia w fazie ostrej infekcji. Paznokcie odrastają samoistnie i nie wymaga to leczenia przeciwgrzybiczego.'
+      },
+      pearl: 'W HFMD najważniejsze jest nawadnianie: podawaj chłodne, niekwaśne napoje i lody, które łagodzą ból afty w buzi i chronią przed odwodnieniem.'
+    },
+    {
+      id: 'puz_rozyczka',
+      title: 'Przypadek 7: 15-letnia Kasia z powiększonymi węzłami za uszami i delikatną wysypką',
+      vignette: '15-letnia dziewczyna zgłasza bolesne zgrubienia na karku i za uszami od 2 dni. Dziś na twarzy i szyi pojawiła się jasnoróżowa, drobnoplamista osutka, która nie zlewa się ze sobą i szybko przenosi się na tułów. Temperatura ciała 37.6°C. W badaniu gardła na podniebieniu miękkim obecne drobne czerwone punkciki (plamki Forchheimera).',
+      rashId: 'rozyczka',
+      step1: {
+        q: 'Jakie jest najbardziej prawdopodobne rozpoznanie?',
+        opts: [
+          'Różyczka (Rubella)',
+          'Odra (Morbilli)',
+          'Mononukleoza zakaźna (EBV)',
+          'Toksoplazmoza węzłowa'
+        ],
+        correct: 0,
+        explanation: 'Bolesna limfadenopatia podpotyliczna i zauszna wyprzedzająca wysypkę, plamki Forchheimera na podniebieniu oraz bladoróżowa, niezlewająca się osutka to podręcznikowy obraz różyczki.'
+      },
+      step2: {
+        q: 'Jakie wady wchodzą w skład klasycznej triady Gregga w zespole różyczki wrodzonej (CRS)?',
+        opts: [
+          'Wady serca (PDA/zwężenie tętnicy płucnej), wady narządu wzroku (zaćma/mikroftalmia) oraz głuchota odbiorcza',
+          'Rozszczep wargi, wodonercze i polidaktylia',
+          'Zarośnięcie przełyku, wady kręgów i brak odbytu (VACTERL)',
+          'Tętniaki naczyń wieńcowych, zapalenie opon i wodogłowie'
+        ],
+        correct: 0,
+        explanation: 'Klasyczna triada Gregga w zespole różyczki wrodzonej obejmuje: wady serca (przetrwały przewód tętniczy Botalla, zwężenie pnia płucnego), uszkodzenie narządu wzroku (zaćma, retinopatia, jaskra) oraz niedosłuch lub głuchotę odbiorczą.'
+      },
+      pearl: 'Różyczka u dzieci przebiega łagodnie, ale u nieszczepionej ciężarnej w I trymestrze ryzyko uszkodzenia płodu sięga 85–90%!'
+    },
+    {
+      id: 'puz_kawasaki',
+      title: 'Przypadek 8: 2-letni Kubuś z gorączką od 6 dni, czerwonymi oczami i obrzękiem stópek',
+      vignette: '2-letni chłopiec gorączkuje od 6 dni do 39.8°C. Pediatra w POZ zapisał amoksycylinę 3 dni temu, bez poprawy. W badaniu: obustronne nastrzyknięcie spojówek bez wydzieliny ropnej, spierzchnięte krwawiące wargi, żywoczerwony język truskawkowy, polimorficzna plamisto-grudkowa osutka na tułowiu, bolesny twardy obrzęk i rumień stóp oraz powiększony pojedynczy węzeł chłonny na szyi o średnicy 2.2 cm.',
+      rashId: 'kawasaki',
+      step1: {
+        q: 'Jakie schorzenie należy natychmiast rozpoznać i jakie badanie pilnie wykonać?',
+        opts: [
+          'Choroba Kawasakiego – pilne badanie echokardiograficzne (ECHO serca)',
+          'Mononukleoza zakaźna – USG jamy brzusznej',
+          'Płonica z powikłaniami – wymaz z gardła',
+          'Młodzieńcze idiopatyczne zapalenie stawów (MIZS) – przeciwciała ANA'
+        ],
+        correct: 0,
+        explanation: 'Gorączka ≥5 dni + 5 z 5 kryteriów klinicznych (spojówki bez ropy, truskawkowy język i wargi, osutka, obrzęk dłoni/stóp, węzeł szyjny >1.5 cm) spełniają kryteria pełnoobjawowej choroby Kawasakiego. Złotym standardem monitorowania powikłań jest pilne ECHO serca.'
+      },
+      step2: {
+        q: 'Jakie leczenie ratujące naczynia wieńcowe należy wdrożyć bez zbędnej zwłoki?',
+        opts: [
+          'Wlew immunoglobulin i.v. (IVIG 2 g/kg) + Kwas acetylosalicylowy (ASA)',
+          'Wysokie dawki deksametazonu w monoterapii',
+          'Ceftriakson i.v. z wankomycyną',
+          'Cyklosporyna A z plazmaferezą'
+        ],
+        correct: 0,
+        explanation: 'Leczeniem z wyboru podanym przed 10. dniem gorączki są immunoglobuliny i.v. (IVIG 2 g/kg mc.) w pojedynczym wlewie w skojarzeniu z kwasem acetylosalicylowym (ASA). Zmniejsza to ryzyko tętniaków wieńcowych z 25% do <3–4%.'
+      },
+      pearl: 'W chorobie Kawasakiego nie czekaj na 10. dzień – im szybciej podasz IVIG, tym mniejsze ryzyko nieodwracalnego tętniaka naczyń wieńcowych!'
+    },
+    {
+      id: 'puz_plamica_iga',
+      title: 'Przypadek 9: 7-letni Olek z wyczuwalną fioletową wysypką na nóżkach i bólem brzuszka',
+      vignette: '7-letni chłopiec 2 tygodnie po anginie zgłasza się z bólem obu stawów skokowych i kurczowym bólem brzuszka. Na pośladkach i tylnych powierzchniach podudzi widoczne symetryczne, uniesione grudki krwotoczne o barwie purpurowo-czerwonej, które nie bledną pod uciskiem palca ani szkiełka. W morfologii krwi: płytki krwi 280 000/µl (norma), leukocyty 9 800/µl.',
+      rashId: 'plamica_iga',
+      step1: {
+        q: 'Jakie jest rozpoznanie kliniczne i kluczowa cecha różnicowa w badaniach krwi?',
+        opts: [
+          'Zapalenie naczyń związane z IgA (Plamica Schönleina-Henocha) – prawidłowa liczba płytek krwi',
+          'Małopłytkowość immunologiczna (ITP) – trombocytopenia',
+          'Meningokokemia – leukopenia i małopłytkowość',
+          'Zespół hemolityczno-mocznicowy (HUS) – niedokrwistość hemolityczna mikroangiopatyczna'
+        ],
+        correct: 0,
+        explanation: 'Uniesiona plamica (purpura palpabilis) o rozkładzie grawitacyjnym w połączeniu z bólami stawów i brzucha oraz PRAWIDŁOWĄ liczbą płytek krwi jednoznacznie potwierdza zapalenie naczyń związane z IgA (Schönleina-Henocha). Prawidłowe płytki wykluczają ITP i białaczkę!'
+      },
+      step2: {
+        q: 'Jakie badanie dodatkowe decyduje o odległym rokowaniu i musi być regularnie kontrolowane przez min. 6 miesięcy?',
+        opts: [
+          'Badanie ogólne moczu (białkomocz, krwinkomocz) i pomiar ciśnienia tętniczego',
+          'Gastroskopia',
+          'RTG stawów skokowych',
+          'Miano przeciwciał ASO'
+        ],
+        correct: 0,
+        explanation: 'O odległym rokowaniu w plamicy IgA decyduje zajęcie nerek (nefropatia IgA). Każdy pacjent wymaga cotygodniowego badania ogólnego moczu i pomiaru ciśnienia tętniczego przez pierwsze tygodnie, a następnie comiesięcznego przez minimum 6 miesięcy od początku choroby.'
+      },
+      pearl: 'Bądź czujny chirurgicznie: Silny ból brzucha z krwawym stolcem u dziecka z plamicą Schönleina-Henocha to podejrzenie wgłobienia jelitowego (intussusception)!'
+    },
+    {
+      id: 'puz_meningokokemia',
+      title: 'Przypadek 10: 18-miesięczny Tymek z plamicą nieblednącą pod szklanką i zimnymi stópkami',
+      vignette: '18-miesięczny chłopiec rano był zdrowy. Od południa gorączka 40°C, dreszcze, wymioty i narastające osłabienie. Przy przyjęciu: dziecko podsypiające, jęczące, tętno 175/min, nawrót kapilarny CRT 4 sekundy, dłonie i stopy sine i lodowate. Na udach i brzuszku matka zauważyła 5 minut temu drobne ciemnoczerwone wykwity o nieregularnym kształcie, które NIE BLEDNĄ przy ucisku szklanym naczyniem (test szklankowy ujemny).',
+      rashId: 'meningokokemia',
+      step1: {
+        q: 'Jaki stan bezpośredniego zagrożenia życia należy rozpoznać?',
+        opts: [
+          'Meningokokemia (posocznica meningokokowa / inwazyjna choroba meningokokowa we wstrząsie septycznym)',
+          'Ospa wietrzna o ciężkim przebiegu',
+          'Ostry rumień guzowaty',
+          'Zespół wstrząsu toksycznego (TSS)'
+        ],
+        correct: 0,
+        explanation: 'Błyskawicznie narastająca osutka wybroczynowa/martwicza nieblednąca w teście szklankowym, skrajna tachykardia, wydłużony nawrót kapilarny CRT >2s i zimne kończyny u gorączkującego malucha to podręcznikowy wczesny wstrząs septyczny w przebiegu meningokokemii.'
+      },
+      step2: {
+        q: 'Jaka jest PIERWSZA i najważniejsza czynność terapeutyczna, którą musisz podjąć natychmiast?',
+        opts: [
+          'Natychmiastowe podanie Ceftriaksonu (lub penicyliny krystalicznej) i.v./i.m. + bolus płynowy 20 ml/kg i wezwanie ZRM z kodem 1 do OIT',
+          'Wykonanie nakłucia lędźwiowego i pobranie PMR przed podaniem antybiotyku',
+          'Skierowanie dziecka do szpitala transportem własnym rodziców',
+          'Podanie paracetamolu i obserwacja wykwitów przez 2 godziny'
+        ],
+        correct: 0,
+        explanation: 'Złota zasada Złotej Godziny w meningokokemii: podaj antybiotyk bakteriobójczy (Ceftriakson i.v. lub i.m.) NATYCHMIAST, w gabinecie lub karetce! Nie wolno opóźniać antybiotykoterapii dla nakłucia lędźwiowego czy posiewów krwi. Rozpocznij resuscytację płynową (20 ml/kg bolus) i transportuj na OIT.'
+      },
+      pearl: 'Pamiętaj: Test szklankowy to najprostszy i najważniejszy test ratujący życie w pediatrii. Każda nieblednąca plamka u gorączkującego dziecka to sepsa do czasu wykluczenia!'
+    }
+  ];
+
   const modById = Object.fromEntries(MODS.map(m => [m.id, m]));
   const atById = Object.fromEntries(ATLASES.map(a => [a.id, a]));
-  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, PEDIATRIC_DRUG_DATABASE, PRESCRIPTION_CHALLENGES, modById, atById };
+  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, PEDIATRIC_DRUG_DATABASE, PRESCRIPTION_CHALLENGES, PEDIATRIC_RASH_DATABASE, RASH_PUZZLES, modById, atById };
 })();
