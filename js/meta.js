@@ -1706,7 +1706,867 @@ window.HUB_META = (function () {
     }
   ];
 
+  /* Apteczka Pediatryczna & Generator Recept (Baza leków ambulatoryjnych, szpitalnych i ratunkowych) */
+  const PEDIATRIC_DRUG_DATABASE = [
+    {
+      id: 'amoxicillin',
+      name: 'Amoksycylina',
+      category: 'oral_abx',
+      categoryName: 'Antybiotyki doustne (zawiesiny)',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Hiconcil', 'Duomox', 'Ospamox', 'Amotaks'],
+      forms: [
+        { id: 'susp_500', name: 'proszek do sporządzania zawiesiny doustnej 500 mg / 5 ml', strengthMgPerMl: 100, packSizes: [60, 100] },
+        { id: 'susp_250', name: 'proszek do sporządzania zawiesiny doustnej 250 mg / 5 ml', strengthMgPerMl: 50, packSizes: [60, 100] }
+      ],
+      indications: [
+        {
+          id: 'aom',
+          name: 'Ostre zapalenie ucha środkowego (AOM)',
+          doseMgPerKgDay: 90,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 10,
+          note: 'Wysoka dawka 90 mg/kg/d (eradykacja S. pneumoniae PRSP). Kuracja 10 dni u dzieci <2 r.ż. lub powikłanych, 5-7 dni u starszych >2 r.ż.'
+        },
+        {
+          id: 'cap',
+          name: 'Pozaszpitalne zapalenie płuc (CAP)',
+          doseMgPerKgDay: 90,
+          dosesPerDay: 3,
+          intervalHours: 8,
+          durationDays: 7,
+          note: 'Lek 1. rzutu w typowym bakteryjnym zapaleniu płuc u dzieci. Podawany co 8h.'
+        },
+        {
+          id: 'strep_alt',
+          name: 'Angina paciorkowcowa (alternatywa przy braku penicyliny V)',
+          doseMgPerKgDay: 50,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 10,
+          note: 'Lekiem 1. rzutu pozostaje fenoksymetylopenicylina. Amoksycylina jest alternatywą o lepszym smaku.'
+        }
+      ],
+      parentAdvice: 'Wstrząsnąć butelką przed każdym użyciem. Podawać w trakcie lub po posiłku. Po sporządzeniu przechowywać w lodówce (2-8°C) do 14 dni.',
+      warning: 'U dzieci z podejrzeniem mononukleozy zakaźnej (EBV) amoksycylina w >90% wywołuje uogólnioną osutkę plamisto-grudkową (niebędącą alergią na penicylinę)!'
+    },
+    {
+      id: 'augmentin',
+      name: 'Amoksycylina + Kwas klawulanowy',
+      category: 'oral_abx',
+      categoryName: 'Antybiotyki doustne (zawiesiny)',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Augmentin ES', 'Amoksiklav Quicktab', 'Taromentin'],
+      forms: [
+        { id: 'susp_400_57', name: 'zawiesina doustna 400 mg + 57 mg / 5 ml (stosunek 7:1)', strengthMgPerMl: 80, packSizes: [70, 140] },
+        { id: 'susp_es_600', name: 'zawiesina Augmentin ES 600 mg + 42.9 mg / 5 ml (stosunek 14:1)', strengthMgPerMl: 120, packSizes: [50, 100] }
+      ],
+      indications: [
+        {
+          id: 'aom_recurrent',
+          name: 'AOM po nieskuteczności amoksycyliny / nawrotowe AOM',
+          doseMgPerKgDay: 90,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 10,
+          note: 'Wskazany przy podejrzeniu szczepów wytwarzających beta-laktamazy (H. influenzae, M. catarrhalis).'
+        },
+        {
+          id: 'uti',
+          name: 'Zakażenie układu moczowego (ZUM)',
+          doseMgPerKgDay: 40,
+          dosesPerDay: 3,
+          intervalHours: 8,
+          durationDays: 7,
+          note: 'Stosowany w ambulatoryjnym leczeniu ZUM (E. coli, Proteus).'
+        }
+      ],
+      parentAdvice: 'Podawać na początku posiłku w celu zmniejszenia ryzyka dolegliwości żołądkowo-jelitowych i biegunki. Przechowywać w lodówce do 7-10 dni.',
+      warning: 'Zawiera kwas klawulanowy, który często powoduje luźne stolce i biegunkę. Zaleca się równoległe stosowanie probiotyku.'
+    },
+    {
+      id: 'penicillin_v',
+      name: 'Fenoksymetylopenicylina (Penicylina V)',
+      category: 'oral_abx',
+      categoryName: 'Antybiotyki doustne (zawiesiny)',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Ospen 750', 'Ospen 1000'],
+      forms: [
+        { id: 'susp_750', name: 'zawiesina doustna 750 000 j.m. / 5 ml (Ospen 750)', strengthUnitsPerMl: 150000, packSizes: [60] }
+      ],
+      indications: [
+        {
+          id: 'pharyngitis',
+          name: 'Angina paciorkowcowa (PBHA / S. pyogenes)',
+          doseUnitsPerKgDay: 100000,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 10,
+          note: 'BEZWZGLĘDNY LEK 1. RZUTU! Dawkowanie 100 000 j.m./kg/d w 2 dawkach co 12h. Kuracja MUSI trwać pełne 10 dni!'
+        }
+      ],
+      parentAdvice: 'Podawać 1 godzinę przed posiłkiem lub 2 godziny po posiłku. Bezwzględnie kontynuować przez pełne 10 dni, nawet jeśli gorączka ustąpi po 48 godzinach!',
+      warning: 'Złota zasada egzaminacyjna: Skrócenie kuracji penicyliną poniżej 10 dni drastycznie zwiększa ryzyko gorączki reumatycznej!'
+    },
+    {
+      id: 'cefuroxime_axetil',
+      name: 'Cefuroksym aksetyl (II generacja)',
+      category: 'oral_abx',
+      categoryName: 'Antybiotyki doustne (zawiesiny)',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Zinnat', 'Bioracef'],
+      forms: [
+        { id: 'susp_125', name: 'granulat do zawiesiny doustnej 125 mg / 5 ml', strengthMgPerMl: 25, packSizes: [50, 100] },
+        { id: 'susp_250', name: 'granulat do zawiesiny doustnej 250 mg / 5 ml', strengthMgPerMl: 50, packSizes: [50, 100] }
+      ],
+      indications: [
+        {
+          id: 'uti_child',
+          name: 'Zakażenie układu moczowego (ZUM)',
+          doseMgPerKgDay: 20,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 7,
+          note: 'Lek z wyboru w ambulatoryjnym leczeniu ZUM u niemowląt i dzieci.'
+        },
+        {
+          id: 'lyme_early',
+          name: 'Wczesna borelioza z Lyme (rumień wędrujący <8 r.ż.)',
+          doseMgPerKgDay: 30,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          durationDays: 14,
+          note: 'Lek 1. rzutu obok amoksycyliny u dzieci poniżej 8 lat (przeciwwskazanie do doksycykliny).'
+        }
+      ],
+      parentAdvice: 'Podawać z posiłkiem (tłuszcz w pokarmie zwiększa biodostępność). Zawiesina ma specyficzny gorzki posmak – nie rozgryzać granulek.',
+      warning: 'Wykazuje oporność krzyżową tylko u znikomej części pacjentów z alergią na penicylinę (<2%).'
+    },
+    {
+      id: 'azithromycin',
+      name: 'Azytromycyna (Makrolid azotowy)',
+      category: 'oral_abx',
+      categoryName: 'Antybiotyki doustne (zawiesiny)',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Sumamed', 'Azitrox', 'Macromax'],
+      forms: [
+        { id: 'susp_100', name: 'proszek do sporządzania zawiesiny doustnej 100 mg / 5 ml', strengthMgPerMl: 20, packSizes: [20] },
+        { id: 'susp_200_forte', name: 'zawiesina doustna forte 200 mg / 5 ml', strengthMgPerMl: 40, packSizes: [20, 30] }
+      ],
+      indications: [
+        {
+          id: 'atypical_pneumonia',
+          name: 'Atypowe zapalenie płuc (Mycoplasma, Chlamydia)',
+          doseMgPerKgDay: 10,
+          dosesPerDay: 1,
+          intervalHours: 24,
+          durationDays: 3,
+          note: 'Dawkowanie: 10 mg/kg/dobę 1 raz na dobę przez 3 dni (kuracja 3-dniowa dzięki długiemu okresowi półtrwania >60h).'
+        },
+        {
+          id: 'pertussis',
+          name: 'Krztusiec (Bordetella pertussis)',
+          doseMgPerKgDay: 10,
+          dosesPerDay: 1,
+          intervalHours: 24,
+          durationDays: 5,
+          note: 'Dzień 1: 10 mg/kg, dni 2-5: 5 mg/kg raz na dobę.'
+        }
+      ],
+      parentAdvice: 'Podawać 1 raz na dobę o stałej porze. Nie wymaga lodówki, trzymać w temp. pokojowej do 5-10 dni.',
+      warning: 'Azytromycyna wydłuża odstęp QT w EKG! Zachować ostrożność u dzieci z zespołem LQTS.'
+    },
+    {
+      id: 'paracetamol',
+      name: 'Paracetamol (Acetaminofen)',
+      category: 'antipyretic',
+      categoryName: 'Leki przeciwgorączkowe i przeciwbólowe',
+      defaultRoute: 'p.o. / p.r.',
+      tradeNames: ['Paracetamol Hasco', 'Panadol Baby', 'Calpol', 'Efferalgan'],
+      forms: [
+        { id: 'susp_120', name: 'zawiesina doustna 120 mg / 5 ml (24 mg/ml)', strengthMgPerMl: 24, packSizes: [100] },
+        { id: 'susp_250_forte', name: 'zawiesina doustna forte 250 mg / 5 ml (50 mg/ml)', strengthMgPerMl: 50, packSizes: [85, 150] }
+      ],
+      indications: [
+        {
+          id: 'fever_pain',
+          name: 'Gorączka i ból u dzieci od 1. doby życia',
+          doseMgPerKgDose: 15,
+          maxDoseMgPerKgDay: 60,
+          intervalHours: 4,
+          note: 'Dawka jednorazowa doustna: 15 mg/kg m.c. co 4-6 godzin (maks. 4 razy na dobę, maks. 60 mg/kg/dobę). Doodbytniczo: 20 mg/kg m.c.'
+        }
+      ],
+      parentAdvice: 'Nie przekraczać 4 dawek na dobę. Odstęp między dawkami minimum 4 godziny. Można stosować bezpiecznie od urodzenia, również w ospie wietrznej.',
+      warning: 'Lek z wyboru w ospie wietrznej! Przedawkowanie grozi ostrą niewydolnością wątroby (odtrutka: N-acetylocysteina).'
+    },
+    {
+      id: 'ibuprofen',
+      name: 'Ibuprofen (NLPZ)',
+      category: 'antipyretic',
+      categoryName: 'Leki przeciwgorączkowe i przeciwbólowe',
+      defaultRoute: 'p.o. / p.r.',
+      tradeNames: ['Ibum', 'Nurofen dla dzieci', 'Pediprofen'],
+      forms: [
+        { id: 'susp_100', name: 'zawiesina doustna 100 mg / 5 ml (20 mg/ml)', strengthMgPerMl: 20, packSizes: [100] },
+        { id: 'susp_200_forte', name: 'zawiesina doustna forte 200 mg / 5 ml (40 mg/ml)', strengthMgPerMl: 40, packSizes: [100, 150] }
+      ],
+      indications: [
+        {
+          id: 'fever_inflam',
+          name: 'Gorączka, ból, stan zapalny (od ukończenia 3. m.ż. lub >5 kg)',
+          doseMgPerKgDose: 10,
+          maxDoseMgPerKgDay: 30,
+          intervalHours: 6,
+          note: 'Dawka jednorazowa: 10 mg/kg m.c. co 6-8 godzin (maks. 3-4 razy na dobę, maks. 30-40 mg/kg/dobę).'
+        }
+      ],
+      parentAdvice: 'Podawać podczas posiłku. Odstęp minimum 6-8 godzin. Dobrze nawadniać dziecko.',
+      warning: 'BEZWZGLĘDNY ZAKAZ w ospie wietrznej (ryzyko paciorkowcowego martwiczego zapalenia powięzi)! Nie zalecany w ciężkim odwodnieniu.'
+    },
+    {
+      id: 'salbutamol',
+      name: 'Salbutamol (SABA)',
+      category: 'inhalation',
+      categoryName: 'Leki wziewne i nebulizacje',
+      defaultRoute: 'nebulizacja / pMDI',
+      tradeNames: ['Ventolin płyn do nebulizacji 1 mg/ml', 'Ventolin aerozol'],
+      forms: [
+        { id: 'neb_1mg_ml', name: 'roztwór do nebulizacji 1 mg / ml (ampułki 2.5 ml = 2.5 mg)', strengthMgPerMl: 1.0, packSizes: [20] }
+      ],
+      indications: [
+        {
+          id: 'bronchospasm',
+          name: 'Zaostrzenie astmy / duszność wydechowa z obturacją',
+          doseMgPerKgDose: 0.15,
+          minDoseMg: 1.25,
+          maxDoseMg: 2.5,
+          note: 'Dawka jednorazowa: 0.15 mg/kg m.c. (min. 1.25 mg, maks. 2.5-5.0 mg) rozcieńczone w 2.0 ml 0.9% NaCl w nebulizatorze pneumatycznym.'
+        }
+      ],
+      parentAdvice: 'Inhalować przez maseczkę twarzową lub ustnik do wyczerpania roztworu (ok. 5-10 minut). Może powodować przejściowe przyspieszenie akcji serca.',
+      warning: 'W ciężkiej duszności podawać co 20 minut w pierwszej godzinie (3 dawki). Nieskuteczny w zapaleniu oskrzelików (bronchiolitis).'
+    },
+    {
+      id: 'budesonide',
+      name: 'Budezonid (wziewny GKS)',
+      category: 'inhalation',
+      categoryName: 'Leki wziewne i nebulizacje',
+      defaultRoute: 'nebulizacja',
+      tradeNames: ['Pulmicort', 'Nebbud', 'Budixon Neb'],
+      forms: [
+        { id: 'neb_025', name: 'zawiesina do nebulizacji 0.25 mg / ml (ampułki 2 ml = 0.5 mg)', strengthMgPerMl: 0.25, packSizes: [20] },
+        { id: 'neb_050', name: 'zawiesina do nebulizacji 0.5 mg / ml (ampułki 2 ml = 1.0 mg)', strengthMgPerMl: 0.5, packSizes: [20] }
+      ],
+      indications: [
+        {
+          id: 'asthma_attack',
+          name: 'Zaostrzenie astmy oskrzelowej',
+          doseMgPerDose: 0.5,
+          intervalHours: 12,
+          durationDays: 7,
+          note: '0.5 - 1.0 mg co 12 godzin w nebulizacji.'
+        },
+        {
+          id: 'croup_alt',
+          name: 'Podgłośniowe zapalenie krtani (Krup) – alternatywa dla deksametazonu',
+          doseMgPerDose: 2.0,
+          intervalHours: 12,
+          durationDays: 1,
+          note: 'Duża dawka 2.0 mg jednorazowo w nebulizacji (ampułki 2 x 1mg).'
+        }
+      ],
+      parentAdvice: 'Po inhalacji przemyć twarz dziecka wilgotną ściereczką oraz podać łyk wody do wypłukania jamy ustnej (zapobieganie grzybicy/pleśniawkom!).',
+      warning: 'Budezonid to zawiesina – nie stosować w inhalatorach ultradźwiękowych (ulega rozbiciu). Wyłącznie nebulizatory pneumatyczno-tłokowe lub siateczkowe MESH.'
+    },
+    {
+      id: 'dexamethasone',
+      name: 'Deksametazon',
+      category: 'systemic_steroid',
+      categoryName: 'Steroidoterapia ogólna',
+      defaultRoute: 'p.o. / i.m. / i.v.',
+      tradeNames: ['Dexamethason WZF amp. 4mg/ml', 'Demezon'],
+      forms: [
+        { id: 'amp_4mg', name: 'roztwór do wstrzykiwań 4 mg / ml (ampułki 1 ml)', strengthMgPerMl: 4.0 }
+      ],
+      indications: [
+        {
+          id: 'croup_oral',
+          name: 'Podgłośniowe zapalenie krtani (Krup / Laryngotracheitis)',
+          doseMgPerKgDose: 0.15,
+          maxDoseMg: 8.0,
+          note: 'Złoty standard: 0.15 - 0.6 mg/kg m.c. doustnie jednorazowo (zawartość ampułki 4 mg/ml można podać doustnie ze słodkim syropem!).'
+        },
+        {
+          id: 'meningitis_adj',
+          name: 'Ropne ZOMR (adjuwant przed lub z 1. dawką antybiotyku)',
+          doseMgPerKgDose: 0.15,
+          intervalHours: 6,
+          durationDays: 4,
+          note: '0.15 mg/kg i.v. co 6h przez 4 dni. Zmniejsza powikłania neurologiczne i głuchotę w zapaleniu pneumokokowym i Hib.'
+        }
+      ],
+      parentAdvice: 'Działanie w krupie rozwija się po ok. 1-2 godzinach i utrzymuje do 24-48 godzin. Często wystarcza jedna dawka.',
+      warning: 'W zapaleniu opon mózgowo-rdzeniowych podać przed lub równocześnie z pierwszą dawką antybiotyku. Podanie po antybiotyku nie przynosi korzyści neurologicznych!'
+    },
+    {
+      id: 'ceftriaxone_iv',
+      name: 'Ceftriakson (III generacja i.v.)',
+      category: 'hospital_iv',
+      categoryName: 'Leki szpitalne i.v. & Wlewy',
+      defaultRoute: 'i.v. / i.m.',
+      tradeNames: ['Biotrakson', 'Rocephin'],
+      forms: [
+        { id: 'vial_1g', name: 'proszek do sporządzania roztworu do wstrzykiwań 1.0 g', strengthMgPerUnit: 1000 },
+        { id: 'vial_2g', name: 'proszek do sporządzania roztworu do wstrzykiwań 2.0 g', strengthMgPerUnit: 2000 }
+      ],
+      indications: [
+        {
+          id: 'sepsis_empiric',
+          name: 'Sepsa, wstrząs septyczny, ciężkie zakażenia ogólne',
+          doseMgPerKgDay: 100,
+          dosesPerDay: 1,
+          intervalHours: 24,
+          maxDailyMg: 4000,
+          note: '100 mg/kg m.c./dobę 1 x dziennie w powolnym wlewie i.v. (30 min) rozcieńczony w 0.9% NaCl lub 5% glukozie.'
+        },
+        {
+          id: 'meningitis_iv',
+          name: 'Ropne ZOMR u dzieci powyżej okresu noworodkowego',
+          doseMgPerKgDay: 100,
+          dosesPerDay: 2,
+          intervalHours: 12,
+          maxDailyMg: 4000,
+          note: 'W ZOMR zaleca się podział na 2 dawki (50 mg/kg co 12h) lub 100 mg/kg 1x dz.'
+        }
+      ],
+      hospitalOrder: 'Ceftriakson {DOSE_MG} mg i.v. w 50-100 ml 0.9% NaCl we wlewie trwającym 30 minut, 1 raz na dobę.',
+      warning: 'BEZWZGLĘDNY ZAKAZ podawania z roztworami zawierającymi wapń (np. Płyn Ringera, glukonian wapnia) – grozi wytrąceniem soli w płucach i nerkach noworodków i niemowląt!'
+    },
+    {
+      id: 'ors_rehydration',
+      name: 'Doustny Płyn Nawadniający (DPN / ORS)',
+      category: 'rehydration',
+      categoryName: 'Nawadnianie & Elektrolity',
+      defaultRoute: 'p.o.',
+      tradeNames: ['Acidolit', 'Orsalit', 'Floridral', 'Hipp ORS'],
+      forms: [
+        { id: 'sachet_reduced', name: 'saszetki o obniżonej osmolarności (WHO/ESPGHAN 245 mOsm/l)', packSizes: [10] }
+      ],
+      indications: [
+        {
+          id: 'dehydration_mild_mod',
+          name: 'Nawadnianie w ostrej biegunce i wymiotach (odwodnienie lekkie do umiarkowanego)',
+          doseFormula: '50-100 ml/kg w ciągu pierwszych 4 godzin',
+          maintenanceFormula: '10 ml/kg po każdym luźnym stolcu, 2-5 ml/kg po każdym epizodzie wymiotów',
+          note: 'Złoty standard ESPGHAN: hipoosmolarny DPN podawany chłodny, małymi porcjami (łyżeczką co 1-2 minuty).'
+        }
+      ],
+      parentAdvice: 'Rozpuścić 1 saszetkę w dokładnie 200 ml przegotowanej, ostudzonej wody. Nie dosładzać sokiem ani cukrem! Podawać schłodzony z lodówki, łyżeczką co 2-3 minuty.',
+      warning: 'Wczesne ponowne żywienie: po 4 godzinach wstępnego nawadniania NALEŻY natychmiast wznowić normalną dietę odpowiednią do wieku!'
+    },
+    {
+      id: 'maintenance_fluids',
+      name: 'Płynoterapia infuzyjna i.v. (Reguła Hollidaya-Segara)',
+      category: 'hospital_iv',
+      categoryName: 'Leki szpitalne i.v. & Wlewy',
+      defaultRoute: 'i.v.',
+      forms: [
+        { id: 'fluid_iso', name: 'Izotoniczny roztwór zrównoważony z 5% glukozą (np. Plasmalyte + 5% Glc lub 0.9% NaCl + 5% Glc + 20 mmol/l KCl)' }
+      ],
+      indications: [
+        {
+          id: 'holliday_segar',
+          name: 'Zapotrzebowanie dobowe na płyny podtrzymujące',
+          formula: '100 ml/kg (pierwsze 10 kg) + 50 ml/kg (kolejne 10-20 kg) + 20 ml/kg (>20 kg)',
+          note: 'Rutynowym płynem podtrzymującym powinien być płyn IZOTONICZNY ze względu na ryzyko jatrogennej hiponatremii.'
+        }
+      ],
+      hospitalOrder: 'Wlew podtrzymujący: {TOTAL_ML_DAY} ml/dobę ({ML_PER_HOUR} ml/h) w pompie infuzyjnej z suplementacją KCl 20 mmol/l po potwierdzeniu diurezy.',
+      warning: 'Złota zasada bezpieczeństwa: Nigdy nie dodawaj potasu (KCl) do płynów i.v. przed upewnieniem się, że dziecko oddaje mocz (ryzyko śmiertelnej hiperkaliemii)!'
+    },
+    {
+      id: 'midazolam',
+      name: 'Midazolam (Benzodiazepina)',
+      category: 'emergency_sedation',
+      categoryName: 'Leki ratunkowe i sedacja',
+      defaultRoute: 'bukalnie / i.v. / i.m.',
+      tradeNames: ['Buccolam', 'Midanium'],
+      forms: [
+        { id: 'buccal_oral', name: 'roztwór do podania w jamie ustnej (strzykawki doustne Buccolam 2.5mg, 5mg, 7.5mg, 10mg)' },
+        { id: 'amp_5mg_ml', name: 'roztwór do wstrzykiwań 5 mg / ml (ampułki 1 ml / 3 ml)' }
+      ],
+      indications: [
+        {
+          id: 'status_seizure',
+          name: 'Przedłużający się napad drgawek (>5 minut)',
+          doseMgPerKgDose: 0.2,
+          maxDoseMg: 10.0,
+          note: 'Lek 1. rzutu pozaszpitalnie i w SOR: 0.2-0.3 mg/kg m.c. na błonę śluzową policzka (bukalnie) lub 0.15-0.2 mg/kg i.v./i.o.'
+        }
+      ],
+      hospitalOrder: 'Midazolam {DOSE_MG} mg bukalnie (pomiędzy dziąsło a policzek) lub powolny bolus i.v. w 2 minuty.',
+      warning: 'Ryzyko depresji oddechowej i bezdechu! Zawsze miej pod ręką sprzęt do wentylacji workiem z maską i tlenoterapię (odtrutka: Flumazenil).'
+    }
+  ];
+
+  /* 10 Klinicznych Wyzwań Recepturowych (Trening Ordynacji Leków) */
+  const PRESCRIPTION_CHALLENGES = [
+    {
+      id: 'chal_aom',
+      title: 'Wyzwanie 1: 3-letni Jaś (15 kg) z ostrym ropnym zapaleniem ucha środkowego (AOM)',
+      vignette: '3-letni chłopiec zgłasza się z rodzicami do gabinetu POZ z powodu silnego bólu prawego ucha od 24 godzin, gorączki 38.8°C i niepokoju. W otoskopii: błona bębenkowa prawa przekrwiona, uwypuklona, bez refleksu świetlnego. Jest to pierwszy epizod, brak alergii na leki.',
+      drugId: 'amoxicillin',
+      weight: 15,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Wybór leku pierwszego rzutu',
+          q: 'Jaki antybiotyk jest lekiem pierwszego rzutu w niepowikłanym ostrym zapaleniu ucha środkowego u dzieci wg wytycznych polskich (NPOA) i międzynarodowych?',
+          opts: [
+            'Amoksycylina bez inhibitora',
+            'Amoksycylina z kwasem klawulanowym (Augmentin)',
+            'Cefuroksym aksetyl (Zinnat)',
+            'Azytromycyna (Sumamed)'
+          ],
+          correct: 0,
+          explanation: 'Amoksycylina bez inhibitora jest bezwzględnym lekiem pierwszego rzutu w AOM. Głównym patogenem bakteryjnym jest Streptococcus pneumoniae, który nie wytwarza beta-laktamaz, lecz ma zmienione białka PBP – dlatego wymaga WYSOKIEJ dawki amoksycyliny, a nie inhibitora!'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Zalecana dobowa dawka leku',
+          q: 'Jaka jest zalecana dobowa dawka amoksycyliny w AOM u 15-kg dziecka?',
+          opts: [
+            '90 mg/kg m.c./dobę w 2 dawkach podzielonych co 12 godzin (1350 mg/d ➔ 675 mg co 12h)',
+            '40-50 mg/kg m.c./dobę w 3 dawkach co 8 godzin (600 mg/d)',
+            '20 mg/kg m.c./dobę 1 raz na dobę',
+            '150 mg/kg m.c./dobę w 4 dawkach'
+          ],
+          correct: 0,
+          explanation: 'W Polsce ze względu na rozpowszechnienie szczepów S. pneumoniae o obniżonej wrażliwości na penicylinę (PRSP) w AOM i CAP bezwzględnie obowiązuje wysoka dawka 90 mg/kg/d podzielona na 2 dawki co 12h (lub 3 dawki co 8h).'
+        },
+        {
+          step: 3,
+          title: 'Krok 3: Wybór stężenia i objętość pojedynczej dawki',
+          q: 'Wybierasz zawiesinę doustną Hiconcil 500 mg / 5 ml (100 mg/ml). Ile mililitrów zawiesiny rodzic musi podać dziecku na jedną dawkę (co 12 godzin)?',
+          opts: [
+            '6.75 ml (ok. 6.8 ml) co 12 godzin',
+            '3.4 ml co 12 godzin',
+            '13.5 ml co 12 godzin',
+            '5.0 ml co 12 godzin'
+          ],
+          correct: 0,
+          explanation: 'Dawka jednorazowa wynosi 675 mg. Przy stężeniu 500 mg w 5 ml (czyli 100 mg w 1 ml): 675 mg / 100 mg/ml = 6.75 ml (do odmierzenia strzykawką dozującą jako 6.7-6.8 ml).'
+        },
+        {
+          step: 4,
+          title: 'Krok 4: Czas kuracji i kalkulacja liczby opakowań',
+          q: 'Ile dni powinna trwać kuracja u 3-latka i ile opakowań zawiesiny (butelka 100 ml) musisz przepisać na e-recepcie?',
+          opts: [
+            'Czas kuracji: 10 dni; Należy przepisać 2 opakowania po 100 ml (całkowita objętość 135 ml)',
+            'Czas kuracji: 5 dni; Wystarczy 1 opakowanie po 100 ml',
+            'Czas kuracji: 3 dni; Wystarczy 1 opakowanie 60 ml',
+            'Czas kuracji: 14 dni; Należy przepisać 3 opakowania po 100 ml'
+          ],
+          correct: 0,
+          explanation: 'Zgodnie z wytycznymi w AOM kuracja trwa 10 dni u dzieci poniżej 2 lat lub z powikłaniami / obustronnym AOM. Całkowite zapotrzebowanie to 2 x 6.75 ml x 10 dni = 135 ml. Jedna butelka 100 ml nie wystarczy! Wypisanie tylko 1 opakowania to częsty błąd skutkujący przedwczesnym przerwaniem antybiotykoterapii.'
+        }
+      ],
+      pearl: 'Pamiętaj: W AOM nie bój się dawki 90 mg/kg/dobę! Niska dawka (40-50 mg/kg) nie osiąga stężenia terapeutycznego w jamie bębenkowej i prowadzi do nawrotu.'
+    },
+    {
+      id: 'chal_angina',
+      title: 'Wyzwanie 2: 6-letnia Zosia (22 kg) z ostrą anginą paciorkowcową (PBHA)',
+      vignette: '6-letnia dziewczynka z nagłym bólem gardła, gorączką 39.0°C, bólem głowy i nudnościami. W badaniu: migdałki podniebienne powiększone, żywoczerwone z ropnymi nalotami w kryptach, tkliwe powiększone węzły chłonne szyjne przednie, brak kaszlu i kataru (Centor/McIsaac = 4 punkty). Szybki test antygenowy Strep A dodatni.',
+      drugId: 'penicillin_v',
+      weight: 22,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Lek pierwszego wyboru',
+          q: 'Jaki antybiotyk jest bezwzględnym lekiem pierwszego wyboru w anginie wywołanej przez Streptococcus pyogenes (PBHA)?',
+          opts: [
+            'Fenoksymetylopenicylina (Penicylina V / Ospen)',
+            'Amoksycylina z kwasem klawulanowym (Augmentin)',
+            'Azytromycyna (Sumamed)',
+            'Cefadroksyl'
+          ],
+          correct: 0,
+          explanation: 'Fenoksymetylopenicylina (Ospen) jest jedynym lekiem pierwszego wyboru w anginie paciorkowcowej. Streptococcus pyogenes wykazuje 100% wrażliwości na penicylinę na całym świecie – nigdy nie opisano szczepu opornego! Stosowanie leków o szerszym spektrum (Augmentin, cefalosporyny) jest błędem sztuki.'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Zalecane dawkowanie dobowe',
+          q: 'Jakie jest zalecane dawkowanie fenoksymetylopenicyliny (Ospen) u 22-kg dziecka?',
+          opts: [
+            '100 000 j.m./kg m.c./dobę w 2 dawkach podzielonych co 12 godzin (2.2 mln j.m./d ➔ 1.1 mln j.m. co 12h)',
+            '20 000 j.m./kg m.c./dobę 1 raz na dobę',
+            '250 000 j.m./kg m.c./dobę w 4 dawkach',
+            '50 mg/kg m.c./dobę'
+          ],
+          correct: 0,
+          explanation: 'Dawka pediatryczna penicyliny V w anginie paciorkowcowej wynosi 100 000 j.m./kg m.c./dobę, podawana w 2 dawkach podzielonych co 12 godzin (maks. 2-3 mln j.m./dobę).'
+        },
+        {
+          step: 3,
+          title: 'Krok 3: Objętość dawki zawiesiny Ospen 750 (750 000 j.m. / 5 ml)',
+          q: 'Dla zawiesiny Ospen 750 (750 000 j.m./5 ml = 150 000 j.m./ml), ile ml wynosi dawka jednorazowa (1.1 mln j.m.)?',
+          opts: [
+            '7.3 ml co 12 godzin',
+            '3.5 ml co 12 godzin',
+            '14.6 ml co 12 godzin',
+            '5.0 ml co 12 godzin'
+          ],
+          correct: 0,
+          explanation: '1 100 000 j.m. / 150 000 j.m./ml = 7.33 ml. Podajemy 7.3 ml co 12 godzin.'
+        },
+        {
+          step: 4,
+          title: 'Krok 4: Czas trwania kuracji (Pułapka egzaminacyjna!)',
+          q: 'Mama pyta, czy jeśli po 3 dniach gardło przestanie boleć i gorączka minie, może odstawić antybiotyk. Co odpowiadasz?',
+          opts: [
+            'Bezwzględnie NIE! Kuracja penicyliną V MUSI trwać pełne 10 dni, aby dokonać całkowitej eradykacji PBHA i zapobiec gorączce reumatycznej.',
+            'Tak, po 48h bezgorączkowych można zakończyć leczenie.',
+            'Wystarczy skrócić do 5 dni, jeśli test kontrolny będzie ujemny.',
+            'Można zamienić na witaminę C.'
+          ],
+          correct: 0,
+          explanation: 'Kardynalna zasada: Kuracja penicyliną w anginie paciorkowcowej MUSI trwać 10 dni! Objawy ustępują zazwyczaj po 24-48h, ale przedwczesne odstawienie grozi nawrotem i rozwojem ostrej gorączki reumatycznej.'
+        }
+      ],
+      pearl: 'Jedyny powód leczenia anginy paciorkowcowej pełnymi 10 dniami penicyliny to prewencja powikłań odległych: gorączki reumatycznej i uszkodzenia zastawek serca!'
+    },
+    {
+      id: 'chal_varicella',
+      title: 'Wyzwanie 3: 4-letni Staś (18 kg) z gorączką 39.3°C w przebiegu ospy wietrznej',
+      vignette: '4-letni chłopiec w 3. dobie ospy wietrznej z licznymi wykwitami plamistymi, grudkowymi i pęcherzykowymi na tułowiu, twarzy i owłosionej skórze głowy. Od rana gorączka wzrosła do 39.3°C, dziecko marudne, obolałe.',
+      drugId: 'paracetamol',
+      weight: 18,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Kardynalny wybór leku przeciwgorączkowego',
+          q: 'Jaki lek przeciwgorączkowy wolno podać dziecku z ospą wietrzną, a który jest BEZWZGLĘDNIE ZAKAZANY?',
+          opts: [
+            'Wolno podać PARACETAMOL; bezwzględnie ZAKAZANY jest IBUPROFEN (i inne NLPZ).',
+            'Wolno podać IBUPROFEN; zakazany jest PARACETAMOL z powodu wątroby.',
+            'Należy podawać kwas acetylosalicylowy (Aspirynę).',
+            'Należy podawać naprzemiennie ibuprofen z paracetamolem co 2 godziny.'
+          ],
+          correct: 0,
+          explanation: 'W ospie wietrznej lekiem z wyboru jest PARACETAMOL. Stosowanie ibuprofenu i innych NLPZ jest bezwzględnie przeciwwskazane, ponieważ drastycznie zwiększa ryzyko inwazyjnych zakażeń paciorkowcowych skóry i tkanki podskórnej, w tym martwiczego zapalenia powięzi (necrotizing fasciitis) oraz sepsy!'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Obliczenie dawki pojedynczej paracetamolu',
+          q: 'Jaka jest prawidłowa jednorazowa dawka paracetamolu p.o. dla dziecka o masie 18 kg?',
+          opts: [
+            '270 mg (15 mg/kg m.c.) co 4-6 godzin',
+            '180 mg (10 mg/kg m.c.) co 8 godzin',
+            '500 mg co 12 godzin',
+            '100 mg co 4 godziny'
+          ],
+          correct: 0,
+          explanation: 'Dawka jednorazowa paracetamolu u dzieci wynosi 15 mg/kg m.c. doustnie (18 kg x 15 mg/kg = 270 mg). Można ją powtarzać co 4-6 godzin (maks. 4 razy na dobę, maks. 60 mg/kg/dobę).'
+        },
+        {
+          step: 3,
+          title: 'Krok 3: Wybór zawiesiny i objętość w ml',
+          q: 'Wybierasz zawiesinę Paracetamol forte 250 mg / 5 ml (50 mg/ml). Ile ml odpowiada dawce 270 mg?',
+          opts: [
+            '5.4 ml co 4-6 godzin',
+            '2.7 ml co 4-6 godzin',
+            '10.8 ml co 4-6 godzin',
+            '7.5 ml co 4-6 godzin'
+          ],
+          correct: 0,
+          explanation: '270 mg / 50 mg/ml = 5.4 ml. Odmierzamy 5.4 ml strzykawką dozującą dołączoną do opakowania.'
+        }
+      ],
+      pearl: 'Pytanie pewniak na egzaminie: Wirus ospy wietrznej (VZV) + Ibuprofen = Martwicze zapalenie powięzi i sepsa paciorkowcowa! Jedynym bezpiecznym lekiem przeciwgorączkowym jest Paracetamol.'
+    },
+    {
+      id: 'chal_cap',
+      title: 'Wyzwanie 4: 5-letni Olek (20 kg) z typowym pozaszpitalnym zapaleniem płuc (CAP)',
+      vignette: '5-letni chłopiec z gorączką 39.0°C od 3 dni, kaszlem wilgotnym, przyspieszonym oddechem (32/min) i bólem w klatce piersiowej po stronie prawej. Osłuchowo: trzeszczenia i szmer oskrzelowy nad polem dolnym płuca prawego. Stan ogólny stabilny, saturacja 96%.',
+      drugId: 'amoxicillin',
+      weight: 20,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Lek pierwszego rzutu w typowym CAP',
+          q: 'Jaki antybiotyk doustny jest lekiem 1. wyboru u dziecka z typowym bakteryjnym zapaleniem płuc leczonym ambulatoryjnie?',
+          opts: [
+            'Amoksycylina w wysokiej dawce 90 mg/kg/d',
+            'Azytromycyna',
+            'Cefuroksym aksetyl',
+            'Cyprofloksacyna'
+          ],
+          correct: 0,
+          explanation: 'Etiologia typowego bakteryjnego zapalenia płuc u dzieci to Streptococcus pneumoniae. Lekiem pierwszego rzutu jest amoksycylina w wysokiej dawce 90 mg/kg/dobę.'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Wyliczenie dawki dobowej i pojedynczej',
+          q: 'Dla 20-kg dziecka dawka dobowa amoksycyliny wynosi 1800 mg (90 mg/kg). Jak podzielisz tę dawkę?',
+          opts: [
+            '600 mg co 8 godzin (w 3 dawkach) lub 900 mg co 12 godzin (w 2 dawkach)',
+            '1800 mg 1 raz na dobę',
+            '300 mg co 4 godziny',
+            '400 mg co 12 godzin'
+          ],
+          correct: 0,
+          explanation: 'Amoksycylina jako antybiotyk beta-laktamowy działa w mechanizmie czasowo-zależnym (T > MIC). W zapaleniu płuc zaleca się podział na 3 dawki co 8h (600 mg co 8h) lub 2 dawki co 12h (900 mg co 12h).'
+        },
+        {
+          step: 3,
+          title: 'Krok 3: Objętość zawiesiny 500 mg / 5 ml (100 mg/ml)',
+          q: 'W schemacie 3 x dziennie po 600 mg, ile ml zawiesiny 500 mg/5 ml należy podać na jedną dawkę?',
+          opts: [
+            '6.0 ml co 8 godzin',
+            '12.0 ml co 8 godzin',
+            '3.0 ml co 8 godzin',
+            '8.0 ml co 8 godzin'
+          ],
+          correct: 0,
+          explanation: '600 mg / 100 mg/ml = 6.0 ml zawiesiny co 8 godzin przez 7-10 dni.'
+        }
+      ],
+      pearl: 'Makrolidy (np. azytromycyna) w CAP włączamy TYLKO przy podejrzeniu etiologii atypowej (np. wiek szkolny, suchy męczący kaszel, rzężenia, brak reakcji na amoksycylinę po 48h) lub ciężkiej nadwrażliwości na beta-laktamy!'
+    },
+    {
+      id: 'chal_uti',
+      title: 'Wyzwanie 5: 18-miesięczna Hania (11 kg) z pierwszym epizodem ZUM',
+      vignette: '18-miesięczna dziewczynka gorączkująca do 38.7°C od 2 dni bez uchwytnego ogniska infekcji w drogach oddechowych. W badaniu ogólnym moczu pobranym ze środkowego strumienia: leukocyturia (30-40 wpw), azotyny (+), białko (+). Zabezpieczono posiew moczu.',
+      drugId: 'cefuroxime_axetil',
+      weight: 11,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Wybór antybiotyku w ambulatoryjnym ZUM',
+          q: 'Który z poniższych leków jest rekomendowany w empirycznym doustnym leczeniu ZUM u niemowlęcia / małego dziecka?',
+          opts: [
+            'Cefuroksym aksetyl (np. Zinnat 125 mg / 5 ml)',
+            'Furazydyna (Furagina)',
+            'Acyklowir',
+            'Erytromycyna'
+          ],
+          correct: 0,
+          explanation: 'Cefalosporyna II generacji (Cefuroksym aksetyl) lub amoksycylina z kwasem klawulanowym to leki pierwszego wyboru w ZUM u małych dzieci. Furazydyna nie osiąga stężenia terapeutycznego w miąższu nerkowym (nie nadaje się do leczenia OOZN / gorączkowego ZUM) i nie jest zalecana w monoterapii ostrego ZUM u niemowląt.'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Dawka dobowej cefuroksymu',
+          q: 'Zalecana dawka cefuroksymu w ZUM wynosi 20-30 mg/kg/dobę w 2 dawkach co 12h. Ile mg wynosi dawka pojedyncza dla 11-kg dziecka przy dawce 25 mg/kg/d?',
+          opts: [
+            'ok. 137.5 mg co 12 godzin (275 mg/doba)',
+            '500 mg co 12 godzin',
+            '50 mg co 12 godzin',
+            '250 mg 1 raz na dobę'
+          ],
+          correct: 0,
+          explanation: '11 kg x 25 mg/kg = 275 mg na dobę. Podzielone na 2 dawki: 275 mg / 2 = 137.5 mg co 12 godzin.'
+        },
+        {
+          step: 3,
+          title: 'Krok 3: Objętość zawiesiny 125 mg / 5 ml (25 mg/ml)',
+          q: 'Ile ml zawiesiny Zinnat 125 mg/5 ml odpowiada dawce 137.5 mg?',
+          opts: [
+            '5.5 ml co 12 godzin przez 7-10 dni',
+            '2.5 ml co 12 godzin',
+            '11.0 ml co 12 godzin',
+            '7.0 ml co 12 godzin'
+          ],
+          correct: 0,
+          explanation: '137.5 mg / 25 mg/ml = 5.5 ml co 12 godzin z posiłkiem przez 7-10 dni.'
+        }
+      ],
+      pearl: 'Pamiętaj: Każdy pierwszy epizod gorączkowego ZUM u małego dziecka wymaga wykonania USG nerek i dróg moczowych w celu wykluczenia wad układu moczowego i odpływu pęcherzowo-moczowodowego (VUR)!'
+    },
+    {
+      id: 'chal_croup',
+      title: 'Wyzwanie 6: 2-letni Filip (13 kg) z podgłośniowym zapaleniem krtani (Krup)',
+      vignette: '2-letni chłopiec obudził się w nocy z płaczem, zachrypniętym głosem, szczekającym kaszlem i głośnym świstem wdechowym (stridorem) w spoczynku. Dziecko w ramionach matki, zaciąga dołek jarzmowy. Skala Westleya: 4 punkty (krup umiarkowany).',
+      drugId: 'dexamethasone',
+      weight: 13,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Złoty standard farmakoterapii krupu',
+          q: 'Jaki lek stanowi podstawę leczenia podgłośniowego zapalenia krtani (krupu)?',
+          opts: [
+            'Deksametazon doustnie jednorazowo (0.15-0.6 mg/kg) + nebulizacja z L-adrenaliny przy stridorze spoczynkowym',
+            'Amoksycylina doustnie przez 10 dni',
+            'Syrop przeciwkaszlowy z kodeiną',
+            'Ceftriakson i.v.'
+          ],
+          correct: 0,
+          explanation: 'Glikokortykosteroid (deksametazon p.o./i.m.) redukuje obrzęk podgłośniowy krtani. W razie duszności spoczynkowej natychmiast dołączamy nebulizację z nie-rozcieńczonej L-adrenaliny 1:1000 z tlenem.'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Dawka deksametazonu',
+          q: 'Przy dawce 0.15 mg/kg m.c. dla dziecka 13 kg, ile mg deksametazonu należy podać?',
+          opts: [
+            'ok. 2.0 mg doustnie (0.5 ml z ampułki 4 mg / ml)',
+            '8.0 mg doustnie',
+            '20 mg doustnie',
+            '0.2 mg doustnie'
+          ],
+          correct: 0,
+          explanation: '13 kg x 0.15 mg/kg = 1.95 mg (ok. 2 mg). Zawartość ampułki do wstrzykiwań Dexamethason 4 mg/ml (czyli 0.5 ml) można podać doustnie, np. ze słodkim syropem lub musem owocowym.'
+        }
+      ],
+      pearl: 'Triada krupu: chrypka, szczekający kaszel, świst wdechowy (stridor). Pamiętaj: NIE zaglądaj do gardła szpatułką na siłę (ryzyko nagłego skurczu krtani i asfiksji)!'
+    },
+    {
+      id: 'chal_asthma',
+      title: 'Wyzwanie 7: 7-letni Bartek (25 kg) z zaostrzeniem astmy oskrzelowej',
+      vignette: '7-letni chłopiec z rozpoznaną astmą oskrzelową zgłasza się z dusznością wydechową, suchym kaszlem i świstami słyszalnymi z odległości po wysiłku fizycznym na basenie. Liczba oddechów 30/min, saturacja 94%, osłuchowo liczne furczenia i świsty wydechowe.',
+      drugId: 'salbutamol',
+      weight: 25,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Lek doraźny pierwszego wyboru',
+          q: 'Jaki lek i droga podania są postępowaniem z wyboru w celu natychmiastowego przerwania obturacji oskrzeli?',
+          opts: [
+            'Szybko działający beta-2-mimetyk (SABA – Salbutamol) w inhalacji / nebulizacji',
+            'Glikokortykosteroid doustny jako jedyny lek',
+            'Teofilina dożylnie',
+            'Antybiotyk makrolidowy'
+          ],
+          correct: 0,
+          explanation: 'Salbutamol (SABA) w inhalacji przez komorę inhalacyjną (spejser) lub nebulizator pneumatyczny to lek pierwszego rzutu znoszący skurcz mięśniówki oskrzeli w ciągu kilku minut.'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Dawka salbutamolu do nebulizacji',
+          q: 'Jaka jest dawka salbutamolu w roztworze do nebulizacji 1 mg/ml (Ventolin) dla 25-kg dziecka?',
+          opts: [
+            '2.5 mg (1 ampułka 2.5 ml) rozcieńczona w 2 ml 0.9% NaCl',
+            '0.5 mg w 5 ml wody',
+            '10 mg nierozcieńczone',
+            '5 kropli doustnie'
+          ],
+          correct: 0,
+          explanation: 'Dawka salbutamolu wynosi 0.15 mg/kg (25 kg x 0.15 mg/kg = 3.75 mg, ale standardowa dawka jednorazowa ampułkowa u dzieci w tym wieku wynosi 2.5 mg). Rozcieńczamy w 2 ml soli fizjologicznej i inhalujemy przez 5-10 minut.'
+        }
+      ],
+      pearl: 'Złota zasada w astmie: Brak świstów u dziecka z ciężką dusznością wydechową i sinicą to objaw „cichej klatki piersiowej” (silent chest) – skrajne zmęczenie mięśni oddechowych i stan bezpośredniego zagrożenia życia!'
+    },
+    {
+      id: 'chal_seizure',
+      title: 'Wyzwanie 8: 10-miesięczny Tymek (9.5 kg) z przedłużającymi się drgawkami gorączkowymi',
+      vignette: '10-miesięczne niemowlę z gorączką 39.5°C w przebiegu infekcji wirusowej nagle zesztywniało i ma uogólnione drgawki toniczno-kloniczne. Napad trwa już 6 minut i nie ustępuje samoistnie. Zespół ratownictwa medycznego lub SOR bez kaniulacji żyły.',
+      drugId: 'midazolam',
+      weight: 9.5,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Przerwanie przedłużających się drgawek',
+          q: 'Jaki lek i droga podania są preferowane wg PALS/ERC przy braku dostępu naczyniowego u drgającego dziecka >5 min?',
+          opts: [
+            'Midazolam na błonę śluzową policzka (bukalnie) 0.2-0.3 mg/kg lub Diazepam doodbytniczo (wlewka p.r. 5 mg)',
+            'Paracetamol w czopku',
+            'Doustny kwas walproinowy',
+            'Fenytoina domięśniowo'
+          ],
+          correct: 0,
+          explanation: 'Przy braku dostępu i.v. lekiem 1. wyboru jest Midazolam podany na błonę śluzową policzka (Buccolam) lub Diazepam doodbytniczo we wlewce (wlewka 5 mg dla dzieci <15 kg).'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Dawka Midazolamu bukalnego',
+          q: 'Dla niemowlęcia o masie 9.5 kg (wiek 10 miesięcy), jaka dawka gotowej strzykawki Buccolam jest zarejestrowana?',
+          opts: [
+            '2.5 mg bukalnie (strzykawka z żółtą etykietą, dla wieku 6 m.ż. - 1 rok)',
+            '5.0 mg bukalnie',
+            '10 mg bukalnie',
+            '0.5 mg bukalnie'
+          ],
+          correct: 0,
+          explanation: 'Gotowy preparat Buccolam dla wieku 6-12 miesięcy ma stałą dawkę 2.5 mg w strzykawce doustnej, co idealnie odpowiada dawce ok. 0.25 mg/kg dla 9.5-kg niemowlęcia.'
+        }
+      ],
+      pearl: 'Pamiętaj: Każdy napad drgawek trwający >5 minut traktujemy i leczymy jak stan padaczkowy (Status Epilepticus) – nie czekaj na samoistne ustąpienie po 5. minucie!'
+    },
+    {
+      id: 'chal_mycoplasma',
+      title: 'Wyzwanie 9: 9-letnia Maja (28 kg) z atypowym zapaleniem płuc',
+      vignette: '9-letnia dziewczynka od tygodnia skarży się na suchy, napadowy, męczący kaszel, ból głowy i stan podgorączkowy 37.8°C. Wcześniej leczona amoksycyliną przez 4 doby bez poprawy. Osłuchowo nad płucami skąpe trzeszczenia, RTG: obustronne nacieki śródmiąższowe.',
+      drugId: 'azithromycin',
+      weight: 28,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Zmiana antybiotyku na lek atypowy',
+          q: 'Brak poprawy po amoksycylinie i cechy zapalenia śródmiąższowego u 9-latki sugerują Mycoplasma pneumoniae. Jaki antybiotyk należy zastosować?',
+          opts: [
+            'Azytromycyna (Sumamed) – makrolid działający na drobnoustroje wewnątrzkomórkowe',
+            'Augmentin w wyższej dawce',
+            'Cefuroksym',
+            'Ampicylina'
+          ],
+          correct: 0,
+          explanation: 'Mycoplasma pneumoniae nie posiada ściany komórkowej (peptydoglikanu), dlatego wszystkie antybiotyki beta-laktamowe (penicyliny, cefalosporyny) są na nią całkowicie nieskuteczne! Lekiem z wyboru są makrolidy (Azytromycyna, Klarytromycyna).'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Dawka azytromycyny',
+          q: 'Jaka jest dawka azytromycyny dla 28-kg dziewczynki?',
+          opts: [
+            '10 mg/kg m.c./dobę 1 raz na dobę przez 3 dni (280 mg/dobę)',
+            '50 mg/kg m.c./dobę co 8 godzin przez 10 dni',
+            '100 mg co 12 godzin przez 7 dni',
+            '500 mg co 6 godzin'
+          ],
+          correct: 0,
+          explanation: 'Standardowy schemat azytromycyny u dzieci to 10 mg/kg m.c. raz dziennie przez 3 dni (maks. 500 mg/dobę). Lek kumuluje się w komórkach i działa w tkankach jeszcze przez kilka dni po zakończeniu przyjmowania.'
+        }
+      ],
+      pearl: 'Pamiętaj: Mycoplasma pneumoniae NIE ma ściany komórkowej! Dlatego penicyliny i cefalosporyny w ogóle na nią nie działają.'
+    },
+    {
+      id: 'chal_shock',
+      title: 'Wyzwanie 10: 3-letni Antoś (14 kg) we wczesnym wstrząsie septycznym',
+      vignette: '3-letni chłopiec przyjęty na SOR z wysoką gorączką 40.0°C, wybroczynami na skórze ud (plamica piorunująca), tachykardią 180/min, CRT 4 sekundy i chłodnymi marmurkowatymi kończynami. Ciśnienie tętnicze 78/40 mmHg.',
+      drugId: 'ceftriaxone_iv',
+      weight: 14,
+      steps: [
+        {
+          step: 1,
+          title: 'Krok 1: Natychmiastowa resuscytacja płynowa we wstrząsie (PALS)',
+          q: 'Jaki bolus płynowy i.v./i.o. należy podać natychmiast u dziecka we wstrząsie septycznym?',
+          opts: [
+            '20 ml/kg m.c. zrównoważonego krystaloidu lub 0.9% NaCl (280 ml) w bolusie pod ciśnieniem w ciągu 10-15 minut',
+            '5 ml/kg 5% glukozy w powolnym wlewie 4-godzinnym',
+            'Wlew 10% NaCl',
+            'Furosemid 2 mg/kg'
+          ],
+          correct: 0,
+          explanation: 'Zgodnie z wytycznymi PALS i Surviving Sepsis Campaign: natychmiastowy bolus płynu izotonicznego wynosi 20 ml/kg (dla 14 kg = 280 ml) podany szybko w ciągu 10-15 min, z ponowną oceną cech przewodnienia (wątroba, rzężenia).'
+        },
+        {
+          step: 2,
+          title: 'Krok 2: Antybiotykoterapia w Złotej Godzinie (Golden Hour)',
+          q: 'Jaki antybiotyk dożylny należy podać natychmiast w ciągu 1. godziny u dziecka z podejrzeniem sepsy meningokokowej / pozaszpitalnej?',
+          opts: [
+            'Ceftriakson i.v. w dawce 100 mg/kg/dobę (1400 mg) + Wankomycyna',
+            'Amoksycylina doustnie',
+            'Gentamycyna w maści',
+            'Oczekiwanie na wynik posiewu krwi przez 48 godzin'
+          ],
+          correct: 0,
+          explanation: 'We wstrząsie septycznym każda godzina opóźnienia antybiotyku zwiększa śmiertelność! Należy natychmiast podać cefalosporynę III generacji i.v. (Ceftriakson 100 mg/kg/d lub Cefotaksym) w skojarzeniu z wankomycyną.'
+        }
+      ],
+      pearl: 'Zasada Złotej Godziny (Golden Hour): Pobierz posiewy krwi i natychmiast podaj antybiotyk o szerokim spektrum i.v. w ciągu maksymalnie 60 minut od podejrzenia sepsy!'
+    }
+  ];
+
   const modById = Object.fromEntries(MODS.map(m => [m.id, m]));
   const atById = Object.fromEntries(ATLASES.map(a => [a.id, a]));
-  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, modById, atById };
+  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, IMAGING_TRAINER_CASES, PEDIATRIC_DRUG_DATABASE, PRESCRIPTION_CHALLENGES, modById, atById };
 })();
