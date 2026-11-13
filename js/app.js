@@ -3181,6 +3181,231 @@ function estimateWeightFromAge(val, unit) {
 
 /* ---------- WIRTUALNY PACJENT (SOR / IZBA PRZYJĘĆ) ---------- */
 
+const EMERGENCY_DRUG_CARDS = {
+  krup: {
+    weight: 9.5,
+    drugs: [
+      {
+        name: "Deksametazon (Dexaven)",
+        dosePerKg: "0.15 – 0.6 mg/kg p.o. / i.m. / i.v.",
+        calcDose: "1.4 – 3.8 mg (np. amp. 4 mg/1 ml = 0.95 ml)",
+        route: "p.o. lub i.m. (powolne i.v.)",
+        indication: "Lek 1. rzutu w każdym stopniu krupu. Działa przeciwobrzękowo po 1–2 h.",
+        badge: "Lek 1. rzutu"
+      },
+      {
+        name: "L-Adrenalina 1:1000 (1 mg/ml) – Nebulizacja",
+        dosePerKg: "0.5 mg/kg (0.5 ml/kg), max 5 ml (5 mg)",
+        calcDose: "4.75 ml roztworu 1:1000 (lub 4.0 ml + 1 ml 0.9% NaCl)",
+        route: "Nebulizacja z tlenem (przepływ 6–8 l/min)",
+        indication: "Stridor spoczynkowy (krup umiarkowany/ciężki). Efekt w 10–20 min.",
+        badge: "Ratunkowy"
+      },
+      {
+        name: "Budezonid (Pulmicort) – alternatywa wziewna",
+        dosePerKg: "2 mg jednorazowo w nebulizacji",
+        calcDose: "2 ampułki po 1 mg/2 ml = 4 ml",
+        route: "Wziewnie (nebulizator)",
+        indication: "W razie niemożności podania deksametazonu p.o.",
+        badge: "Alternatywa wziewna"
+      },
+      {
+        name: "Tlenoterapia bierna (Blow-by)",
+        dosePerKg: "Przepływ do SpO₂ >94%",
+        calcDose: "Maseczka lub dren trzymany w odległości 2–3 cm od twarzy",
+        route: "Biernie bez uciskania maski",
+        indication: "Unikaj ciasnego mocowania maski – stres nasila obturację krtani!",
+        badge: "Podstawa PALS"
+      }
+    ],
+    redFlags: [
+      "NIGDY nie badaj gardła szpatułką – ryzyko odruchowego zatrzymania oddechu i skurczu głośni!",
+      "Po nebulizacji z adrenaliny obowiązkowa obserwacja min. 2–4 h (ryzyko efektu odbicia / rebound)."
+    ]
+  },
+  wglobienie: {
+    weight: 8.5,
+    drugs: [
+      {
+        name: "Krystaloidy (0.9% NaCl lub Plazmalyte) – Bolus",
+        dosePerKg: "10 – 20 ml/kg i.v. w 20–30 min",
+        calcDose: "85 – 170 ml i.v.",
+        route: "Dożylnie (wlew kroplowy lub push-pull)",
+        indication: "Uzupełnienie łożyska naczyniowego przed sedacją i procedurą odgłobienia.",
+        badge: "Wstrząs / Hipowolemia"
+      },
+      {
+        name: "Paracetamol i.v. (Perfalgan 10 mg/ml)",
+        dosePerKg: "15 mg/kg i.v. (wlew 15 min)",
+        calcDose: "127.5 mg = 12.8 ml roztworu 10 mg/ml",
+        route: "Wlew dożylny",
+        indication: "Ból o umiarkowanym nasileniu, bezpieczny przed zabiegiem.",
+        badge: "Przeciwbólowy"
+      },
+      {
+        name: "Metamizol (Pyralgina) – alternatywa",
+        dosePerKg: "10 – 15 mg/kg i.v.",
+        calcDose: "85 – 127.5 mg (ok. 0.17 – 0.25 ml amp. 500 mg/ml)",
+        route: "Powolne i.v. (min. 5 minut)",
+        indication: "Silny ból kolkowy, po wykluczeniu wstrząsu.",
+        badge: "Rozkurczowy"
+      },
+      {
+        name: "Amoksycylina z kwasem klawulanowym (Augmentin)",
+        dosePerKg: "30 mg/kg i.v.",
+        calcDose: "255 mg i.v.",
+        route: "Wstrzyknięcie / wlew dożylny",
+        indication: "Profilaktyka okołooperacyjna / podejrzenie martwicy lub perforacji pętli jelitowej.",
+        badge: "Antybiotyk"
+      }
+    ],
+    redFlags: [
+      "Dieta bezwzględnie ścisła (na czczo) do czasu wykonania USG i decyzji chirurga!",
+      "Przeciwwskazania do odgłobienia pneumatycznego/hydrostatycznego: zapalenie otrzewnej, perforacja jelita, wstrząs hipowolemiczny."
+    ]
+  },
+  drgawki: {
+    weight: 13,
+    drugs: [
+      {
+        name: "Diazepam wlewka doodbytnicza (Rektiole)",
+        dosePerKg: "0.5 mg/kg p.r.",
+        calcDose: "Wlewka 5 mg p.r. (dla dzieci <15 kg; powtórka po 5 min w razie braku efektu)",
+        route: "Doodbytniczo",
+        indication: "Lek 1. rzutu przy braku dostępu naczyniowego u małego dziecka.",
+        badge: "Lek 1. rzutu (p.r.)"
+      },
+      {
+        name: "Midazolam (Buccolam roztwór 5 mg/ml)",
+        dosePerKg: "0.2 – 0.3 mg/kg bukkalnie / i.n.",
+        calcDose: "Bukkalnie: 2.6 – 3.9 mg (Midazolam 5 mg/ml = 0.5 – 0.8 ml)",
+        route: "Na błonę śluzową policzka lub donosowo",
+        indication: "Szybkie i bezpieczne podanie bez szarpania o żyłę u drgającego dziecka.",
+        badge: "Lek 1. rzutu (bukk.)"
+      },
+      {
+        name: "Klonazepam i.v.",
+        dosePerKg: "0.05 mg/kg powoli i.v.",
+        calcDose: "0.65 mg (z amp. 1 mg/1 ml rozcieńczonej do 10 ml: 6.5 ml)",
+        route: "Powolne wstrzyknięcie i.v. pod kontrolą oddechu",
+        indication: "W stanach drgawkowych z istniejącym wkłuciem żylnym.",
+        badge: "Dożylny BZD"
+      },
+      {
+        name: "Lewetiracetam (Keppra) – Lek 2. rzutu",
+        dosePerKg: "40 – 60 mg/kg we wlewie i.v. w 10 minut",
+        calcDose: "520 – 780 mg (np. 650 mg w 50 ml 0.9% NaCl)",
+        route: "Wlew i.v. w 10–15 minut",
+        indication: "Stan drgawkowy oporny na 2 dawki benzodiazepin (>10–15 min).",
+        badge: "Lek 2. rzutu"
+      },
+      {
+        name: "10% Glukoza (w razie hipoglikemii)",
+        dosePerKg: "2 – 5 ml/kg i.v. (bolus)",
+        calcDose: "26 – 65 ml 10% Glukozy i.v.",
+        route: "Powolny bolus i.v.",
+        indication: "Zawsze zbadaj glikemię! Hipoglikemia <60 mg/dl wymaga natychmiastowej korekty.",
+        badge: "Glikemia"
+      }
+    ],
+    redFlags: [
+      "Pamiętaj o regule ABC: udrożnij drogi oddechowe, podaj 100% tlen z rezerwuarem, ułóż na boku.",
+      "Uwaga na depresję oddechową po 2 dawkach benzodiazepin – przygotuj worek samorozprężalny z maską!"
+    ]
+  },
+  dka: {
+    weight: 28,
+    drugs: [
+      {
+        name: "0.9% NaCl – Początkowa rehydratacja (1. godzina)",
+        dosePerKg: "10 – 20 ml/kg w ciągu pierwszych 60 minut",
+        calcDose: "280 – 560 ml 0.9% NaCl w 1 h",
+        route: "Wlew dożylny",
+        indication: "Wypełnienie łożyska naczyniowego PRZED rozpoczęciem wlewu insuliny!",
+        badge: "Krok 1: Płyny"
+      },
+      {
+        name: "Insulina krótzkodziałająca (Actrapid) – ciągły wlew",
+        dosePerKg: "0.05 – 0.1 j./kg/h (rozpocząć PO 1 h nawadniania!)",
+        calcDose: "1.4 – 2.8 j./h (np. 50 j. w 50 ml 0.9% NaCl = wlew 1.4 – 2.8 ml/h)",
+        route: "Ciągły wlew dożylny pompą infuzyjną",
+        indication: "NIGDY nie podawaj bolusa insuliny i.v.! Grozi obrzękiem mózgu i hipokaliemią.",
+        badge: "Krok 2: Insulina"
+      },
+      {
+        name: "Chlorek potasu (KCl 15%) – suplementacja",
+        dosePerKg: "20 – 40 mmol/l płynu infuzyjnego (po uzyskaniu mikcji)",
+        calcDose: "Zależnie od kaliemii, po potwierdzeniu diurezy",
+        route: "Dodatek do płynów infuzyjnych (max stężenie 40 mmol/l obwodowo)",
+        indication: "Wlew insuliny powoduje gwałtowny spadek stężenia K⁺ w surowicy.",
+        badge: "Elektrolity"
+      },
+      {
+        name: "20% Mannitol (w razie obrzęku mózgu)",
+        dosePerKg: "0.5 – 1.0 g/kg i.v. w 20 minut",
+        calcDose: "70 – 140 ml 20% Mannitolu (lub 3% NaCl 5 ml/kg = 140 ml)",
+        route: "Szybki wlew i.v.",
+        indication: "Wskazania: ból głowy, bradykardia, spadek GCS, nierówne źrenice.",
+        badge: "Obrzęk mózgu"
+      }
+    ],
+    redFlags: [
+      "BEZWZGLĘDNY ZAKAZ podawania bolusa insuliny i.v. – ryzyko śmiertelnego obrzęku mózgu!",
+      "Nie obniżaj glikemii szybciej niż o 70–100 mg/dl/h. Przy glikemii <250–300 mg/dl dołącz 5% glukozę do płynów!"
+    ]
+  },
+  sepsa: {
+    weight: 15,
+    drugs: [
+      {
+        name: "Krystaloidy zbilansowane (Plazmalyte / Ringer / 0.9% NaCl)",
+        dosePerKg: "10 – 20 ml/kg w szybkim bolusie w 5–10 minut (metoda push-pull)",
+        calcDose: "150 – 300 ml w bolusie (do 40–60 ml/kg w pierwszej godzinie)",
+        route: "Dożylnie / doszpikowo (i.o.) strzykawką na siłę",
+        indication: "Natychmiastowe wypełnienie łożyska naczyniowego we wstrząsie septycznym.",
+        badge: "Resuscytacja płynowa"
+      },
+      {
+        name: "Ceftriakson (lub Cefotaksym) i.v. / i.o.",
+        dosePerKg: "100 mg/kg i.v. (Ceftriakson jednorazowo lub w 2 dawkach)",
+        calcDose: "1500 mg (1.5 g) i.v. w ciągu pierwszych 60 minut („Złota Godzina”)",
+        route: "Dożylnie lub doszpikowo (wstrzyknięcie w 3–5 min)",
+        indication: "Antybiotyk empiryczny o szerokim spektrum. Nigdy nie opóźniaj dla badań!",
+        badge: "Złota Godzina (Abx)"
+      },
+      {
+        name: "Noradrenalina (wlew we wstrząsie ciepłym / naczyniorozszerzonym)",
+        dosePerKg: "0.05 – 0.3 µg/kg/min",
+        calcDose: "0.75 – 4.5 µg/min w pompie infuzyjnej",
+        route: "Ciągły wlew i.v. / i.o.",
+        indication: "Wstrząs oporny na płynoterapię (hipotensja, szerokie ciśnienie tętna).",
+        badge: "Aminy presyjne"
+      },
+      {
+        name: "Adrenalina (wlew we wstrząsie zimnym / kardiogennym)",
+        dosePerKg: "0.05 – 0.3 µg/kg/min",
+        calcDose: "0.75 – 4.5 µg/min",
+        route: "Ciągły wlew i.v. / i.o.",
+        indication: "Zimne kończyny, wydłużony CRT >3s, słabe tętno obwodowe.",
+        badge: "Inotropowo"
+      },
+      {
+        name: "Hydrokortyzon i.v. (przy podejrzeniu z. Waterhouse-Friderichsena)",
+        dosePerKg: "1 – 2 mg/kg i.v. (lub dawka stresowa 50 mg/m²)",
+        calcDose: "25 – 30 mg i.v.",
+        route: "Wstrzyknięcie dożylne",
+        indication: "Wstrząs oporny na katecholaminy z niewydolnością kory nadnerczy.",
+        badge: "GKS ratunkowy"
+      }
+    ],
+    redFlags: [
+      "BEZWZGLĘDNY ZAKAZ PUNKCJI LĘDŹWIOWEJ we wstrząsie i przy cechach DIC (ryzyko wklinowania i krwawienia)!",
+      "Plamica nieblednąca pod uciskiem + gorączka = sepsa meningokokowa! Czas to życie."
+    ]
+  }
+};
+window.EMERGENCY_DRUG_CARDS = EMERGENCY_DRUG_CARDS;
+
 const PATIENT_CASES = [
   {
     id: 'krup',
@@ -4008,71 +4233,276 @@ function startPatientSim(caseItem) {
     score: 0,
     maxScore: 0,
     history: [],
-    currentVitals: { ...caseItem.vitalsInitial }
+    currentVitals: { ...caseItem.vitalsInitial },
+    showEmergencyTray: false
   };
 }
 
-function renderPatientCaseList() {
-  const completedCount = Object.keys(S.patientCases || {}).length;
-  let totalScoreSum = 0;
-  Object.values(S.patientCases || {}).forEach(c => { totalScoreSum += (c.bestScore || 0); });
-  const avgScore = completedCount ? Math.round(totalScoreSum / completedCount) : 0;
+function renderEmergencyDrugTray(caseItem) {
+  const cardData = EMERGENCY_DRUG_CARDS[caseItem.id];
+  if (!cardData) return '';
 
-  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:980px">
-    <div class="eyebrow">Symulator kliniczny · Ostry dyżur SOR / Izba Przyjęć</div>
-    <h2>Wirtualny Pacjent – stany nagłe u dzieci</h2>
-
-    <div class="conn-tabs" role="tablist" style="margin-bottom:1.5rem">
-      <button class="conn-tab-btn active" data-ptab="sor" role="tab" aria-selected="true">🚨 SOR / Ostry Dyżur (${PATIENT_CASES.length})</button>
-      <button class="conn-tab-btn" data-ptab="osce" role="tab" aria-selected="false">📋 Stacje OSCE / Badanie fizykalne (${(OSCE_STATIONS || []).length})</button>
+  return `
+  <div class="card emergency-doses-tray" style="margin:1rem 0;background:var(--surface);border:2px solid var(--red);box-shadow:var(--shadow-md)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:1.3rem">🚨</span>
+        <div>
+          <h3 style="margin:0;font-size:1.1rem;color:var(--red)">Panel Dawek Ratunkowych (PALS / SOR)</h3>
+          <div style="font-size:.8rem;color:var(--ink-muted)">
+            Wyliczone dawki doraźne dla wagi pacjenta: <b>${caseItem.weight} kg</b> (${caseItem.age})
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-subtle" id="btnCloseEmergencyTray" style="font-size:.78rem">✕ Zamknij panel</button>
     </div>
 
-    <p class="lead">Podejmuj decyzje diagnostyczne i terapeutyczne krok po kroku w stanach zagrożenia życia. Dynamiczny monitor parametrów życiowych reaguje na Twoje zlecenia, a system weryfikuje trafność działań, wyłapuje błędy sztuki i przyznaje punkty.</p>
-
-    <!-- Pasek statystyk -->
-    <div style="display:flex;gap:1rem;margin:1.5rem 0;flex-wrap:wrap">
-      <div class="card" style="flex:1;min-width:180px;padding:.9rem 1.1rem">
-        <span class="srcline">Dostępne przypadki</span>
-        <b style="font-size:1.6rem;font-family:var(--font-display);display:block;margin-top:.2rem">${PATIENT_CASES.length}</b>
-      </div>
-      <div class="card" style="flex:1;min-width:180px;padding:.9rem 1.1rem">
-        <span class="srcline">Ukończone scenariusze</span>
-        <b style="font-size:1.6rem;font-family:var(--font-display);display:block;margin-top:.2rem;color:var(--teal)">${completedCount} / ${PATIENT_CASES.length}</b>
-      </div>
-      <div class="card" style="flex:1;min-width:180px;padding:.9rem 1.1rem">
-        <span class="srcline">Średnia skuteczność</span>
-        <b style="font-size:1.6rem;font-family:var(--font-display);display:block;margin-top:.2rem;color:${avgScore >= 75 ? 'var(--green)' : (avgScore >= 60 ? 'var(--amber)' : 'var(--ink)')}">${avgScore}%</b>
-      </div>
-    </div>
-
-    <!-- Siatka przypadków -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.2rem;margin-top:1.5rem">
-      ${PATIENT_CASES.map(c => {
-        const saved = (S.patientCases || {})[c.id];
-        const hasScore = saved && saved.bestScore !== undefined;
-        return `<div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid var(--teal)">
+    <!-- Siatka leków -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:.7rem;margin-bottom:.8rem">
+      ${cardData.drugs.map(drug => `
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.75rem .9rem;display:flex;flex-direction:column;justify-content:space-between">
           <div>
-            <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
-              <span class="chip" style="background:var(--teal-l);color:var(--teal-d);font-weight:700;border:0">${esc(c.category)}</span>
-              <span class="chip">${c.age} · ${c.weight} kg</span>
-              ${hasScore ? `<span class="chip" style="background:${saved.bestScore >= 80 ? 'var(--green-l)' : (saved.bestScore >= 60 ? 'var(--amber-l)' : 'var(--red-l)')};color:${saved.bestScore >= 80 ? 'var(--green)' : (saved.bestScore >= 60 ? 'var(--amber)' : 'var(--red)')};font-weight:700;border:0">Wynik: ${saved.bestScore}%</span>` : '<span class="chip" style="background:var(--surface);color:var(--muted)">Nowy</span>'}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;gap:.4rem">
+              <b style="font-size:.92rem;color:var(--ink)">${drug.name}</b>
+              <span class="chip" style="background:var(--red-l);color:var(--red);font-weight:700;font-size:.68rem;padding:.15rem .4rem;border:0">${drug.badge}</span>
             </div>
-            <h3 style="font-size:1.15rem;margin-bottom:.4rem;font-family:var(--font-display)">${esc(c.title)}</h3>
-            <p class="srcline" style="margin-bottom:.8rem">${esc(c.chiefComplaint)}</p>
+            <div style="font-size:.8rem;color:var(--ink-muted);margin-bottom:.3rem">
+              Dawka/kg: <b>${drug.dosePerKg}</b>
+            </div>
+            <div style="padding:.45rem .6rem;background:var(--surface);border:1.5px solid var(--teal);border-radius:6px;margin-bottom:.4rem">
+              <span style="font-size:.74rem;color:var(--teal-d);display:block;font-weight:700">WYKORZYSTAJ:</span>
+              <b style="font-size:.96rem;color:var(--teal);display:block">${drug.calcDose}</b>
+            </div>
+            <div style="font-size:.78rem;color:var(--ink-muted);margin-bottom:.2rem">
+              <b>Droga:</b> ${drug.route}
+            </div>
           </div>
-          <div style="display:flex;gap:.6rem;align-items:center;border-top:1px solid var(--line-2);padding-top:.8rem;margin-top:.6rem">
-            <a class="btn pri sm" href="#/pacjent/${c.id}">${hasScore ? 'Zagraj ponownie →' : 'Rozpocznij symulację →'}</a>
-            <a class="btn sec sm" href="#/kalkulator?w=${c.weight}" title="Otwórz kalkulator dla tego pacjenta">🧮 Dawki</a>
+          <div style="font-size:.76rem;color:var(--ink);background:rgba(12,122,133,0.06);padding:.35rem .5rem;border-radius:4px;margin-top:.4rem;line-height:1.35">
+            ${drug.indication}
           </div>
-        </div>`;
-      }).join('')}
+        </div>
+      `).join('')}
     </div>
+
+    <!-- Czerwone flagi / ostrzeżenia -->
+    <div style="background:rgba(194,59,42,0.08);border-left:4px solid var(--red);padding:.7rem .9rem;border-radius:0 6px 6px 0;font-size:.82rem;line-height:1.45;color:var(--ink)">
+      <b style="color:var(--red)">⚠️ CZERWONE FLAGI I PRZECIWWSKAZANIA:</b>
+      <ul style="margin:.3rem 0 0 1.1rem;padding:0">
+        ${cardData.redFlags.map(rf => `<li>${rf}</li>`).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+window.getClinicalRank = getClinicalRank;
+function getClinicalRank(completedCount) {
+  if (completedCount >= 9) return { title: "Lekarz Dyżurny SOR Dziecięcego 🏆", color: "var(--teal)" };
+  if (completedCount >= 6) return { title: "Młodszy Rezydent Pediatrii 🌟", color: "var(--green)" };
+  if (completedCount >= 3) return { title: "Stażysta Izby Przyjęć 🏥", color: "var(--amber)" };
+  return { title: "Praktykant Pediatryczny 🩺", color: "var(--ink-muted)" };
+}
+
+function renderPatientCaseList() {
+  window.scrollTo(0, 0);
+  window.PATIENT_HUB_FILTER = window.PATIENT_HUB_FILTER || "all";
+
+  const completedSor = Object.keys(S.patientCases || {}).length;
+  const completedOsce = Object.keys(S.osceCases || {}).length;
+  const totalCompleted = completedSor + completedOsce;
+  const totalCases = PATIENT_CASES.length + (OSCE_STATIONS || []).length;
+
+  let totalScoreSum = 0;
+  let scoredCount = 0;
+  Object.values(S.patientCases || {}).forEach(c => {
+    if (c.bestScore !== undefined) {
+      totalScoreSum += c.bestScore;
+      scoredCount++;
+    }
+  });
+  Object.values(S.osceCases || {}).forEach(c => {
+    if (c.score !== undefined) {
+      totalScoreSum += c.score;
+      scoredCount++;
+    }
+  });
+  const avgScore = scoredCount ? Math.round(totalScoreSum / scoredCount) : 0;
+  const rank = getClinicalRank(totalCompleted);
+
+  const currentFilter = window.PATIENT_HUB_FILTER;
+
+  const sorFiltered = PATIENT_CASES.filter(c => {
+    if (currentFilter === "osce") return false;
+    if (currentFilter === "infant") return c.weight < 10 || c.age.includes("miesięc");
+    if (currentFilter === "older") return c.weight >= 10 && !c.age.includes("miesięc");
+    return true;
+  });
+
+  const osceFiltered = (OSCE_STATIONS || []).filter(s => {
+    if (currentFilter === "sor") return false;
+    if (currentFilter === "infant") return s.patient.avatarType === "infant" || s.patient.age.includes("miesięc");
+    if (currentFilter === "older") return s.patient.avatarType === "child" && !s.patient.age.includes("miesięc");
+    return true;
+  });
+
+  main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:1040px">
+    <div class="eyebrow">Symulator kliniczny · Ostry dyżur SOR & Egzamin OSCE</div>
+    <h2>Wirtualny Pacjent – stany nagłe i badanie fizykalne</h2>
+
+    <!-- Główne zakładki nawigacyjne -->
+    <div class="conn-tabs" role="tablist" style="margin-bottom:1.2rem">
+      <button class="conn-tab-btn ${currentFilter !== "osce" ? "active" : ""}" data-ptab="sor" role="tab" aria-selected="${currentFilter !== "osce"}">
+        🚨 SOR / Ostry Dyżur (${PATIENT_CASES.length})
+      </button>
+      <button class="conn-tab-btn ${currentFilter === "osce" ? "active" : ""}" data-ptab="osce" role="tab" aria-selected="${currentFilter === "osce"}">
+        📋 Stacje OSCE / Badanie fizykalne (${(OSCE_STATIONS || []).length})
+      </button>
+    </div>
+
+    <!-- Pasek statystyk i Rangi klinicznej -->
+    <div class="card" style="margin-bottom:1.5rem;background:var(--surface);border-left:4px solid var(--teal);padding:1rem 1.3rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem">
+        <div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em">Status postępów klinicznych:</div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-top:.2rem;flex-wrap:wrap">
+            <span class="sim-rank-chip" style="border-color:${rank.color};color:${rank.color}">
+              ${rank.title}
+            </span>
+            <span style="font-size:.9rem;color:var(--ink-muted)">
+              Ukończono <b>${totalCompleted} z ${totalCases}</b> scenariuszy (${Math.round((totalCompleted/totalCases)*100)}%)
+            </span>
+          </div>
+        </div>
+        <div style="display:flex;gap:1.5rem;align-items:center">
+          <div style="text-align:right">
+            <span class="srcline" style="display:block;font-size:.78rem">Średnia skuteczność</span>
+            <b style="font-size:1.35rem;color:${avgScore >= 75 ? "var(--green)" : (avgScore >= 60 ? "var(--amber)" : "var(--ink)")}">
+              ${avgScore > 0 ? avgScore + "%" : "–"}
+            </b>
+          </div>
+          <div style="text-align:right">
+            <span class="srcline" style="display:block;font-size:.78rem">Zaliczone stacje</span>
+            <b style="font-size:1.35rem;color:var(--teal)">${totalCompleted} / ${totalCases}</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtry kategorialne (chips) -->
+    <div class="sim-filter-bar" role="toolbar" aria-label="Filtry przypadków klinicznych">
+      <button class="sim-filter-chip ${currentFilter === "all" ? "active" : ""}" data-filter="all">
+        Wszystkie (${totalCases})
+      </button>
+      <button class="sim-filter-chip ${currentFilter === "sor" ? "active" : ""}" data-filter="sor">
+        🚨 Tylko SOR (${PATIENT_CASES.length})
+      </button>
+      <button class="sim-filter-chip ${currentFilter === "osce" ? "active" : ""}" data-filter="osce">
+        📋 Tylko OSCE (${(OSCE_STATIONS || []).length})
+      </button>
+      <button class="sim-filter-chip ${currentFilter === "infant" ? "active" : ""}" data-filter="infant">
+        👶 Niemowlęta (<1 r.ż.)
+      </button>
+      <button class="sim-filter-chip ${currentFilter === "older" ? "active" : ""}" data-filter="older">
+        👦 Dzieci starsze
+      </button>
+    </div>
+
+    <!-- SEKCJA: PRZYPADKI SOR -->
+    ${sorFiltered.length > 0 ? `
+      <div style="margin-bottom:2rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
+          <span style="font-size:1.3rem">🚨</span>
+          <h3 style="margin:0;font-size:1.2rem">Stany Nagłe i Resuscytacja (SOR)</h3>
+          <span class="chip" style="background:rgba(194,59,42,0.1);color:var(--red);font-weight:700;border:0">${sorFiltered.length}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.1rem">
+          ${sorFiltered.map(c => {
+            const saved = (S.patientCases || {})[c.id];
+            const hasScore = saved && saved.bestScore !== undefined;
+            return `<div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:3.5px solid var(--red)">
+              <div>
+                <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
+                  <span class="chip" style="background:var(--red-l);color:var(--red);font-weight:700;border:0">${esc(c.category.split("/")[0].trim())}</span>
+                  <span class="chip">${c.age} · ${c.weight} kg</span>
+                  ${hasScore ? `<span class="chip" style="background:${saved.bestScore >= 80 ? "var(--green-l)" : (saved.bestScore >= 60 ? "var(--amber-l)" : "var(--red-l)")};color:${saved.bestScore >= 80 ? "var(--green)" : (saved.bestScore >= 60 ? "var(--amber)" : "var(--red)")};font-weight:700;border:0">Wynik: ${saved.bestScore}%</span>` : '<span class="chip" style="background:var(--surface);color:var(--muted)">Nowy</span>'}
+                </div>
+                <h4 style="font-size:1.1rem;margin-bottom:.4rem;font-family:var(--font-display)">${esc(c.title)}</h4>
+                <p class="srcline" style="margin-bottom:.8rem;font-size:.86rem;line-height:1.45">${esc(c.chiefComplaint)}</p>
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:center;border-top:1px solid var(--line-2);padding-top:.8rem;margin-top:.6rem;flex-wrap:wrap">
+                <a class="btn pri sm" href="#/pacjent/${c.id}">${hasScore ? "Zagraj ponownie →" : "Rozpocznij symulację →"}</a>
+                <a class="btn sec sm" href="#/kalkulator?w=${c.weight}" title="Otwórz kalkulator dla tego pacjenta">🧮 Dawki</a>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    ` : ""}
+
+    <!-- SEKCJA: STACJE OSCE -->
+    ${osceFiltered.length > 0 ? `
+      <div style="margin-bottom:2rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
+          <span style="font-size:1.3rem">📋</span>
+          <h3 style="margin:0;font-size:1.2rem">Stacje Egzaminacyjne OSCE i Status Praesens</h3>
+          <span class="chip" style="background:var(--teal-l);color:var(--teal-d);font-weight:700;border:0">${osceFiltered.length}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.1rem">
+          ${osceFiltered.map(station => {
+            const saved = (S.osceCases || {})[station.id];
+            const isPassed = saved && saved.score >= 60;
+            const totalKey = station.zones.flatMap(z => z.maneuvers).filter(m => m.isKey).length;
+            return `<div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:3.5px solid var(--teal)">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.4rem">
+                  <span class="badge" style="background:var(--teal);color:#fff;font-weight:800;font-size:.72rem">STACJA ${station.number}</span>
+                  <span style="font-size:.78rem;color:var(--ink-muted);font-weight:700">${station.patient.age} · ${station.patient.weight}</span>
+                </div>
+                <h4 style="font-size:1.08rem;margin-bottom:.35rem;font-family:var(--font-display)">
+                  <a href="#/pacjent/osce/${station.id}">${esc(station.title)}</a>
+                </h4>
+                <div style="font-size:.82rem;color:var(--teal);font-weight:700;margin-bottom:.5rem">
+                  🩺 ${station.scale ? station.scale.name.split("/")[0].trim() : station.topic}
+                </div>
+                <p class="srcline" style="margin-bottom:.8rem;font-size:.86rem;line-height:1.4">${esc(station.briefing.scenario)}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.6rem">
+                  <span class="badge" style="background:rgba(12,122,133,0.1);color:var(--teal);font-size:.72rem">📍 ${station.zones.length} stref</span>
+                  <span class="badge" style="background:rgba(12,122,133,0.1);color:var(--teal);font-size:.72rem">🔑 ${totalKey} manewrów</span>
+                  <span class="badge" style="background:rgba(194,59,42,0.1);color:var(--red);font-size:.72rem">⚠️ Błędy krytyczne</span>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-2);padding-top:.8rem;margin-top:.6rem">
+                <div>
+                  ${saved ? `
+                    <span class="chip" style="background:${isPassed ? "var(--green-l)" : "var(--red-l)"};color:${isPassed ? "var(--green)" : "var(--red)"};font-weight:700;border:0;font-size:.74rem">
+                      ${isPassed ? "✓ Zdane" : "✗ Do poprawy"}: ${saved.score}%
+                    </span>
+                  ` : '<span class="chip" style="background:var(--surface);color:var(--muted);font-size:.74rem">Nowa stacja</span>'}
+                </div>
+                <a class="btn pri sm" href="#/pacjent/osce/${station.id}">${saved ? "Powtórz badanie →" : "Rozpocznij stację →"}</a>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    ` : ""}
+
   </div></section>`;
 
   $$('.conn-tab-btn[data-ptab]').forEach(b => {
     b.onclick = () => {
-      if (b.dataset.ptab === 'osce') renderOsceStationList();
-      else renderPatientCaseList();
+      if (b.dataset.ptab === 'osce') {
+        window.PATIENT_HUB_FILTER = 'osce';
+      } else {
+        window.PATIENT_HUB_FILTER = 'sor';
+      }
+      renderPatientCaseList();
+    };
+  });
+
+  $$('.sim-filter-chip[data-filter]').forEach(b => {
+    b.onclick = () => {
+      window.PATIENT_HUB_FILTER = b.dataset.filter;
+      renderPatientCaseList();
     };
   });
 }
@@ -4112,8 +4542,11 @@ function renderActivePatientSim(caseItem) {
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:920px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
       <a class="btn sec sm" href="#/pacjent">← Wróć do listy pacjentów</a>
-      <div style="display:flex;gap:.5rem">
-        <a class="btn sec sm" href="#/kalkulator?w=${caseItem.weight}" target="_blank" title="Otwórz kalkulator dawek w nowym oknie">🧮 Kalkulator dawek (${caseItem.weight} kg)</a>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn sec sm" id="btnToggleEmergencyTray" style="font-weight:700;color:var(--red);border-color:rgba(194,59,42,0.3)">
+          🚨 Dawki ratunkowe (${caseItem.weight} kg) ${SIM_ACTIVE.showEmergencyTray ? "▲" : "▼"}
+        </button>
+        <a class="btn sec sm" href="#/kalkulator?w=${caseItem.weight}" target="_blank" title="Otwórz kalkulator dawek w nowym oknie">🧮 Pełny kalkulator</a>
       </div>
     </div>
 
@@ -4129,6 +4562,9 @@ function renderActivePatientSim(caseItem) {
 
     <!-- Monitor parametrów życiowych -->
     ${renderVitalsMonitor(SIM_ACTIVE.currentVitals)}
+
+    <!-- Panel Dawek Ratunkowych (SOR / PALS) -->
+    ${SIM_ACTIVE.showEmergencyTray ? renderEmergencyDrugTray(caseItem) : ''}
 
     <!-- Pasek postępu etapów -->
     <div class="sim-steps">
@@ -4216,6 +4652,22 @@ function renderActivePatientSim(caseItem) {
       `}
     </div>
   </div></section>`;
+
+  // Obsługa Panelu Dawek Ratunkowych
+  const btnToggleEmerg = $("#btnToggleEmergencyTray");
+  if (btnToggleEmerg) {
+    btnToggleEmerg.onclick = () => {
+      SIM_ACTIVE.showEmergencyTray = !SIM_ACTIVE.showEmergencyTray;
+      renderActivePatientSim(caseItem);
+    };
+  }
+  const btnCloseEmerg = $("#btnCloseEmergencyTray");
+  if (btnCloseEmerg) {
+    btnCloseEmerg.onclick = () => {
+      SIM_ACTIVE.showEmergencyTray = false;
+      renderActivePatientSim(caseItem);
+    };
+  }
 
   // Obsługa wyboru opcji
   if (!isReviewed) {
@@ -4583,6 +5035,8 @@ function startOsceStation(station) {
     stationId: station.id,
     performedManeuvers: new Set(),
     performedQuestions: new Set(),
+    performedOrder: [],
+    scaleExpanded: false,
     selectedZone: station.zones && station.zones[0] ? station.zones[0].id : null,
     activeTab: 'maneuvers', // 'maneuvers' | 'interview'
     reaction: (station.id === 'stacja-1-odwodnienie') ? 'lethargy' : (station.id === 'stacja-2-brzuch' ? 'pain' : (station.id === 'stacja-3-krup' ? 'cry' : 'normal')),
@@ -4695,6 +5149,210 @@ function renderOsceStationList() {
   });
 }
 
+window.computeOsceScale = computeOsceScale;
+window.validateOsceTechnique = validateOsceTechnique;
+window.renderOsceScaleWidget = renderOsceScaleWidget;
+function computeOsceScale(station) {
+  if (!station || !station.scale) return null;
+  const s = station.scale;
+  let totalScore = 0;
+  let itemsCount = s.items.length;
+  let assessedCount = 0;
+
+  const perfManeuvers = (typeof OSCE_ACTIVE !== "undefined" && OSCE_ACTIVE && OSCE_ACTIVE.performedManeuvers)
+    ? OSCE_ACTIVE.performedManeuvers
+    : (window.OSCE_ACTIVE && window.OSCE_ACTIVE.performedManeuvers ? window.OSCE_ACTIVE.performedManeuvers : new Set());
+  const perfQuestions = (typeof OSCE_ACTIVE !== "undefined" && OSCE_ACTIVE && OSCE_ACTIVE.performedQuestions)
+    ? OSCE_ACTIVE.performedQuestions
+    : (window.OSCE_ACTIVE && window.OSCE_ACTIVE.performedQuestions ? window.OSCE_ACTIVE.performedQuestions : new Set());
+
+  const itemResults = s.items.map(item => {
+    let isAssessed = false;
+    let earned = 0;
+
+    if (item.triggerIntro || item.triggerVitals || item.triggerLab) {
+      isAssessed = true;
+      earned = item.score;
+    } else {
+      const maneuverHit = item.triggerManeuvers && item.triggerManeuvers.some(mId => perfManeuvers.has(mId));
+      const questionHit = item.triggerQuestions && item.triggerQuestions.some(qIdx => perfQuestions.has(qIdx));
+      if (maneuverHit || questionHit) {
+        isAssessed = true;
+        earned = item.score;
+      }
+    }
+
+    if (isAssessed) {
+      assessedCount++;
+      totalScore += earned;
+    }
+
+    return {
+      ...item,
+      isAssessed,
+      earned
+    };
+  });
+
+  let currentInterp = s.interpretations[0];
+  for (const interp of s.interpretations) {
+    if (totalScore <= interp.max) {
+      currentInterp = interp;
+      break;
+    }
+    currentInterp = interp;
+  }
+
+  return {
+    id: s.id,
+    name: s.name,
+    unit: s.unit || "pkt",
+    maxScore: s.maxScore,
+    currentScore: totalScore,
+    assessedCount,
+    totalItems: itemsCount,
+    isComplete: assessedCount >= itemsCount,
+    items: itemResults,
+    interpretation: currentInterp
+  };
+}
+
+function validateOsceTechnique(station) {
+  const activeObj = (typeof OSCE_ACTIVE !== "undefined" && OSCE_ACTIVE) ? OSCE_ACTIVE : window.OSCE_ACTIVE;
+  if (!activeObj || !activeObj.performedOrder) return null;
+  const order = activeObj.performedOrder || [];
+
+  if (station.id === "stacja-2-brzuch") {
+    const hasAuscult = order.includes("m_osluch_brzucha");
+    const hasPalpation = order.includes("m_mcburney") || order.includes("m_blumberg") || order.includes("m_obrona_miesniowa");
+    if (hasAuscult && hasPalpation) {
+      const idxAuscult = order.indexOf("m_osluch_brzucha");
+      const idxPalp = Math.min(
+        ...["m_mcburney", "m_blumberg", "m_obrona_miesniowa"].map(id => {
+          const idx = order.indexOf(id);
+          return idx === -1 ? 9999 : idx;
+        })
+      );
+      if (idxAuscult < idxPalp) {
+        return {
+          type: "gold",
+          badge: "🏅 Wzorcowa technika badania brzucha",
+          text: "Osłuchano perystaltykę jelit przed bolesną palpacją i objawami otrzewnowymi. Zapobiegnięto odruchowemu wygaszeniu szmerów jelitowych."
+        };
+      } else {
+        return {
+          type: "tip",
+          badge: "💡 Wskazówka techniki OSCE",
+          text: "W ostrym brzuchu najpierw osłuchaj perystaltykę przez 1–2 minuty, a bolesną palpację prawego dołu biodrowego zostaw na sam koniec!"
+        };
+      }
+    }
+  }
+
+  if (station.id === "stacja-3-krup") {
+    const calmExam = order.includes("m_pat_ocena") || order.includes("m_ogladanie_bezinwazyjne") || order.includes("m_stridor_ocena");
+    const avoidedSpatula = !(activeObj.performedManeuvers && activeObj.performedManeuvers.has("m_szpatulka_fatal"));
+    if (calmExam && avoidedSpatula) {
+      return {
+        type: "gold",
+        badge: "🏅 Złota zasada PALS w duszności krtaniowej",
+        text: "Badanie przeprowadzone bez dotykania gardła szpatułką w objęciach matki – zapobiegnięto groźnemu skurczowi krtani i nagłemu bezdechowi."
+      };
+    }
+  }
+
+  if (station.id === "stacja-1-odwodnienie") {
+    const hasCrt = order.includes("m_crt");
+    const hasSkinFold = order.includes("m_fald_skorny");
+    if (hasCrt && hasSkinFold) {
+      return {
+        type: "gold",
+        badge: "🏅 Precyzyjna ocena hipowolemii",
+        text: "Zbadano czas nawrotu kapilarnego CRT (4.0s) oraz fałd skórny (>2.5s) – dwa najczulsze parametry odwodnienia ciężkiego (>9% m.c.)."
+      };
+    }
+  }
+
+  if (station.id === "stacja-4-igav") {
+    const hasBp = order.includes("m_pomiar_rr");
+    const hasUrine = order.includes("m_mocz_stix");
+    if (hasBp && hasUrine) {
+      return {
+        type: "gold",
+        badge: "🏅 Złoty standard nefrologiczny w IgAV",
+        text: "Zmierzono ciśnienie tętnicze (128/82 mmHg) oraz wykonano test paskowy moczu (krwinkomocz +++ i białkomocz ++) – wcześnie wykryto nefropatię IgA."
+      };
+    }
+  }
+
+  return null;
+}
+
+function renderOsceScaleWidget(station) {
+  const scale = computeOsceScale(station);
+  if (!scale) return "";
+
+  const isExpanded = !!OSCE_ACTIVE.scaleExpanded;
+  const techFeedback = validateOsceTechnique(station);
+
+  return `
+  <div class="card osce-scale-tray" style="margin-bottom:1.2rem;background:var(--surface);border-left:4px solid ${scale.interpretation.color}">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+        <span class="badge" style="background:var(--surface-sunken);color:var(--ink);font-weight:800;font-size:.78rem">
+          📊 PRZYŁÓŻKOWA SKALA
+        </span>
+        <b style="font-size:1rem;color:var(--ink)">${scale.name}</b>
+        <span class="chip" style="background:${scale.interpretation.color}18;color:${scale.interpretation.color};font-weight:800;border:1px solid ${scale.interpretation.color}40">
+          Wynik: ${scale.currentScore} / ${scale.maxScore} ${scale.unit}
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.82rem;font-weight:700;color:${scale.interpretation.color}">
+          ${scale.interpretation.label}
+        </span>
+        <button class="btn btn-sm btn-subtle" id="btnToggleOsceScale" style="font-size:.78rem;padding:.2rem .6rem">
+          ${isExpanded ? "Zwiń szczegóły ▲" : "Kryteria szczegółowe (" + scale.assessedCount + "/" + scale.totalItems + ") ▼"}
+        </button>
+      </div>
+    </div>
+
+    <!-- Pasek interpretacji klinicznej -->
+    <div style="margin-top:.6rem;padding:.6rem .8rem;border-radius:6px;background:${scale.interpretation.color}12;border:1px solid ${scale.interpretation.color}30;font-size:.84rem;line-height:1.45;color:var(--ink)">
+      <b>💡 Wskazanie kliniczne:</b> ${scale.interpretation.tip}
+    </div>
+
+    ${techFeedback ? `
+      <div style="margin-top:.6rem;padding:.55rem .8rem;border-radius:6px;background:${techFeedback.type === "gold" ? "rgba(217,119,6,0.1)" : "rgba(12,122,133,0.08)"};border-left:3px solid ${techFeedback.type === "gold" ? "var(--amber)" : "var(--teal)"};font-size:.82rem;line-height:1.4">
+        <b style="color:${techFeedback.type === "gold" ? "var(--amber)" : "var(--teal)"}">${techFeedback.badge}:</b> ${techFeedback.text}
+      </div>
+    ` : ""}
+
+    ${isExpanded ? `
+      <div style="margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--line-2)">
+        <div style="font-size:.78rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;margin-bottom:.5rem">
+          Status poszczególnych składowych skali w badaniu:
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.5rem">
+          ${scale.items.map(it => `
+            <div style="padding:.5rem .7rem;border-radius:6px;background:var(--bg);border:1px solid ${it.isAssessed ? "var(--line)" : "var(--line-2)"};font-size:.8rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+                <span style="font-weight:700;color:var(--ink)">${it.label}</span>
+                <span class="chip" style="font-size:.7rem;padding:.1rem .35rem;background:${it.isAssessed ? "var(--teal-l)" : "var(--surface)"};color:${it.isAssessed ? "var(--teal-d)" : "var(--ink-muted)"};font-weight:700">
+                  ${it.isAssessed ? "+" + it.earned + " pkt" : "⏳ Czeka"}
+                </span>
+              </div>
+              <div style="color:${it.isAssessed ? "var(--teal)" : "var(--ink-muted)"};font-size:.76rem">
+                ${it.isAssessed ? "✓ " + it.findingVal : "○ Wymaga zbadania odpowiedniej strefy"}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    ` : ""}
+  </div>`;
+}
+
 function renderActiveOsceStation(station) {
   if (!OSCE_ACTIVE || OSCE_ACTIVE.stationId !== station.id) {
     startOsceStation(station);
@@ -4777,6 +5435,9 @@ function renderActiveOsceStation(station) {
         </div>
       </div>
     </div>
+
+    <!-- Przyłóżkowa Skala Diagnostyczna & Weryfikacja Techniki Badania -->
+    ${renderOsceScaleWidget(station)}
 
     <!-- Alert błędu krytycznego i powikłania (jeśli wystąpiło) -->
     ${OSCE_ACTIVE.isComplication ? `
@@ -5043,6 +5704,17 @@ function renderActiveOsceStation(station) {
     };
   });
 
+  // Obsługa przyłóżkowej skali
+  const btnToggleScale = $('#btnToggleOsceScale');
+  if (btnToggleScale) {
+    btnToggleScale.onclick = () => {
+      OSCE_ACTIVE.scaleExpanded = !OSCE_ACTIVE.scaleExpanded;
+      const scrollY = window.scrollY;
+      renderActiveOsceStation(station);
+      window.scrollTo(0, scrollY);
+    };
+  }
+
   // 6. Reset stacji
   const btnRestart = $('#btnRestartOsce');
   if (btnRestart) {
@@ -5074,6 +5746,10 @@ function renderActiveOsceStation(station) {
 function performOsceManeuver(station, zone, maneuver) {
   if (!OSCE_ACTIVE) return;
   OSCE_ACTIVE.performedManeuvers.add(maneuver.id);
+  if (!OSCE_ACTIVE.performedOrder) OSCE_ACTIVE.performedOrder = [];
+  if (!OSCE_ACTIVE.performedOrder.includes(maneuver.id)) {
+    OSCE_ACTIVE.performedOrder.push(maneuver.id);
+  }
 
   if (maneuver.isFatal) {
     OSCE_ACTIVE.isComplication = true;

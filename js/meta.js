@@ -305,6 +305,56 @@ window.HUB_META = (function () {
         scenario: 'Matka zgłasza się z 5-miesięcznym synem z powodu gorączki do 38.6°C od 2 dni oraz obfitych wymiotów treścią pokarmową po każdej próbie karmienia. Od 12 godzin pieluszka jest całkowicie sucha. Chłopiec jest apatyczny, podsypiający, z trudem nawiązuje kontakt wzrokowy.',
         task: 'Zbierz celowany wywiad od matki, przeprowadź pełne badanie fizykalne na interaktywnej sylwetce niemowlęcia, rozpoznaj stopień odwodnienia, uniknij błędu krytycznego i sformułuj wzorcowy raport Status Praesens.'
       },
+      scale: {
+        id: "cds_gorelick",
+        name: "Clinical Dehydration Scale (CDS) / Skala Gorelicka",
+        maxScore: 8,
+        unit: "pkt",
+        items: [
+          {
+            id: "stan_ogolny",
+            label: "Stan ogólny / zachowanie",
+            triggerManeuvers: ["m_stan_swiadomosci"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Apatyczne, podsypiające, letarg (2 pkt)",
+            normVal: "Żywe, prawidłowy kontakt (0 pkt)"
+          },
+          {
+            id: "oczy",
+            label: "Wygląd gałek ocznych",
+            triggerManeuvers: ["m_oczy"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Głęboko zapadnięte w oczodołach (2 pkt)",
+            normVal: "Prawidłowo osadzone (0 pkt)"
+          },
+          {
+            id: "sluzowki",
+            label: "Wilgotność błon śluzowych jamy ustnej",
+            triggerManeuvers: ["m_sluzowki"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Skrajnie suche, spierzchnięte, brak śliny (2 pkt)",
+            normVal: "Wilgotne, obfita ślina (0 pkt)"
+          },
+          {
+            id: "lzy",
+            label: "Łzy przy płaczu",
+            triggerManeuvers: ["m_oczy"],
+            triggerQuestions: [3],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Płacz całkowicie bezłzowy (2 pkt)",
+            normVal: "Obecne łzy (0 pkt)"
+          }
+        ],
+        interpretations: [
+          { max: 0, label: "Brak cech odwodnienia (<3%)", color: "var(--green)", tip: "Nawadnianie doustne w domu ORS, edukacja rodziców." },
+          { max: 4, label: "Łagodne / umiarkowane odwodnienie (3–6%)", color: "var(--amber)", tip: "Doustny płyn nawadniający (50 ml/kg w 4 h) lub sonda żołądkowa." },
+          { max: 8, label: "Ciężkie odwodnienie (>6–9%) / Zagrożenie wstrząsem", color: "var(--red)", tip: "Pilny dostęp naczyniowy i.v./i.o. i bolus krystaloidów 20 ml/kg w 20 minut!" }
+        ]
+      },
       interview: [
         { q: 'Ile razy dziecko wymiotowało w ciągu ostatniej doby?', a: 'Praktycznie po każdym podaniu piersi lub wody, co najmniej 7-8 razy, chlustało treścią mleczną bez domieszki żółci.', isKey: true },
         { q: 'Kiedy pojawiła się ostatnia mokra pieluszka?', a: 'Wczoraj wieczorem, czyli ponad 12 godzin temu. Pieluszka była prawie sucha z pomarańczowym nalotem moczanów.', isKey: true },
@@ -466,6 +516,92 @@ window.HUB_META = (function () {
         scenario: 'Ojciec zgłasza się z 6-letnim synem z powodu nasilającego się od 14 godzin bólu brzucha. Początkowo ból zlokalizowany był wokół pępka, od 4 godzin przeniósł się do prawego dołu biodrowego. Chłopiec zwymiotował raz treścią żołądkową, odmawia chodzenia i leży na prawym boku z podkurczonymi nogami.',
         task: 'Zbierz celowany wywiad, zbadaj pacjenta ze szczególnym uwzględnieniem manewrów otrzewnowych i wykluczenia innych patologii, sformułuj rozpoznanie i wzorcowy Status Praesens.'
       },
+      scale: {
+        id: "pas_alvarado",
+        name: "Pediatric Appendicitis Score (PAS) / Skala Alvarado",
+        maxScore: 10,
+        unit: "pkt",
+        items: [
+          {
+            id: "migracja",
+            label: "Migracja bólu z pępka do prawego dołu biodrowego",
+            triggerQuestions: [0],
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "Obecna – ból przeniósł się do prawego dołu (1 pkt)",
+            normVal: "Brak migracji (0 pkt)"
+          },
+          {
+            id: "jadlowstret",
+            label: "Jadłowstręt / brak apetytu",
+            triggerIntro: true,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "Obecny – odmawia posiłków i picia (1 pkt)",
+            normVal: "Apetyt zachowany (0 pkt)"
+          },
+          {
+            id: "nudnosci",
+            label: "Nudności i wymioty",
+            triggerIntro: true,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "Wymiotował treścią pokarmową (1 pkt)",
+            normVal: "Brak wymiotów (0 pkt)"
+          },
+          {
+            id: "tkliwosc_pdp",
+            label: "Wyraźna bolesność w punkcie McBurneya",
+            triggerManeuvers: ["m_mcburney", "m_obrona_miesniowa"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Silna bolesność w punkcie McBurneya (2 pkt)",
+            normVal: "Prawy dół niebolesny (0 pkt)"
+          },
+          {
+            id: "obrona_blumberg",
+            label: "Objawy otrzewnowe (Blumberg) i obrona mięśniowa",
+            triggerManeuvers: ["m_blumberg", "m_obrona_miesniowa"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Dodatni objaw Blumberga i obrona powłok (2 pkt)",
+            normVal: "Objawy otrzewnowe ujemne (0 pkt)"
+          },
+          {
+            id: "goraczka",
+            label: "Gorączka / temperatura ≥ 37.5°C",
+            triggerVitals: true,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "Temperatura 38.0°C (1 pkt)",
+            normVal: "<37.5°C (0 pkt)"
+          },
+          {
+            id: "kaszel_jaworski",
+            label: "Ból przy kaszlu / wstrząsach / objaw Jaworskiego",
+            triggerManeuvers: ["m_jaworski"],
+            triggerQuestions: [1],
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "Ból przy wstrząsach i dodatni objaw Jaworskiego (1 pkt)",
+            normVal: "Ujemny objaw Jaworskiego (0 pkt)"
+          },
+          {
+            id: "leukocytoza",
+            label: "Leukocytoza >10 000/µl z przesunięciem w lewo",
+            triggerLab: true,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "W toku badań (przewidywana leukocytoza 14.5 tys./µl) (1 pkt)",
+            normVal: "W normie (0 pkt)"
+          }
+        ],
+        interpretations: [
+          { max: 3, label: "Małe prawdopodobieństwo (≤3 pkt)", color: "var(--green)", tip: "Zapalenie wyrostka mało prawdopodobne, bezpieczna obserwacja ambulatoryjna." },
+          { max: 6, label: "Niejednoznaczne (4–6 pkt)", color: "var(--amber)", tip: "Wymaga pilnego USG jamy brzusznej i aktywnej obserwacji chirurgicznej." },
+          { max: 10, label: "Wysokie prawdopodobieństwo (≥7 pkt)", color: "var(--red)", tip: "Pilna konsultacja chirurga dziecięcego i przygotowanie do apendektomii!" }
+        ]
+      },
       interview: [
         { q: 'Gdzie ból zaczął się na początku, a gdzie boli teraz?', a: 'Rano bolało go w okolicach pępka i w dołku, ale od kilku godzin pokazuje dokładnie prawy dolny róg brzucha.', isKey: true },
         { q: 'Czy ból nasila się przy chodzeniu lub wstrząsach?', a: 'Tak, w samochodzie płakał na każdej nierówności drogi, a teraz nie chce w ogóle wstać z kozetki.', isKey: true },
@@ -608,6 +744,65 @@ window.HUB_META = (function () {
         scenario: 'Matka przywiozła na ostry dyżur 3-letnią córkę o 2:00 w nocy. Dziecko obudziło się z nagłym, głośnym szczekającym kaszlem, chrypką i świszczącym oddechem. Dziewczynka siedzi wtulona w matkę, oddycha z wyraźnym wysiłkiem.',
         task: 'Oceń pacjentkę wg trójkąta PAT i skali Westleya, przeprowadź badanie fizykalne unikając błędu zagrażającego obturacją, rozpoznaj krup i wygeneruj profesjonalny Status Praesens.'
       },
+      scale: {
+        id: "westley_croup",
+        name: "Skala Ciężkości Krupu wg Westleya (Westley Score)",
+        maxScore: 17,
+        unit: "pkt",
+        items: [
+          {
+            id: "stridor",
+            label: "Stridor wdechowy",
+            triggerManeuvers: ["m_stridor_ocena"],
+            score: 2,
+            maxItemScore: 2,
+            findingVal: "Obecny w spoczynku (2 pkt) [0=brak, 1=przy płaczu, 2=w spoczynku]",
+            normVal: "Brak stridoru (0 pkt)"
+          },
+          {
+            id: "zaciaganie",
+            label: "Zaciąganie ścian klatki piersiowej",
+            triggerManeuvers: ["m_zaciaganie_retractions"],
+            score: 2,
+            maxItemScore: 3,
+            findingVal: "Umiarkowane zaciąganie dołka i żeber (2 pkt) [0=brak, 1=dyskretne, 2=umiarkowane, 3=ciężkie]",
+            normVal: "Brak zaciągania (0 pkt)"
+          },
+          {
+            id: "wentylacja",
+            label: "Wentylacja / szmer pęcherzykowy",
+            triggerManeuvers: ["m_osluch_pluc_krup"],
+            score: 0,
+            maxItemScore: 2,
+            findingVal: "Prawidłowa wentylacja obustronna (0 pkt) [0=prawidłowa, 1=ściszona, 2=znacznie osłabiona]",
+            normVal: "Prawidłowa (0 pkt)"
+          },
+          {
+            id: "sinica",
+            label: "Sinica (Cyanosis)",
+            triggerManeuvers: ["m_pat_ocena"],
+            score: 0,
+            maxItemScore: 5,
+            findingVal: "Brak sinicy, skóra różowa (0 pkt) [0=brak, 4=przy płaczu, 5=w spoczynku]",
+            normVal: "Brak sinicy (0 pkt)"
+          },
+          {
+            id: "swiadomosc",
+            label: "Stan świadomości",
+            triggerManeuvers: ["m_pat_ocena"],
+            score: 0,
+            maxItemScore: 5,
+            findingVal: "Prawidłowa świadomość, niepokój (0 pkt) [0=prawidłowa, 5=apatia/letarg]",
+            normVal: "Prawidłowa (0 pkt)"
+          }
+        ],
+        interpretations: [
+          { max: 2, label: "Łagodny krup (≤2 pkt)", color: "var(--green)", tip: "Deksametazon p.o. 0.15 mg/kg, chłodne nawilżone powietrze, leczenie domowe." },
+          { max: 5, label: "Umiarkowany krup (3–5 pkt)", color: "var(--amber)", tip: "Deksametazon p.o./i.m. + nebulizacja z L-Adrenaliny 1:1000 (0.5 ml/kg), obserwacja min. 2–4 h." },
+          { max: 11, label: "Ciężki krup (6–11 pkt)", color: "var(--red)", tip: "Deksametazon i.v./i.m. + natychmiastowa adrenalina w nebulizacji z tlenem, hospitalizacja." },
+          { max: 17, label: "Zagrażająca niewydolność oddechowa (≥12 pkt)", color: "var(--red)", tip: "OIOM dziecięcy, przygotowanie do intubacji (rurka o 0.5–1 mm mniejsza)." }
+        ]
+      },
       interview: [
         { q: 'O której godzinie i jak nagle wystąpiły objawy?', a: 'Około północy. W dzień miała tylko lekki katarek, a nagle w nocy obudził ją szczekający kaszel i świst.', isKey: true },
         { q: 'Czy dziecko połyka ślinę, czy ma ślinotok?', a: 'Połyka normalnie, piła wodę godzinę temu, nie ślini się.', isKey: true },
@@ -735,6 +930,59 @@ window.HUB_META = (function () {
       briefing: {
         scenario: 'Matka zgłasza się z 10-letnim synem z powodu uniesionej, plamistej wysypki na pośladkach i nogach, która pojawiła się wczoraj, oraz nasilającego się bólu obu stawów skokowych utrudniającego chodzenie. Przed 10 dniami przebył zapalenie gardła leczone objawowo.',
         task: 'Przeprowadź pełne badanie fizykalne, oceń charakter wykwitów, ciśnienie tętnicze oraz mocz, uniknij pominięcia powikłania nerkowego i przygotuj wzorcowy raport Status Praesens.'
+      },
+      scale: {
+        id: "eular_printo_pres",
+        name: "Kryteria EULAR/PRINTO/PRES dla IgAV (Schönlein-Henoch)",
+        maxScore: 4,
+        unit: "kryteria",
+        items: [
+          {
+            id: "purpura_obowiazkowa",
+            label: "Kryterium bezwzględne: Uniesiona plamica (purpura palpabilis)",
+            triggerManeuvers: ["m_purpura_palpabilis"],
+            isMandatory: true,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "SPEŁNIONE – symetryczna purpura palpabilis na kończynach dolnych i pośladkach",
+            normVal: "Brak plamicy"
+          },
+          {
+            id: "brzuch_kryterium",
+            label: "Kryterium dodatkowe 1: Rozlany ból brzucha o ostrym początku",
+            triggerManeuvers: ["m_brzuch_palpacja_igav"],
+            triggerQuestions: [1],
+            isMandatory: false,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "SPEŁNIONE – kurczowe bóle okołopępkowe",
+            normVal: "Brak bólów brzucha"
+          },
+          {
+            id: "stawy_kryterium",
+            label: "Kryterium dodatkowe 2: Zapalenie / bolesność stawów (Arthritis/Arthralgia)",
+            triggerManeuvers: ["m_stawy_badanie"],
+            isMandatory: false,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "SPEŁNIONE – obustronny obrzęk i bolesność stawów skokowych",
+            normVal: "Stawy bez zmian"
+          },
+          {
+            id: "nerki_kryterium",
+            label: "Kryterium dodatkowe 3: Zajęcie nerek (krwinkomocz / białkomocz / NT)",
+            triggerManeuvers: ["m_mocz_stix", "m_pomiar_rr"],
+            isMandatory: false,
+            score: 1,
+            maxItemScore: 1,
+            findingVal: "SPEŁNIONE – erytrocyty +++, białkomocz ++, RR podwyższone (128/82 mmHg)",
+            normVal: "Mocz prawidłowy"
+          }
+        ],
+        interpretations: [
+          { max: 1, label: "Kryteria niespełnione (<2 kryteriów)", color: "var(--amber)", tip: "Wymaga obecności plamicy uniesionej oraz co najmniej jednego kryterium dodatkowego." },
+          { max: 4, label: "KRYTERIA IgAV SPEŁNIONE (Plamica + kryteria narządowe)", color: "var(--green)", tip: "Potwierdzone zapalenie naczyń związane z IgA. Obowiązkowe cotygodniowe monitorowanie nerek (mocz, RR)." }
+        ]
       },
       interview: [
         { q: 'Czy wykwity bledną pod uciskiem szklanką?', a: 'Sprawdzałam szklanką w domu – plamki w ogóle nie znikają, a pod palcem czuć je jak drobne grudki.', isKey: true },

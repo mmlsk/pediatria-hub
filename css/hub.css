@@ -1965,3 +1965,63 @@ body.reader footer.ft{display:none}
   color: var(--teal);
   margin-bottom: .3rem;
 }
+
+/* ---------- Bedside Scales, Emergency Doses & Unified Hub ---------- */
+.osce-scale-tray {
+  padding: .95rem 1.15rem;
+  border-radius: var(--r);
+  transition: all .2s ease;
+  animation: osceSlideIn .25s ease;
+}
+.emergency-doses-tray {
+  padding: 1.1rem 1.3rem;
+  border-radius: var(--r-lg);
+  animation: osceSlideIn .25s ease;
+}
+@media (max-width: 600px) {
+  .emergency-doses-tray {
+    padding: .85rem .95rem;
+  }
+}
+.sim-filter-bar {
+  display: flex;
+  gap: .4rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: .4rem;
+  margin-bottom: 1.2rem;
+}
+.sim-filter-chip {
+  padding: .4rem .85rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: .84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+  touch-action: manipulation;
+}
+.sim-filter-chip:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.sim-filter-chip.active {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+  box-shadow: 0 2px 6px rgba(12,122,133,0.25);
+}
+.sim-rank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  font-size: .84rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
