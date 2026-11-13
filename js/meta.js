@@ -59,18 +59,24 @@ window.HUB_META = (function () {
       secs: [['s12', '[12] Skazy'], ['diag', 'Diagnostyka'], ['leczenie', 'Leczenie'], ['s13a', '[13a] Niedokrwistości'], ['zelazo', 'Żelazo'], ['s13b', '[13b] Odporność'], ['jmf', 'JMF'], ['wiek', 'Wiek'], ['zadania', 'Zadania'], ['klucz', 'Pula vs wytyczne'], ['zrodla', 'Źródła']] }
   ];
 
-  /* Pułapki międzymodułowe: zakres projektu (anty-błąd) */
+  /* Pułapki międzymodułowe: 16 pułapek z podziałem na testowe i przyłóżkowe */
   const TRAPS = [
-    { t: 'HUS', mods: ['1', '3', '12', '15'], eq: 'Ból brzucha + krwista biegunka + małopłytkowość + AKI', out: 'Zespół hemolityczno-mocznicowy', tip: 'Nie podawać antybiotyków ani leków przeciwperystaltycznych przy krwistej biegunce z podejrzeniem STEC.' },
-    { t: 'IgAV (HSP)', mods: ['1', '12', '4'], eq: 'Ból brzucha + plamica na pośladkach i kończynach + krwinkomocz', out: 'Zapalenie naczyń związane z IgA', tip: 'Plamica nie wynika z małopłytkowości, a morfologia i krzepnięcie są prawidłowe.' },
-    { t: 'Gorączka i brzuch', mods: ['1', '2', '14'], eq: 'Ból brzucha + gorączka bez objawów dyzurycznych', out: 'Wyklucz ZUM lub zapalenie dolnego płata płuca', tip: 'U niemowląt i małych dzieci ZUM bywa niemy: mocz pobrany prawidłowo, zanim padnie antybiotyk.' },
-    { t: 'Zaparcie a ZUM', mods: ['14', '1'], eq: 'Zaparcie lub dysfunkcja mikcji + nawracające ZUM', out: 'Leczyć czynnik ryzyka, nie tylko zakażenie', tip: 'Zaparcie i dysfunkcja pęcherza to częste, odwracalne przyczyny nawrotów.' },
-    { t: 'Guz brzucha', mods: ['10', '1'], eq: 'Guz w jamie brzusznej u małego dziecka', out: 'Podejrzenie nefroblastoma: nie uciskać guza', tip: 'Ucisk guza i biopsja grożą rozsiewem i podniesieniem stopnia, rozpoznanie opiera się na obrazowaniu.' },
-    { t: 'Przed sedacją', mods: ['11', '5'], eq: 'Węzły, zespół żyły głównej górnej, duszność u dziecka z podejrzeniem chłoniaka', out: 'RTG klatki piersiowej przed sedacją', tip: 'Guz śródpiersia i uciśnięcie dróg oddechowych mogą zakończyć się zatrzymaniem krążenia w znieczuleniu.' },
-    { t: 'Ból głowy i wymioty', mods: ['9', '5'], eq: 'Poranne bóle głowy + wymioty + zaburzenia widzenia', out: 'Guz tylnego dołu, wzrost ICP: dno oka i MR', tip: 'Poranne bóle głowy i wymioty to cechy wzrostu ICP: badanie dna oka i obrazowanie MR.' },
-    { t: 'Zespół nerczycowy', mods: ['4', '2', '12'], eq: 'Obrzęki + masywny białkomocz + hipoalbuminemia', out: 'Ryzyko zakażeń i zakrzepicy', tip: 'Utrata IgG i antytrombiny z moczem oraz hipoalbuminemia sprzyjają zakażeniom i zakrzepicy.' },
-    { t: 'Anafilaksja', mods: ['5', '8'], eq: 'Reakcja alergiczna pokarmowa z objawami układowymi', out: 'Adrenalina i.m. w pierwszej kolejności', tip: 'Alergia pokarmowa IgE-zależna to najczęstsza przyczyna anafilaksji u dzieci.' },
-    { t: 'Szczepienia żywe', mods: ['13b', '2'], eq: 'Podejrzenie pierwotnego niedoboru odporności', out: 'Szczepienia żywe przeciwwskazane do czasu wyjaśnienia', tip: 'Przesiew: morfologia z rozmazem, immunoglobuliny, subpopulacje limfocytów.' }
+    { id: 't1',  category: 'bedside', t: 'HUS po biegunce STEC', mods: ['1', '3', '12', '15'], eq: 'Ból brzucha + krwista biegunka + małopłytkowość + AKI', out: 'Zespół hemolityczno-mocznicowy', tip: 'Nie podawać antybiotyków ani leków przeciwperystaltycznych przy krwistej biegunce z podejrzeniem STEC.' },
+    { id: 't2',  category: 'test',    t: 'IgAV (Schönlein-Henoch)', mods: ['1', '12', '4'], eq: 'Ból brzucha + plamica na pośladkach i kończynach + krwinkomocz', out: 'Zapalenie naczyń związane z IgA', tip: 'Plamica nie wynika z małopłytkowości – morfologia i krzepnięcie są całkowicie prawidłowe!' },
+    { id: 't3',  category: 'bedside', t: 'Gorączka i brzuch (ZUM / płuca)', mods: ['1', '2', '14'], eq: 'Ból brzucha + gorączka bez objawów dyzurycznych', out: 'Wyklucz ZUM lub zapalenie dolnego płata płuca', tip: 'U niemowląt i małych dzieci ZUM bywa niemy: mocz pobrany prawidłowo, zanim padnie antybiotyk.' },
+    { id: 't4',  category: 'test',    t: 'Zaparcie a ZUM', mods: ['14', '1'], eq: 'Zaparcie lub dysfunkcja mikcji + nawracające ZUM', out: 'Leczyć czynnik ryzyka, nie tylko zakażenie', tip: 'Zaparcie i dysfunkcja pęcherza to częste, odwracalne przyczyny nawrotów ZUM.' },
+    { id: 't5',  category: 'bedside', t: 'Guz brzucha (Nefroblastoma)', mods: ['10', '1'], eq: 'Guz w jamie brzusznej u małego dziecka', out: 'Podejrzenie guza Wilmsa: nie uciskać guza!', tip: 'Ucisk guza i biopsja grożą pęknięciem torebki i podniesieniem stopnia, rozpoznanie opiera się na USG/TK/MR.' },
+    { id: 't6',  category: 'bedside', t: 'Guz śródpiersia przed sedacją', mods: ['11', '5'], eq: 'Węzły, zespół żyły głównej górnej, duszność w pozycji leżącej', out: 'RTG klatki piersiowej przed sedacją', tip: 'Guz śródpiersia i ucisk dróg oddechowych grożą nagłym zatrzymaniem krążenia w znieczuleniu.' },
+    { id: 't7',  category: 'bedside', t: 'Wzrost ICP i triada Cushinga', mods: ['9', '5'], eq: 'Poranne bóle głowy + chlustające wymioty + bradykardia', out: 'Guz tylnego dołu, wzrost ICP: dno oka i MR', tip: 'Bezwzględny zakaz punkcji lędźwiowej przed wykluczeniem ciasnoty wewnątrzczaszkowej!' },
+    { id: 't8',  category: 'test',    t: 'Zakrzepica w zespole nerczycowym', mods: ['4', '2', '12'], eq: 'Obrzęki + masywny białkomocz + hipoalbuminemia', out: 'Ryzyko zakażeń i zakrzepicy naczyniowej', tip: 'Utrata antytrombiny III i białka S sprzyja zakrzepicy żyły nerkowej i zatorowości płucnej.' },
+    { id: 't9',  category: 'bedside', t: 'Ostra anafilaksja', mods: ['5', '8'], eq: 'Reakcja alergiczna pokarmowa z objawami oddechowymi/krążeniowymi', out: 'Adrenalina i.m. w pierwszej kolejności', tip: 'Adrenalina 0.01 mg/kg w przednio-boczną powierzchnię uda jako jedyny lek ratujący życie.' },
+    { id: 't10', category: 'bedside', t: 'Szczepienia żywe a PNO', mods: ['13b', '2'], eq: 'Podejrzenie pierwotnego niedoboru odporności (SCID)', out: 'Szczepienia żywe bezwzględnie przeciwwskazane', tip: 'Atenuowane patogeny (BCG, MMR, rota, ospa) grożą uogólnionym poszczepiennym zakażeniem.' },
+    { id: 't11', category: 'bedside', t: 'Pseudoperitonitis w DKA', mods: ['1', '5'], eq: 'Ostry brzuch + oddech Kussmaula + odwodnienie', out: 'Kwasica ketonowa w cukrzycy typu 1', tip: 'Zawsze glikemia z glukometru i gazometria przed wezwaniem chirurga do ostrego brzucha!' },
+    { id: 't12', category: 'bedside', t: 'Szpatułka w zapaleniu nagłośni', mods: ['5', '2'], eq: 'Stridor wdechowy + ślinotok + pozycja wąchająca', out: 'Bezwzględny zakaz szpatułki w gardle!', tip: 'Dotknięcie nagłośni szpatułką wywołuje odruchowy skurcz krtani i natychmiastowe uduszenie.' },
+    { id: 't13', category: 'test',    t: 'Płytki krwi w IgAV (PLT)', mods: ['12', '4'], eq: 'Plamica uniesiona + ból stawów + krwinkomocz', out: 'Liczba płytek krwi (PLT) jest prawidłowa!', tip: 'W zapaleniu naczyń IgA nie ma małopłytkowości. Nie podawać koncentratu płytek.' },
+    { id: 't14', category: 'bedside', t: 'Transfuzja płytek w HUS', mods: ['15', '12'], eq: 'Trombocytopenia + schistocyty + ostre uszkodzenie nerek', out: 'Zakaz rutynowego przetaczania płytek (KKP)', tip: 'Przetaczanie płytek krwi w HUS nasila mikrozakrzepy w kłębuszkach nerkowych i pogłębia AKI.' },
+    { id: 't15', category: 'test',    t: 'Celiakia przy niedoborze IgA', mods: ['8', '13b'], eq: 'Podejrzenie celiakii + wynik ujemny anty-tTG IgA', out: 'Zbadaj całkowite IgA lub przeciwciała anty-DGP IgG', tip: 'Wrodzony niedobór IgA daje fałszywie ujemny wynik przeciwciał w klasie IgA.' },
+    { id: 't16', category: 'test',    t: 'Wymioty w zwężeniu odźwiernika (HPS)', mods: ['1', '3'], eq: 'Niemowlę 3-6 tyg. + chlustające wymioty bez żółci', out: 'Zasadowica hipochloremiczna i hipokaliemiczna', tip: 'Wymioty treścią żołądkową bez żółci wywołują zasadowicę metaboliczną, a nie kwasicę.' }
   ];
 
   const CONF = {
@@ -89,106 +95,106 @@ window.HUB_META = (function () {
     custom: { id: 'custom', n: 'Dodane pytania (Własne)', short: 'Własne',   icon: '✏️', desc: 'Pytania wprowadzone przez użytkownika' }
   };
 
-  /* Wikilinks & Backlinks – powiązania między atlasami i modułami */
+  /* Wikilinks & Backlinks – powiązania między atlasami i modułami z głębokimi kotwicami */
   const WIKILINKS = {
     '1': [
-      { target: '5', label: 'Pseudoperitonitis diabetica w DKA', type: 'trap', concept: 'Kwasica ketonowa imitująca ostry brzuch chirurgiczny (odwodnienie, ból brzucha bez patologii chirurgicznej).' },
-      { target: '2', label: 'Gorączka + ból brzucha (ZUM, płuca)', type: 'diag', concept: 'U małych dzieci ból brzucha często maskuje zapalenie dolnego płata płuca lub niemy ZUM.' },
-      { target: '3', label: 'Wgłobienie jelitowe vs ostra biegunka', type: 'diag', concept: 'Napadowy ból kolkowy, bladość, stolce galaretowate i obraz tarczy strzelniczej w USG.' },
-      { target: '4', label: 'Zapalenie naczyń IgAV (Schönlein-Henoch)', type: 'trap', concept: 'Ból brzucha i krwawienie z PP mogą wyprzedzać typową plamicę na kończynach o kilka dni.' },
-      { target: '10', label: 'Guz w jamie brzusznej (Wilms/Neuroblastoma)', type: 'trap', concept: 'Zakaz głębokiej i powtarzanej palpacji brzucha przy podejrzeniu nefroblastoma (ryzyko pęknięcia torebki).' },
-      { target: '12', label: 'Krwawienie z przewodu pokarmowego a skazy', type: 'diag', concept: 'Różnicowanie wrzodu, uchyłka Meckela, polipów i koagulopatii w krwawieniach z PP.' }
+      { target: '5', atlas: 'nagle', sec: 'dka', label: 'Pseudoperitonitis diabetica w DKA', type: 'trap', concept: 'Kwasica ketonowa imitująca ostry brzuch chirurgiczny (odwodnienie, ból brzucha bez patologii chirurgicznej).' },
+      { target: '2', atlas: 'zakazenia', sec: 'badanie', label: 'Gorączka + ból brzucha (ZUM, płuca)', type: 'diag', concept: 'U małych dzieci ból brzucha często maskuje zapalenie dolnego płata płuca lub niemy ZUM.' },
+      { target: '3', atlas: 'gastro', sec: 'biegunki', label: 'Wgłobienie jelitowe vs ostra biegunka', type: 'diag', concept: 'Napadowy ból kolkowy, bladość, stolce galaretowate i obraz tarczy strzelniczej w USG.' },
+      { target: '4', atlas: 'nefro', sec: 'kzn', label: 'Zapalenie naczyń IgAV (Schönlein-Henoch)', type: 'trap', concept: 'Ból brzucha i krwawienie z PP mogą wyprzedzać typową plamicę na kończynach o kilka dni.' },
+      { target: '10', atlas: 'nowotwory', sec: 'guzy', label: 'Guz w jamie brzusznej (Wilms/Neuroblastoma)', type: 'trap', concept: 'Zakaz głębokiej i powtarzanej palpacji brzucha przy podejrzeniu nefroblastoma (ryzyko pęknięcia torebki).' },
+      { target: '12', atlas: 'skazy', sec: 's12', label: 'Krwawienie z przewodu pokarmowego a skazy', type: 'diag', concept: 'Różnicowanie wrzodu, uchyłka Meckela, polipów i koagulopatii w krwawieniach z PP.' }
     ],
     '2': [
-      { target: '1', label: 'Adenitis mesenterica a ostre zapalenie wyrostka', type: 'diag', concept: 'Odczynowe zapalenie węzłów krezkowych w przebiegu wirusowych infekcji dróg oddechowych.' },
-      { target: '5', label: 'Sepsa meningokokowa i wstrząs septyczny', type: 'trap', concept: 'Plamica piorunująca, obniżenie nawrotu kapilarnego, natychmiastowy ceftriakson i.v./i.m. i bolus płynowy.' },
-      { target: '14', label: 'Nawracające zakażenia układu moczowego', type: 'diag', concept: 'Nietypowe i skąpoobjawowe ZUM u niemowląt; zawsze mocz na posiew PRZED wdrożeniem antybiotyku.' },
-      { target: '15', label: 'Zespół HUS po zakażeniu E. coli STEC O157:H7', type: 'trap', concept: 'Bezwzględny zakaz antybiotykoterapii i leków przeciwperystaltycznych przy krwistej biegunce.' },
-      { target: '13b', label: 'Szczepienia żywe a niedobory odporności (PNO)', type: 'trap', concept: 'Szczepionki atenuowane (BCG, MMR, ospa, rota) są bezwzględnie przeciwwskazane do czasu wykluczenia SCID.' }
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Adenitis mesenterica a ostre zapalenie wyrostka', type: 'diag', concept: 'Odczynowe zapalenie węzłów krezkowych w przebiegu wirusowych infekcji dróg oddechowych.' },
+      { target: '5', atlas: 'nagle', sec: 'sepsa', label: 'Sepsa meningokokowa i wstrząs septyczny', type: 'trap', concept: 'Plamica piorunująca, obniżenie nawrotu kapilarnego, natychmiastowy ceftriakson i.v./i.m. i bolus płynowy.' },
+      { target: '14', atlas: 'nefro', sec: 'zum', label: 'Nawracające zakażenia układu moczowego', type: 'diag', concept: 'Nietypowe i skąpoobjawowe ZUM u niemowląt; zawsze mocz na posiew PRZED wdrożeniem antybiotyku.' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Zespół HUS po zakażeniu E. coli STEC O157:H7', type: 'trap', concept: 'Bezwzględny zakaz antybiotykoterapii i leków przeciwperystaltycznych przy krwistej biegunce.' },
+      { target: '13b', atlas: 'skazy', sec: 's13b', label: 'Szczepienia żywe a niedobory odporności (PNO)', type: 'trap', concept: 'Szczepionki atenuowane (BCG, MMR, ospa, rota) są bezwzględnie przeciwwskazane do czasu wykluczenia SCID.' }
     ],
     '3': [
-      { target: '1', label: 'Wgłobienie jelita (maska ostrego nieżytu)', type: 'trap', concept: 'Apatia, wymioty i krew w stolcu brane błędnie za zapalenie żołądkowo-jelitowe.' },
-      { target: '8', label: 'Alergie pokarmowe i zespół FPIES', type: 'diag', concept: 'Ciężka nie-IgE-zależna enteropatia z wymiotami, wstrząsem hipowolemicznym i kwasicą.' },
-      { target: '7', label: 'Przewlekła biegunka a nieswoiste zapalenia jelit', type: 'diag', concept: 'Kalprotektyna w kale, krew utajona, spadek masy ciała, MR-enterografia.' },
-      { target: '15', label: 'Krwista biegunka STEC ⤏ HUS i ostra niewydolność nerek', type: 'trap', concept: 'Konieczność monitorowania diurezy, morfologii (trombocytopenia, schistocyty) i kreatyniny.' }
+      { target: '1', atlas: 'brzuch', sec: 'choroby', label: 'Wgłobienie jelita (maska ostrego nieżytu)', type: 'trap', concept: 'Apatia, wymioty i krew w stolcu brane błędnie za zapalenie żołądkowo-jelitowe.' },
+      { target: '8', atlas: 'gastro', sec: 'alergie', label: 'Alergie pokarmowe i zespół FPIES', type: 'diag', concept: 'Ciężka nie-IgE-zależna enteropatia z wymiotami, wstrząsem hipowolemicznym i kwasicą.' },
+      { target: '7', atlas: 'gastro', sec: 'ibd', label: 'Przewlekła biegunka a nieswoiste zapalenia jelit', type: 'diag', concept: 'Kalprotektyna w kale, krew utajona, spadek masy ciała, MR-enterografia.' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Krwista biegunka STEC ⤏ HUS i ostra niewydolność nerek', type: 'trap', concept: 'Konieczność monitorowania diurezy, morfologii (trombocytopenia, schistocyty) i kreatyniny.' }
     ],
     '4': [
-      { target: '2', label: 'Popaciorkowcowe Ostre KZN (PSGN)', type: 'diag', concept: 'Infekcja gardła (1-2 tyg.) lub skóry (3-6 tyg.) paciorkowcem grupy A z hipokomplementemią C3.' },
-      { target: '12', label: 'Powikłania zakrzepowo-zatorowe w zespole nerczycowym', type: 'trap', concept: 'Utrata antytrombiny III i białka S z moczem sprzyja zakrzepicy żyły nerkowej i zatorowości płucnej.' },
-      { target: '15', label: 'Gwałtownie postępujące KZN (RPGN) ⤏ AKI', type: 'diag', concept: 'Obecność półksiężyców w >50% kłębuszków; pilne wdrożenie pulsów metyloprednizolonu.' },
-      { target: '1', label: 'Bóle brzucha w zespole nerczycowym', type: 'trap', concept: 'Ryzyko spontanicznego bakteryjnego zapalenia otrzewnej (SBP) wywołanego przez S. pneumoniae.' }
+      { target: '2', atlas: 'zakazenia', sec: 'badanie', label: 'Popaciorkowcowe Ostre KZN (PSGN)', type: 'diag', concept: 'Infekcja gardła (1-2 tyg.) lub skóry (3-6 tyg.) paciorkowcem grupy A z hipokomplementemią C3.' },
+      { target: '12', atlas: 'skazy', sec: 's12', label: 'Powikłania zakrzepowo-zatorowe w zespole nerczycowym', type: 'trap', concept: 'Utrata antytrombiny III i białka S z moczem sprzyja zakrzepicy żyły nerkowej i zatorowości płucnej.' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Gwałtownie postępujące KZN (RPGN) ⤏ AKI', type: 'diag', concept: 'Obecność półksiężyców w >50% kłębuszków; pilne wdrożenie pulsów metyloprednizolonu.' },
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Bóle brzucha w zespole nerczycowym', type: 'trap', concept: 'Ryzyko spontanicznego bakteryjnego zapalenia otrzewnej (SBP) wywołanego przez S. pneumoniae.' }
     ],
     '5': [
-      { target: '1', label: 'Kwasica ketonowa (DKA) imitująca ostry brzuch', type: 'trap', concept: 'Odwodnienie, oddech Kussmaula, zapach acetonu, hipokaliemia – oznaczenie glikemii i gazometria.' },
-      { target: '2', label: 'Wstrząs septyczny i zakażenia inwazyjne', type: 'diag', concept: 'Empiryczna antybiotykoterapia w 1. godzinie („złota godzina”), krystaloidy 10-20 ml/kg w bolusie.' },
-      { target: '8', label: 'Anafilaksja z objawami oddechowymi i krążeniowymi', type: 'trap', concept: 'Adrenalina 0.01 mg/kg i.m. w przednio-boczną powierzchnię uda jako jedyny lek ratujący życie.' },
-      { target: '9', label: 'Wzmożone ciśnienie śródczaszkowe (ICP) i triada Cushinga', type: 'trap', concept: 'Bradykardia, nadciśnienie tętnicze, nieregularny oddech; bezwzględny zakaz punkcji PMR bez TK.' },
-      { target: '11', label: 'Zespół lizy guza (TLS) i zespół żyły głównej górnej', type: 'trap', concept: 'Hiperkaliemia, kwas moczowy, hiperfosfatemia; ucisk dróg oddechowych przed znieczuleniem.' }
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Kwasica ketonowa (DKA) imitująca ostry brzuch', type: 'trap', concept: 'Odwodnienie, oddech Kussmaula, zapach acetonu, hipokaliemia – oznaczenie glikemii i gazometria.' },
+      { target: '2', atlas: 'zakazenia', sec: 'objawy', label: 'Wstrząs septyczny i zakażenia inwazyjne', type: 'diag', concept: 'Empiryczna antybiotykoterapia w 1. godzinie („złota godzina”), krystaloidy 10-20 ml/kg w bolusie.' },
+      { target: '8', atlas: 'gastro', sec: 'alergie', label: 'Anafilaksja z objawami oddechowymi i krążeniowymi', type: 'trap', concept: 'Adrenalina 0.01 mg/kg i.m. w przednio-boczną powierzchnię uda jako jedyny lek ratujący życie.' },
+      { target: '9', atlas: 'guzy', sec: 'objawy', label: 'Wzmożone ciśnienie śródczaszkowe (ICP) i triada Cushinga', type: 'trap', concept: 'Bradykardia, nadciśnienie tętnicze, nieregularny oddech; bezwzględny zakaz punkcji PMR bez TK.' },
+      { target: '11', atlas: 'hemato', sec: 'chloniaki', label: 'Zespół lizy guza (TLS) i zespół żyły głównej górnej', type: 'trap', concept: 'Hiperkaliemia, kwas moczowy, hiperfosfatemia; ucisk dróg oddechowych przed znieczuleniem.' }
     ],
     '6': [
-      { target: '1', label: 'Ból w nadbrzuszu i perforacja wrzodu', type: 'diag', concept: 'Objawy otrzewnowe, deska na brzuchu, sierp powietrza pod przeponą w RTG przeglądowym.' },
-      { target: '13a', label: 'Przewlekłe krwawienie ⤏ niedokrwistość mikrocytarna', type: 'diag', concept: 'Niedobór żelaza spowodowany utajoną utratą krwi ze śluzówki żołądka lub dwunastnicy.' },
-      { target: '3', label: 'Zakażenie H. pylori a dyspepsja czynnościowa', type: 'diag', concept: 'Wskazania do gastroskopii z biopsją i eradykacji wg wytycznych ESPGHAN/NASPGHAN.' }
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Ból w nadbrzuszu i perforacja wrzodu', type: 'diag', concept: 'Objawy otrzewnowe, deska na brzuchu, sierp powietrza pod przeponą w RTG przeglądowym.' },
+      { target: '13a', atlas: 'skazy', sec: 's13a', label: 'Przewlekłe krwawienie ⤏ niedokrwistość mikrocytarna', type: 'diag', concept: 'Niedobór żelaza spowodowany utajoną utratą krwi ze śluzówki żołądka lub dwunastnicy.' },
+      { target: '3', atlas: 'gastro', sec: 'biegunki', label: 'Zakażenie H. pylori a dyspepsja czynnościowa', type: 'diag', concept: 'Wskazania do gastroskopii z biopsją i eradykacji wg wytycznych ESPGHAN/NASPGHAN.' }
     ],
     '7': [
-      { target: '1', label: 'Ból w prawym dole biodrowym (ChLC vs wyrostek)', type: 'diag', concept: 'Zapalenie końcowego odcinka jelita krętego (ileitis terminalis) imitujące zapalenie wyrostka.' },
-      { target: '3', label: 'Biegunka z domieszką krwi i śluzu (WZJG)', type: 'diag', concept: 'Ciągłe zapalenie błony śluzowej od odbytnicy w górę; oznaczanie kalprotektyny w stolcu.' },
-      { target: '13a', label: 'Niedokrwistość chorób przewlekłych i z niedoboru żelaza', type: 'diag', concept: 'Zaburzenia wchłaniania w jelicie cienkim oraz przewlekła utrata krwi i hepcydyna.' },
-      { target: '8', label: 'Alergie pokarmowe a eozynofilowe zapalenie jelit', type: 'diag', concept: 'Różnicowanie przewlekłych stanów zapalnych śluzówki z enteropatią alergiczną.' }
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Ból w prawym dole biodrowym (ChLC vs wyrostek)', type: 'diag', concept: 'Zapalenie końcowego odcinka jelita krętego (ileitis terminalis) imitujące zapalenie wyrostka.' },
+      { target: '3', atlas: 'gastro', sec: 'ibd', label: 'Biegunka z domieszką krwi i śluzu (WZJG)', type: 'diag', concept: 'Ciągłe zapalenie błony śluzowej od odbytnicy w górę; oznaczanie kalprotektyny w stolcu.' },
+      { target: '13a', atlas: 'skazy', sec: 's13a', label: 'Niedokrwistość chorób przewlekłych i z niedoboru żelaza', type: 'diag', concept: 'Zaburzenia wchłaniania w jelicie cienkim oraz przewlekła utrata krwi i hepcydyna.' },
+      { target: '8', atlas: 'gastro', sec: 'alergie', label: 'Alergie pokarmowe a eozynofilowe zapalenie jelit', type: 'diag', concept: 'Różnicowanie przewlekłych stanów zapalnych śluzówki z enteropatią alergiczną.' }
     ],
     '8': [
-      { target: '5', label: 'Wstrząs anafilaktyczny po ekspozycji pokarmowej', type: 'trap', concept: 'Gwałtowny skurcz oskrzeli, obrzęk krtani, hipotensja; adrenalina domięśniowo natychmiast.' },
-      { target: '3', label: 'Zespół FPIES u niemowląt', type: 'diag', concept: 'Wymioty i zapaść naczyniowa 1-4h po spożyciu białka mleka lub soi bez udziału IgE.' },
-      { target: '1', label: 'Alergia na białka mleka krowiego (APLV) a kolki', type: 'diag', concept: 'Krew w stolcu u niemowlęcia, dieta eliminacyjna matki karmiącej lub preparat eHF.' }
+      { target: '5', atlas: 'nagle', sec: 'nagle', label: 'Wstrząs anafilaktyczny po ekspozycji pokarmowej', type: 'trap', concept: 'Gwałtowny skurcz oskrzeli, obrzęk krtani, hipotensja; adrenalina domięśniowo natychmiast.' },
+      { target: '3', atlas: 'gastro', sec: 'alergie', label: 'Zespół FPIES u niemowląt', type: 'diag', concept: 'Wymioty i zapaść naczyniowa 1-4h po spożyciu białka mleka lub soi bez udziału IgE.' },
+      { target: '1', atlas: 'brzuch', sec: 'choroby', label: 'Alergia na białka mleka krowiego (APLV) a kolki', type: 'diag', concept: 'Krew w stolcu u niemowlęcia, dieta eliminacyjna matki karmiącej lub preparat eHF.' }
     ],
     '9': [
-      { target: '5', label: 'Wklinowanie migdałków i odruch Cushinga', type: 'trap', concept: 'Wzrost ICP w guzach tylnego dołu czaszki; ryzyko wklinowania przy punkcji lędźwiowej.' },
-      { target: '1', label: 'Poranne wymioty i nudności bez bólu brzucha', type: 'trap', concept: 'Chlustające poranne wymioty przynoszące ulgę w bólu głowy to osiowy objaw ciasnoty.' },
-      { target: '2', label: 'Różnicowanie z ropnym i gruźliczym ZOMR', type: 'diag', concept: 'Objawy oponowe, gorączka, badanie dna oka przed jakimkolwiek nakłuciem kanału kręgowego.' }
+      { target: '5', atlas: 'nagle', sec: 'drgawki', label: 'Wklinowanie migdałków i odruch Cushinga', type: 'trap', concept: 'Wzrost ICP w guzach tylnego dołu czaszki; ryzyko wklinowania przy punkcji lędźwiowej.' },
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Poranne wymioty i nudności bez bólu brzucha', type: 'trap', concept: 'Chlustające poranne wymioty przynoszące ulgę w bólu głowy to osiowy objaw ciasnoty.' },
+      { target: '2', atlas: 'zakazenia', sec: 'zomr', label: 'Różnicowanie z ropnym i gruźliczym ZOMR', type: 'diag', concept: 'Objawy oponowe, gorączka, badanie dna oka przed jakimkolwiek nakłuciem kanału kręgowego.' }
     ],
     '10': [
-      { target: '1', label: 'Guz w jamie brzusznej u małego dziecka', type: 'trap', concept: 'Podejrzenie nefroblastoma (guz Wilmsa) – nie uciskać brzucha, biopsja przeciwwskazana.' },
-      { target: '4', label: 'Guz Wilmsa a nadciśnienie nerkopochodne', type: 'diag', concept: 'Ucisk tętnicy nerkowej, hiperreninemia, krwinkomocz bez cech ostrego zapalenia.' },
-      { target: '12', label: 'Neuroblastoma a naciekanie szpiku i skaza', type: 'diag', concept: 'Krwiaki okularowe (racoon eyes), małopłytkowość, katecholaminy i ich metabolity w moczu.' }
+      { target: '1', atlas: 'brzuch', sec: 'choroby', label: 'Guz w jamie brzusznej u małego dziecka', type: 'trap', concept: 'Podejrzenie nefroblastoma (guz Wilmsa) – nie uciskać brzucha, biopsja przeciwwskazana.' },
+      { target: '4', atlas: 'nefro', sec: 'kzn', label: 'Guz Wilmsa a nadciśnienie nerkopochodne', type: 'diag', concept: 'Ucisk tętnicy nerkowej, hiperreninemia, krwinkomocz bez cech ostrego zapalenia.' },
+      { target: '12', atlas: 'skazy', sec: 's12', label: 'Neuroblastoma a naciekanie szpiku i skaza', type: 'diag', concept: 'Krwiaki okularowe (racoon eyes), małopłytkowość, katecholaminy i ich metabolity w moczu.' }
     ],
     '11': [
-      { target: '5', label: 'Zespół żyły głównej górnej i guz śródpiersia', type: 'trap', concept: 'RTG klatki piersiowej PRZED znieczuleniem ogólnym lub sedacją (ryzyko nagłego zatrzymania krążenia).' },
-      { target: '13a', label: 'Niedokrwistość aregeneratywna w ostrych białaczkach', type: 'diag', concept: 'Pancytopenia, blasty w rozmazie krwi, spadek retikulocytów, bolesność kości.' },
-      { target: '12', label: 'Skaza małopłytkowa w ostrej białaczce limfoblastycznej', type: 'diag', concept: 'Wybroczyny, krwawienia ze śluzówek, trombocytopenia <20 tys./µl.' },
-      { target: '2', label: 'Gorączka neutropeniczna w trakcie chemioterapii', type: 'trap', concept: 'Stan nagłego zagrożenia życia – natychmiastowe podanie antybiotyków o szerokim spektrum i.v.' }
+      { target: '5', atlas: 'nagle', sec: 'nagle', label: 'Zespół żyły głównej górnej i guz śródpiersia', type: 'trap', concept: 'RTG klatki piersiowej PRZED znieczuleniem ogólnym lub sedacją (ryzyko nagłego zatrzymania krążenia).' },
+      { target: '13a', atlas: 'skazy', sec: 's13a', label: 'Niedokrwistość aregeneratywna w ostrych białaczkach', type: 'diag', concept: 'Pancytopenia, blasty w rozmazie krwi, spadek retikulocytów, bolesność kości.' },
+      { target: '12', atlas: 'skazy', sec: 's12', label: 'Skaza małopłytkowa w ostrej białaczce limfoblastycznej', type: 'diag', concept: 'Wybroczyny, krwawienia ze śluzówek, trombocytopenia <20 tys./µl.' },
+      { target: '2', atlas: 'zakazenia', sec: 'objawy', label: 'Gorączka neutropeniczna w trakcie chemioterapii', type: 'trap', concept: 'Stan nagłego zagrożenia życia – natychmiastowe podanie antybiotyków o szerokim spektrum i.v.' }
     ],
     '12': [
-      { target: '1', label: 'Wgłobienie jelita w plamicy Schönleina-Henocha (IgAV)', type: 'diag', concept: 'Krwiak śródścienny staje się czołem wgłobienia; ból brzucha może wyprzedzać osutkę.' },
-      { target: '4', label: 'Nefropatia w przebiegu IgAV (Schönlein-Henoch)', type: 'diag', concept: 'Krwinkomocz, białkomocz, konieczność monitorowania osadu moczu i ciśnienia przez 6 miesięcy.' },
-      { target: '2', label: 'Wybroczyny w sepsie meningokokowej vs ITP', type: 'trap', concept: 'Dziecko z ITP czuje się dobrze mimo płytek <10 tys.; dziecko z sepsą jest wstrząsowe i splątane.' },
-      { target: '15', label: 'Małopłytkowość ze zużycia w zespole HUS', type: 'trap', concept: 'Mikroangiopatia zakrzepowa nerkowa, brak cech DIC (układ krzepnięcia osoczowego prawidłowy).' }
+      { target: '1', atlas: 'brzuch', sec: 'choroby', label: 'Wgłobienie jelita w plamicy Schönleina-Henocha (IgAV)', type: 'diag', concept: 'Krwiak śródścienny staje się czołem wgłobienia; ból brzucha może wyprzedzać osutkę.' },
+      { target: '4', atlas: 'nefro', sec: 'kzn', label: 'Nefropatia w przebiegu IgAV (Schönlein-Henoch)', type: 'diag', concept: 'Krwinkomocz, białkomocz, konieczność monitorowania osadu moczu i ciśnienia przez 6 miesięcy.' },
+      { target: '2', atlas: 'zakazenia', sec: 'objawy', label: 'Wybroczyny w sepsie meningokokowej vs ITP', type: 'trap', concept: 'Dziecko z ITP czuje się dobrze mimo płytek <10 tys.; dziecko z sepsą jest wstrząsowe i splątane.' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Małopłytkowość ze zużycia w zespole HUS', type: 'trap', concept: 'Mikroangiopatia zakrzepowa nerkowa, brak cech DIC (układ krzepnięcia osoczowego prawidłowy).' }
     ],
     '13a': [
-      { target: '6', label: 'Przewlekła utrata krwi w chorobie wrzodowej', type: 'diag', concept: 'Niedokrwistość mikrocytarna z niedoboru żelaza (niska ferrytyna, podwyższone TIBC).' },
-      { target: '15', label: 'Niedokrwistość nerkopochodna w PChN', type: 'diag', concept: 'Niedobór endogennej erytropoetyny (EPO), wskazanie do leczenia rekombinowanym EPO.' },
-      { target: '12', label: 'Anemia hemolityczna mikroangiopatyczna (MAHA)', type: 'trap', concept: 'Schistocyty (fragmentocyty) w rozmazie, wzrost LDH, spadek haptoglobiny w HUS.' },
-      { target: '11', label: 'Pancytopenia w nacieczeniu szpiku kostnego', type: 'diag', concept: 'Wyparcie czerwonokrwinkowej linii przez blasty białaczkowe (ALL/AML).' }
+      { target: '6', atlas: 'gastro', sec: 'biegunki', label: 'Przewlekła utrata krwi w chorobie wrzodowej', type: 'diag', concept: 'Niedokrwistość mikrocytarna z niedoboru żelaza (niska ferrytyna, podwyższone TIBC).' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Niedokrwistość nerkopochodna w PChN', type: 'diag', concept: 'Niedobór endogennej erytropoetyny (EPO), wskazanie do leczenia rekombinowanym EPO.' },
+      { target: '12', atlas: 'skazy', sec: 's12', label: 'Anemia hemolityczna mikroangiopatyczna (MAHA)', type: 'trap', concept: 'Schistocyty (fragmentocyty) w rozmazie, wzrost LDH, spadek haptoglobiny w HUS.' },
+      { target: '11', atlas: 'hemato', sec: 'objawy', label: 'Pancytopenia w nacieczeniu szpiku kostnego', type: 'diag', concept: 'Wyparcie czerwonokrwinkowej linii przez blasty białaczkowe (ALL/AML).' }
     ],
     '13b': [
-      { target: '2', label: 'Przeciwwskazania do szczepionek żywych w PNO', type: 'trap', concept: 'Ryzyko uogólnionego poszczepiennego zakażenia (BCG, polio OPV, rota, odra) przy defekcie limfocytów T.' },
-      { target: '14', label: 'Nawracające zakażenia i 10 objawów Jeffrey Modell', type: 'diag', concept: '>=2 ciężkie zapalenia płuc w roku, >=4 zapalenia ucha, ropnie narządowe wskazują na PNO.' },
-      { target: '11', label: 'Zwiększone ryzyko chłoniaków w defektach naprawy DNA', type: 'diag', concept: 'Zespoły łamliwości chromosomów (ataksja-teleangiektazja, Nijmegen) predysponują do chłoniaków.' }
+      { target: '2', atlas: 'zakazenia', sec: 'badanie', label: 'Przeciwwskazania do szczepionek żywych w PNO', type: 'trap', concept: 'Ryzyko uogólnionego poszczepiennego zakażenia (BCG, polio OPV, rota, odra) przy defekcie limfocytów T.' },
+      { target: '14', atlas: 'nefro', sec: 'zum', label: 'Nawracające zakażenia i 10 objawów Jeffrey Modell', type: 'diag', concept: '>=2 ciężkie zapalenia płuc w roku, >=4 zapalenia ucha, ropnie narządowe wskazują na PNO.' },
+      { target: '11', atlas: 'hemato', sec: 'chloniaki', label: 'Zwiększone ryzyko chłoniaków w defektach naprawy DNA', type: 'diag', concept: 'Zespoły łamliwości chromosomów (ataksja-teleangiektazja, Nijmegen) predysponują do chłoniaków.' }
     ],
     '14': [
-      { target: '1', label: 'Ból brzucha i wymioty jako maska ZUM u małych dzieci', type: 'diag', concept: 'Niemowlęta nie zgłaszają dysurii; gorączka bez przyczyny wymaga wykluczenia ZUM.' },
-      { target: '2', label: 'Gorączka o nieznanej przyczynie (FWS)', type: 'diag', concept: 'ZUM jest najczęstszym zakażeniem bakteryjnym u gorączkujących niemowląt bez objawów kataralnych.' },
-      { target: '15', label: 'Refluks pęcherzowo-moczowodowy (VUR) a bliznowacenie nerek', type: 'diag', concept: 'Odpływ wsteczny zakażonego moczu prowadzi do nefropatii refluksowej i PChN.' }
+      { target: '1', atlas: 'brzuch', sec: 'algorytm', label: 'Ból brzucha i wymioty jako maska ZUM u małych dzieci', type: 'diag', concept: 'Niemowlęta nie zgłaszają dysurii; gorączka bez przyczyny wymaga wykluczenia ZUM.' },
+      { target: '2', atlas: 'zakazenia', sec: 'badanie', label: 'Gorączka o nieznanej przyczynie (FWS)', type: 'diag', concept: 'ZUM jest najczęstszym zakażeniem bakteryjnym u gorączkujących niemowląt bez objawów kataralnych.' },
+      { target: '15', atlas: 'nefro', sec: 'aki', label: 'Refluks pęcherzowo-moczowodowy (VUR) a bliznowacenie nerek', type: 'diag', concept: 'Odpływ wsteczny zakażonego moczu prowadzi do nefropatii refluksowej i PChN.' }
     ],
     '15': [
-      { target: '2', label: 'Zespół HUS po zakażeniu jelitowym STEC', type: 'trap', concept: 'Najczęstsza przyczyna nabytej ostrej niewydolności nerek u dzieci do 5. r.ż.; zakaz antybiotyków.' },
-      { target: '4', label: 'Kłębuszkowe zapalenia nerek prowadzące do schyłkowej PChN', type: 'diag', concept: 'Postępująca utrata nefronów, wskazania do leczenia nerkozastępczego i przeszczepu nerki.' },
-      { target: '5', label: 'Przednerkowe AKI we wstrząsie i odwodnieniu', type: 'diag', concept: 'Szybkie wyrównanie wolemii chroni przed nieodwracalną ostrą martwicą cewek (ATN).' },
-      { target: '13a', label: 'Niedokrwistość i osteodystrofia nerkowa w PChN', type: 'diag', concept: 'Zaburzenia gospodarki Ca-P, retencja fosforanów, niedobór aktywnej witaminy D3 i EPO.' }
+      { target: '2', atlas: 'zakazenia', sec: 'objawy', label: 'Zespół HUS po zakażeniu jelitowym STEC', type: 'trap', concept: 'Najczęstsza przyczyna nabytej ostrej niewydolności nerek u dzieci do 5. r.ż.; zakaz antybiotyków.' },
+      { target: '4', atlas: 'nefro', sec: 'kzn', label: 'Kłębuszkowe zapalenia nerek prowadzące do schyłkowej PChN', type: 'diag', concept: 'Postępująca utrata nefronów, wskazania do leczenia nerkozastępczego i przeszczepu nerki.' },
+      { target: '5', atlas: 'nagle', sec: 'nagle', label: 'Przednerkowe AKI we wstrząsie i odwodnieniu', type: 'diag', concept: 'Szybkie wyrównanie wolemii chroni przed nieodwracalną ostrą martwicą cewek (ATN).' },
+      { target: '13a', atlas: 'skazy', sec: 's13a', label: 'Niedokrwistość i osteodystrofia nerkowa w PChN', type: 'diag', concept: 'Zaburzenia gospodarki Ca-P, retencja fosforanów, niedobór aktywnej witaminy D3 i EPO.' }
     ],
     '0': [
-      { target: '5', label: 'Stany nagłe w kardiologii dziecięcej', type: 'diag', concept: 'Napady anoksemiczne w Fallota, wady przewodozależne, wlew prostaglandyny E1.' },
-      { target: '2', label: 'Choroba Kawasakiego i zespół PIMS-TS', type: 'trap', concept: 'Gorączka >5 dni, zapalenie spojówek, malinowy język; powikłania wieńcowe, leczenie IVIG + ASA.' },
-      { target: '13a', label: 'Fizjologiczna niedokrwistość niemowląt', type: 'diag', concept: 'Spadek stężenia hemoglobiny w 8-12 tygodniu życia w wyniku fizjologicznego spadku EPO.' }
+      { target: '5', atlas: 'nagle', sec: 'nagle', label: 'Stany nagłe w kardiologii dziecięcej', type: 'diag', concept: 'Napady anoksemiczne w Fallota, wady przewodozależne, wlew prostaglandyny E1.' },
+      { target: '2', atlas: 'zakazenia', sec: 'objawy', label: 'Choroba Kawasakiego i zespół PIMS-TS', type: 'trap', concept: 'Gorączka >5 dni, zapalenie spojówek, malinowy język; powikłania wieńcowe, leczenie IVIG + ASA.' },
+      { target: '13a', atlas: 'skazy', sec: 's13a', label: 'Fizjologiczna niedokrwistość niemowląt', type: 'diag', concept: 'Spadek stężenia hemoglobiny w 8-12 tygodniu życia w wyniku fizjologicznego spadku EPO.' }
     ]
   };
 
@@ -281,6 +287,223 @@ window.HUB_META = (function () {
       clinicalReason: 'Zapalenie drobnych naczyń krwionośnych przewodu pokarmowego prowadzi do obrzęku ściany jelita i krwiaków śródściennych. Taki krwiak stanowi anatomiczny punkt wyjścia (lead point) dla wgłobienia jelitowego (często cienko-cienkiego).',
       examTrap: 'Ból brzucha i krwawienie z odbytu mogą wyprzedzać charakterystyczną plamicę uniesioną na pośladkach i kończynach o 3-7 dni! Co kluczowe na egzaminie: w IgAV liczba płytek krwi jest PRAWIDŁOWA (to zapalenie naczyń, a nie trombocytopenia).',
       mods: ['12', '1', '4']
+    }
+  ];
+
+  /* 8 Kluczowych zespołów objawowych (Symptom Explorer) – mosty różnicowania */
+  const SYMPTOM_CLUSTERS = [
+    {
+      id: 's1',
+      name: 'Ból brzucha + wymioty',
+      icon: '🤢',
+      tag: 'Ostre stany brzuszne i metaboliczne',
+      mods: ['1', '5', '3', '9'],
+      redFlags: [
+        'Obrona mięśniowa i objawy otrzewnowe (Blumberg) ➔ perforacja / zapalenie wyrostka [1]',
+        'Oddech Kussmaula, zapach acetonu, odwodnienie ➔ kwasica ketonowa DKA [5]',
+        'Napadowy płacz, podkurczanie nóżek, stolec „galaretka porzeczkowa” ➔ wgłobienie jelitowe [3]',
+        'Poranne chlustające wymioty przynoszące ulgę, bradykardia ➔ guz mózgu / ciasnota ICP [9]'
+      ],
+      keyRule: 'Zanim skierujesz dziecko na stół operacyjny z „ostrym brzuchem”: ZAWSZE sprawdź glikemię (wyklucz DKA!) oraz wykonaj USG jamy brzusznej (wyrostek vs wgłobienie).',
+      branches: [
+        { mod: '1', name: 'Ostre zapalenie wyrostka robaczkowego', clue: 'Ból rozpoczyna się w nadbrzuszu/śródbrzuszu, migruje do prawego dołu biodrowego, objaw Blumberga i Jaworskiego (+)', atlas: 'brzuch', sec: 'algorytm', linkText: 'Algorytm ostrego brzucha' },
+        { mod: '5', name: 'Kwasica ketonowa (Pseudoperitonitis diabetica)', clue: 'Hiperglikemia >200 mg/dl, kwasica metaboliczna pH <7.3, ketonuria, tachypnoe bez cech chirurgicznych w USG', atlas: 'nagle', sec: 'nagle', linkText: 'Protokół DKA w stanach nagłych' },
+        { mod: '3', name: 'Wgłobienie jelitowe (Intussusception)', clue: 'Niemowlę 5–10 m.ż., napady kolki z okresami apatii, objaw tarczy strzelniczej / donuta w USG', atlas: 'brzuch', sec: 'choroby', linkText: 'Wgłobienie jelita – diagnostyka i leczenie' },
+        { mod: '9', name: 'Guz tylnego dołu czaszki (Wzmożone ICP)', clue: 'Wymioty na czczo rano, ból głowy budzący ze snu, brak gorączki i obrony brzusznej; tarcza zastoinowa', atlas: 'guzy', sec: 'objawy', linkText: 'Triada objawów wzmożonego ICP' }
+      ],
+      trap: {
+        type: 'bedside',
+        badge: '🚨 Zagrożenie życia / Błąd w sztuce',
+        title: 'Laparotomia u dziecka w stanie kwasicy ketonowej (DKA)',
+        desc: 'Znieczulenie ogólne dziecka w ciężkiej kwasicy ketonowej imitującej ostry brzuch grozi natychmiastowym wstrząsem i zatrzymaniem krążenia. Pierwszy krok to glukometr i gazometria, nie chirurg!'
+      },
+      examTip: 'Pytania LEK/PES: Dziecko z bólem brzucha i wymiotami + tachypnoe bez gorączki = najpierw glikemia i gazometria.'
+    },
+    {
+      id: 's2',
+      name: 'Gorączka + osutka / wybroczyny',
+      icon: '🩸',
+      tag: 'Zakażenia piorunujące i skazy naczyniowe',
+      mods: ['2', '12', '11', '13b'],
+      redFlags: [
+        'Szybko narastające wybroczyny i wylewy podskórne + CRT >3s ➔ sepsa meningokokowa / plamica piorunująca [2]',
+        'Plamica uniesiona (palpabilis) na pośladkach i wyprostach kończyn dolnych + ból stawów ➔ IgAV (Schönlein-Henoch) [12]',
+        'Bladość, powiększenie węzłów i wątroby/śledziony, wybroczyny na tułowiu i śluzówkach ➔ ostra białaczka [11]',
+        'Gorączka ≥5 dni, zapalenie spojówek bez wysięku, malinowy język, obrzęk dłoni/stóp ➔ choroba Kawasakiego [13b]'
+      ],
+      keyRule: 'Test szklankowy (diaskopia): wykwit nieblednący pod uciskiem to wybroczyna! Przy gorączce i wybroczynach – natychmiast ceftriakson i.v./i.m. w 1. godzinie bez czekania na wyniki posiewów.',
+      branches: [
+        { mod: '2', name: 'Inwazyjna choroba meningokokowa (Sepsa)', clue: 'Plamica piorunująca, obniżony stan świadomości, tachykardia, CRT >3s, konieczność natychmiastowej antybiotykoterapii', atlas: 'zakazenia', sec: 'objawy', linkText: 'Algorytm sepsy i wstrząsu septycznego' },
+        { mod: '12', name: 'Zapalenie naczyń związane z IgA (IgAV / HSP)', clue: 'Plamica uniesiona, prawidłowa liczba płytek krwi (PLT norma!), ból brzucha, zapalenie stawów i krwinkomocz', atlas: 'skazy', sec: 's12', linkText: 'Kryteria EULAR/PRINTO dla IgAV' },
+        { mod: '11', name: 'Ostra białaczka limfoblastyczna (ALL)', clue: 'Wybroczyny ze skazy płytkowej (PLT <20 tys./µl) + niedokrwistość + limfadenopatia + bóle kostne', atlas: 'hemato', sec: 'objawy', linkText: 'Objawy rozrostowe i skaza w ALL' },
+        { mod: '13b', name: 'Choroba Kawasakiego / Zespół PIMS-TS', clue: 'Gorączka >5 dni, wielopostaciowa osutka, malinowy język, zmiany w naczyniach wieńcowych w echo serca', atlas: 'skazy', sec: 's13b', linkText: 'Kryteria diagnostyczne Kawasakiego' }
+      ],
+      trap: {
+        type: 'test',
+        badge: '⚠️ Pułapka testowa (Klucz vs Wytyczne)',
+        title: 'IgAV to NIE jest skaza małopłytkowa',
+        desc: 'W zapaleniu naczyń IgA liczba płytek krwi (PLT) oraz parametry koagulologiczne (APTT, PT, INR) są całkowicie PRAWIDŁOWE. Zlecanie koncentratu płytek lub osocza to kardynalny błąd testowy!'
+      },
+      examTip: 'Różnicowanie: Sepsa = zły stan ogólny, gorączka, tachykardia; IgAV = stan ogólny zazwyczaj dobry/stabilny, wykwity głównie na pośladkach i wyprostach nóg.'
+    },
+    {
+      id: 's3',
+      name: 'Krwiomocz + obrzęki / nadciśnienie',
+      icon: '💧',
+      tag: 'Nefrologia i onkologia dziecięca',
+      mods: ['4', '15', '10', '14'],
+      redFlags: [
+        'Oliguria/anuria, kreatynina podwyższona, mocz koloru popłuczyn mięsnych ➔ ostre popaciorkowcowe KZN / AKI [4][15]',
+        'Triada: niedokrwistość hemolityczna + małopłytkowość + ostra niewydolność nerek ➔ HUS po biegunce krwistej [15]',
+        'Jednostronny, gładki opór w jamie brzusznej nieprzekraczający linii środkowej + nadciśnienie ➔ guz Wilmsa [10]',
+        'Gorączka z dreszczami, ból w okolicy lędźwiowej, leukocyturia i bakteriuria ➔ Ostre odmiedniczkowe ZZN (OOZN) [14]'
+      ],
+      keyRule: 'Różnicuj zespół nefrytyczny (obrzęki powiek, nadciśnienie, krwinkomocz, skąpomocz) z nerczycowym (masywny białkomocz >50 mg/kg/doba, hipoalbuminemia <2.5 g/dl, uogólnione obrzęki bez nadciśnienia).',
+      branches: [
+        { mod: '4', name: 'Popaciorkowcowe Ostre KZN (PSGN)', clue: 'Przebyta angina (1–2 tyg. wcześniej) lub liszajec (3–6 tyg. wcześniej), spadek składowej dopełniacza C3, wałeczki erytrocytarne', atlas: 'nefro', sec: 'kzn', linkText: 'Diagnostyka PSGN i dopełniacza' },
+        { mod: '15', name: 'Zespół hemolityczno-mocznicowy (STEC-HUS)', clue: 'Krwista biegunka w wywiadzie, schistocyty w rozmazie krwi obwodowej, gwałtowny wzrost mocznika i kreatyniny', atlas: 'nefro', sec: 'aki', linkText: 'Postępowanie w HUS i wskazania do dializy' },
+        { mod: '10', name: 'Guz Wilmsa (Nefroblastoma)', clue: 'Niebolesny guz brzucha u dziecka 2–4 lata, mikroskopowy krwinkomocz, nadciśnienie w wyniku ucisku tętnicy nerkowej', atlas: 'nowotwory', sec: 'guzy', linkText: 'Protokół guza Wilmsa i SIOP' },
+        { mod: '14', name: 'Zakażenie układu moczowego (OOZN)', clue: 'Wysoka gorączka, objaw Goldflama (+), leukocyturia, dodatni posiew moczu z nakłucia lub cewnikowania', atlas: 'nefro', sec: 'zum', linkText: 'Klasyfikacja ZUM i diagnostyka ZUM' }
+      ],
+      trap: {
+        type: 'bedside',
+        badge: '🚨 Zagrożenie życia / Błąd w sztuce',
+        title: 'Zakaz podawania antybiotyków przy STEC-HUS',
+        desc: 'Leczenie krwistej biegunki antybiotykami lub lekami przeciwbiegunkowymi (loperamid) indukuje gwałtowne uwalnianie toksyny Shiga i wywołuje pełnoobjawowy zespół hemolityczno-mocznicowy ze zniszczeniem nerek.'
+      },
+      examTip: 'W zespole nerczycowym pamiętaj o ryzyku powikłań zakrzepowych (utrata antytrombiny III) i zakażeń pneumokokowych (utrata immunoglobulin).'
+    },
+    {
+      id: 's4',
+      name: 'Drgawki + zaburzenia świadomości',
+      icon: '⚡',
+      tag: 'Neurologia i stany nagłe',
+      mods: ['5', '2', '9', '15'],
+      redFlags: [
+        'Drgawki trwające >5 minut bez odzyskania przytomności ➔ stan padaczkowy (Status epilepticus) [5]',
+        'Gorączka, sztywność karku, objaw Brudzińskiego/Kerniga, wybroczyny ➔ ropne ZOMR [2]',
+        'Triada Cushinga: bradykardia + nadciśnienie + nieregularny oddech ➔ wklinowanie migdałków / guz [9]',
+        'Kurcze mięśni, parestezje, objaw Chvostka i Trousseau, wydłużenie QT ➔ hipokalcemia / mocznica [15]'
+      ],
+      keyRule: 'W każdym epizodzie drgawek natychmiast oznacz glikemię z opuszki palca! Hipoglikemia to najczęstsza natychmiastowo odwracalna przyczyna drgawek. Po 5 minutach podaj benzodiazepinę (midazolam policzkowo/domięśniowo lub diazepam doodbytniczo).',
+      branches: [
+        { mod: '5', name: 'Stan padaczkowy i drgawki gorączkowe złożone', clue: 'Czas trwania >15 min, napad ogniskowy, niedowład ponapadowy Todda lub nawrót w ciągu 24h', atlas: 'nagle', sec: 'drgawki', linkText: 'Algorytm leczenia stanu padaczkowego' },
+        { mod: '2', name: 'Bakteryjne zapalenie opon mózgowo-rdzeniowych', clue: 'Pleocytoza neutrofilowa w PMR, wysokie białko, spadek glukozy PMR/surowica <0.4; pilna antybiotykoterapia', atlas: 'zakazenia', sec: 'zomr', linkText: 'Analiza płynu mózgowo-rdzeniowego' },
+        { mod: '9', name: 'Guz mózgu i ciasnota wewnątrzczaszkowa', clue: 'Napady padaczkowe o początku ogniskowym, objawy ubytkowe, poranne bóle głowy i wymioty', atlas: 'guzy', sec: 'objawy', linkText: 'Guzy OUN – lokalizacja i objawy' },
+        { mod: '15', name: 'Encefalopatia mocznicowa i zaburzenia elektrolitowe', clue: 'Moczówka, oliguria, hiperkaliemia, skrajna hipokalcemia lub hiponatremia', atlas: 'nefro', sec: 'aki', linkText: 'Zaburzenia elektrolitowe w AKI' }
+      ],
+      trap: {
+        type: 'bedside',
+        badge: '🚨 Zagrożenie życia / Błąd w sztuce',
+        title: 'Zakaz punkcji lędźwiowej przed wykluczeniem ciasnoty śródczaszkowej',
+        desc: 'Wykonanie nakłucia lędźwiowego przy wzmożonym ciśnieniu śródczaszkowym (obrzęk tarczy nerwu II, triada Cushinga) grozi natychmiastowym wklinowaniem pnia mózgu w otwór wielki i zgonem.'
+      },
+      examTip: 'Proste drgawki gorączkowe: wiek 6 m.ż.–5 lat, uogólnione toniczno-kloniczne, <15 min, 1 raz na 24h, bez deficytów neurologicznych – nie wymagają rutynowego EEG ani TK!'
+    },
+    {
+      id: 's5',
+      name: 'Duszność + świst oddechowy',
+      icon: '🫁',
+      tag: 'Drogi oddechowe i stany zagrożenia życia',
+      mods: ['5', '8', '11'],
+      redFlags: [
+        'Nagły napad kaszlu w trakcie zabawy/jedzenia, jednostronne osłabienie szmeru ➔ zaaspirowane ciało obce [5]',
+        'Świst wdechowy (stridor), szczekający kaszel, chrypka, zaciąganie dołków ➔ podgłośniowe zapalenie krtani (Krup) [5]',
+        'Obrzęk warg/języka, pokrzywka, duszność wydechowa, spadek ciśnienia ➔ wstrząs anafilaktyczny [8]',
+        'Duszność nasilająca się w pozycji leżącej, poszerzenie żył szyjnych, obrzęk twarzy (twarz nalana) ➔ guz śródpiersia (SVCS) [11]'
+      ],
+      keyRule: 'Rozróżnij świst wdechowy (stridor = górne drogi oddechowe: krtań, tchawica) od wydechowego (wheezing = dolne drogi: oskrzela, astma, zapalenie oskrzelików). Bezwzględny zakaz wkładania szpatułki do gardła przy podejrzeniu zapalenia nagłośni!',
+      branches: [
+        { mod: '5', name: 'Podgłośniowe zapalenie krtani (Krup / Laryngotracheitis)', clue: 'Etiologia wirusowa (parainfluenza), nasilenie w nocy, deksametazon p.o./i.m. 0.15–0.6 mg/kg + nebulizacja z L-adrenaliny', atlas: 'nagle', sec: 'krup', linkText: 'Skala Westleya i protokół krupu' },
+        { mod: '8', name: 'Anafilaksja układu oddechowego', clue: 'Ekspozycja na alergen pokarmowy lub użądlenie owada; adrenalina 0.01 mg/kg domięśniowo w przednio-boczne udo', atlas: 'gastro', sec: 'alergie', linkText: 'Postępowanie w ostrej anafilaksji' },
+        { mod: '11', name: 'Chłoniak śródpiersia / Zespół żyły głównej górnej', clue: 'Guz w przednim śródpiersiu (chłoniak T-komórkowy), ucisk tchawicy, bezwzględne RTG klatki przed jakąkolwiek sedacją', atlas: 'hemato', sec: 'chloniaki', linkText: 'Stany nagłe w hematoonkologii' }
+      ],
+      trap: {
+        type: 'bedside',
+        badge: '🚨 Zagrożenie życia / Błąd w sztuce',
+        title: 'Szpatułka w gardle przy ostrym zapaleniu nagłośni',
+        desc: 'Próba oglądania gardła szpatułką u dziecka z podejrzeniem zapalenia nagłośni (świst, ślinotok, pozycja wąchająca) wywołuje natychmiastowy odruchowy skurcz krtani i asfiksję.'
+      },
+      examTip: 'Krup leczymy sterydem (deksametazon) ZAWSZE, nawet w łagodnej postaci. Antybiotyk jest bezcelowy, bo przyczyną są wirusy parainfluozy.'
+    },
+    {
+      id: 's6',
+      name: 'Przewlekła biegunka + spadek masy ciała',
+      icon: '🌾',
+      tag: 'Gastroenterologia i wchłanianie pokarmów',
+      mods: ['3', '7', '8', '13a'],
+      redFlags: [
+        'Biegunka z krwią i śluzem, bóle brzucha budzące ze snu, afty, przetoki okołoodbytnicze ➔ nieswoiste zapalenia jelit (IBD) [7]',
+        'Wzdęty brzuch, zanik mięśni pośladkowych, zmiana usposobienia, opóźnienie wzrastania ➔ celiakia [8]',
+        'Gwałtowne wymioty i biegunka ze wstrząsem 2-4h po podaniu mleka/soi ➔ zespół FPIES [8]',
+        'Niedokrwistość mikrocytarna oporna na doustne żelazo + biegunka tłuszczowa ➔ zespół złego wchłaniania [13a]'
+      ],
+      keyRule: 'Przewlekła biegunka (>4 tygodnie) wymaga różnicowania osmotycznej (ustępuje na czczo, pH stolca <5.5, luki osmotyczne) od wydzielniczej (nie ustępuje na czczo) i zapalnej (krew, leukocyty, kalprotektyna).',
+      branches: [
+        { mod: '7', name: 'Choroba Leśniowskiego-Crohna / WZJG', clue: 'Wysoka kalprotektyna w kale, przyspieszone OB/CRP, zmiany okołoodbytnicze, MR-enterografia i kolonoskopia', atlas: 'gastro', sec: 'ibd', linkText: 'Różnicowanie ChLC vs WZJG w atlasie' },
+        { mod: '8', name: 'Celiakia (Enteropatia z nadwrażliwości na gluten)', clue: 'Przeciwciała anty-tTG IgA + całkowite IgA; u dzieci stężenie >10x górna granica normy pozwala na rozpoznanie bez biopsji', atlas: 'gastro', sec: 'celiakia', linkText: 'Wytyczne ESPGHAN dla celiakii' },
+        { mod: '3', name: 'Biegunka poinfekcyjna i wtórny niedobór laktazy', clue: 'Wodniste, pieniste, strzelające stolce z odparzeniami pośladków po przebytym rotawirusowym zapaleniu jelit', atlas: 'gastro', sec: 'biegunki', linkText: 'Algorytm nawadniania i diety' },
+        { mod: '13a', name: 'Niedokrwistość z niedoboru żelaza (Sideropenia)', clue: 'Spadek MCV, MCH, ferrytyny przy podwyższonym TIBC w wyniku przewlekłego krwawienia śluzówkowego lub enteropatii', atlas: 'skazy', sec: 's13a', linkText: 'Diagnostyka różnicowa niedokrwistości' }
+      ],
+      trap: {
+        type: 'test',
+        badge: '⚠️ Pułapka testowa (Klucz vs Wytyczne)',
+        title: 'Rozpoznanie celiakii u pacjenta z selektywnym niedoborem IgA',
+        desc: 'U 2-3% pacjentów z celiakią występuje wrodzony niedobór IgA. Test anty-tTG w klasie IgA da wynik fałszywie ujemny! W algorytmie ZAWSZE oznacza się całkowite stężenie IgA lub bada przeciwciała w klasie IgG (anty-DGP IgG).'
+      },
+      examTip: 'Testy alergiczne skórne (prick) i swoiste IgE są całkowicie nieprzydatne w celiakii, ponieważ celiakia jest chorobą autoimmunologiczną, a nie alergią IgE-zależną!'
+    },
+    {
+      id: 's7',
+      name: 'Powiększenie węzłów + gorączka',
+      icon: '🔬',
+      tag: 'Limfadenopatia i rozrosty układu chłonnego',
+      mods: ['2', '11', '13b'],
+      redFlags: [
+        'Powiększenie węzłów nadobojczykowych lub śródpiersiowych ➔ podejrzenie złośliwego rozrostu nowotworowego [11]',
+        'Węzeł twardy, niebolesny, zrośnięty z podłożem, pakiet węzłowy, brak cech ostrego zapalenia skóry ➔ chłoniak [11]',
+        'Wysoka gorączka, powiększenie węzłów szyjnych, naloty na migdałkach, hepatosplenomegalia ➔ mononukleoza zakaźna (EBV) [2]',
+        'Nawracające ropnie węzłów chłonnych wywołane przez Catalase(+) patogeny (np. S. aureus, Serratia) ➔ Przewlekła choroba ziarniniakowa (CGD) [13b]'
+      ],
+      keyRule: 'Węzły nadobojczykowe ZAWSZE są patologiczne i wymagają pilnej biopsji! Węzły szyjne i pachwinowe u dzieci są często odczynowe. Jeśli limfadenopatia trwa >4-6 tygodni bez tendencji do regresji – wskazana biopsja węzła w całości.',
+      branches: [
+        { mod: '11', name: 'Chłoniak Hodgkina i chłoniaki nie-Hodgkina (NHL)', clue: 'Niebolesna limfadenopatia, objawy ogólne B (gorączka, nocne poty, spadek masy ciała >10%), eozynofilia, poszerzenie śródpiersia', atlas: 'hemato', sec: 'chloniaki', linkText: 'Klasyfikacja Ann Arbor i chłoniaki' },
+        { mod: '2', name: 'Mononukleoza zakaźna (EBV) i cytomegalia (CMV)', clue: 'Limfocytoza z obecnością atypowych limfocytów (komórki Downey) >10%, przeciwciała anty-VCA IgM, odczyn heterofilny Paula-Bunnella-Davidsohna', atlas: 'zakazenia', sec: 'ebv', linkText: 'Obraz kliniczny i diagnostyka EBV' },
+        { mod: '13b', name: 'Pierwotne niedobory odporności (PNO / CGD)', clue: 'Defekt wybuchu tlenowego fagocytów (test NBT / DHR), zakażenia węzłów bakteriami katalazo-dodatnimi i grzybami', atlas: 'skazy', sec: 's13b', linkText: '10 objawów ostrzegawczych PNO' }
+      ],
+      trap: {
+        type: 'test',
+        badge: '⚠️ Pułapka testowa (Klucz vs Wytyczne)',
+        title: 'Podanie amoksycyliny lub ampicyliny w mononukleozie (EBV)',
+        desc: 'Podanie aminopenicyliny pacjentowi z zakażeniem EBV w 90% przypadków wywołuje odczynową, swędzącą osutkę plamisto-grudkową. Nie jest to prawdziwa alergia na penicylinę, lecz reakcja immunologiczna w przebiegu wiremii.'
+      },
+      examTip: 'Biopsja aspiracyjna cienkoigłowa (BAC) węzła u dziecka jest BŁĘDEM w diagnostyce chłoniaka – nie pozwala ocenić architektoniki tkankowej. Standardem jest pobranie całego węzła chirurgicznie!'
+    },
+    {
+      id: 's8',
+      name: 'Bladość + żółtaczka / ciemny mocz',
+      icon: '🟡',
+      tag: 'Hemoliza i mikroangiopatie zakrzepowe',
+      mods: ['13a', '15', '12'],
+      redFlags: [
+        'Gwałtowny spadek Hb, ciemny mocz (barwa coli / ciemnego piwa), żółtaczka, splenomegalia ➔ kryza hemolityczna [13a]',
+        'Niedokrwistość + małopłytkowość + skąpomocz po biegunce ➔ mikroangiopatia HUS [15]',
+        'Pojawienie się żółtaczki po ekspozycji na bób lub leki (kotrimoksazol, nitrofurantoina) ➔ niedobór G6PD (fawizm) [13a]',
+        'Zaburzenia krzepnięcia, spadek fibrynogenu, wzrost D-dimerów, krwawienia z wkłuć ➔ zespół DIC [12]'
+      ],
+      keyRule: 'W anemii z żółtaczką pierwszy krok to ocena retikulocytów i odczynu Coombsa. Wysokie retikulocyty + spadek haptoglobiny + wzrost LDH i bilirubiny pośredniej = hemoliza! Dodatni BTA (Coombs) = autoimmunologiczna niedokrwistość hemolityczna (AIHA).',
+      branches: [
+        { mod: '13a', name: 'Niedokrwistość hemolityczna (Wrodzona vs AIHA)', clue: 'Sferocytoza wrodzona (spadek oporności osmotycznej, mutacja ankiryny/spektryny) lub AIHA (dodatni bezpośredni test antyglobulinowy Coombsa)', atlas: 'skazy', sec: 's13a', linkText: 'Algorytm diagnostyki hemolizy' },
+        { mod: '15', name: 'Mikroangiopatyczna niedokrwistość hemolityczna (MAHA / HUS)', clue: 'Obecność fragmentów erytrocytów (schistocytów / helmet cells) w rozmazie krwi, ujemny test Coombsa (mechaniczne niszczenie)', atlas: 'nefro', sec: 'aki', linkText: 'Rozmaz krwi w HUS i nefropatii' },
+        { mod: '12', name: 'Koagulopatia ze zużycia (DIC)', clue: 'Jednoczesna aktywacja krzepnięcia i fibrynolizy, wydłużenie PT i APTT, skrajny spadek fibrynogenu (<100 mg/dl)', atlas: 'skazy', sec: 'diag', linkText: 'Kryteria rozpoznania DIC u dzieci' }
+      ],
+      trap: {
+        type: 'bedside',
+        badge: '🚨 Zagrożenie życia / Błąd w sztuce',
+        title: 'Przetoczenie koncentratu płytek krwi (KKP) w zespole HUS',
+        desc: 'W zespole HUS oraz TTP płytki są zużywane w mikrozakrzepach nerkowych i naczyniowych. Podanie koncentratu krwinek płytkowych (KKP) „dolewa oliwy do ognia” nasilając zakrzepicę w kłębuszkach nerkowych i grożąc nieodwracalnym zniszczeniem nerek!'
+      },
+      examTip: 'Kluczowe różnicowanie anemii: Niedobór żelaza = retikulocyty NISKIE, ferrytyna NISKA. Hemoliza = retikulocyty WYSOKIE, LDH WYSOKIE, haptoglobina NIEWYKRYWALNA.'
     }
   ];
 
@@ -1104,5 +1327,5 @@ window.HUB_META = (function () {
 
   const modById = Object.fromEntries(MODS.map(m => [m.id, m]));
   const atById = Object.fromEntries(ATLASES.map(a => [a.id, a]));
-  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, modById, atById };
+  return { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, modById, atById };
 })();

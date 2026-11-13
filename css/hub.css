@@ -2057,3 +2057,281 @@ body.reader footer.ft{display:none}
   0% { r: 6; opacity: 0.9; }
   100% { r: 24; opacity: 0; }
 }
+
+/* ---------- Connections: Symptom Explorer & Focus & Context ---------- */
+.conn-omnibar-box {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.2rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.4rem;
+}
+.conn-omnibar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-bottom: .85rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--line-2);
+}
+.conn-omnibar-filters {
+  display: flex;
+  gap: .35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.conn-omnibar-filters::-webkit-scrollbar { display: none; }
+.omnibar-tag-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .25rem .7rem;
+  font-size: .76rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.omnibar-tag-btn:hover {
+  border-color: var(--teal);
+  color: var(--ink);
+}
+.omnibar-tag-btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+[data-theme="dark"] .omnibar-tag-btn.active {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.conn-clusters-scroll {
+  display: flex;
+  gap: .65rem;
+  overflow-x: auto;
+  padding-bottom: .4rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.symptom-chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .65rem .95rem;
+  border-radius: 14px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  transition: all .2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  scroll-snap-align: start;
+  text-decoration: none;
+}
+.symptom-chip:hover {
+  border-color: var(--teal);
+  background: var(--surface);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(12, 122, 133, 0.12);
+}
+.symptom-chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(19, 35, 44, 0.2);
+}
+[data-theme="dark"] .symptom-chip.active {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+.symptom-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.symptom-name {
+  font-weight: 800;
+  font-size: .86rem;
+  color: inherit;
+  margin-bottom: .15rem;
+}
+.symptom-mods {
+  display: flex;
+  gap: .25rem;
+}
+.chip-mini {
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+/* Karta ścieżki decyzyjnej */
+.diff-card-wrapper {
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: var(--r-lg);
+  padding: 1.3rem 1.4rem;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 1.6rem;
+  animation: diffFadeIn .25s ease-out;
+}
+@keyframes diffFadeIn {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.diff-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .8rem;
+  margin-bottom: 1rem;
+}
+.diff-box {
+  border-radius: 10px;
+  padding: .75rem 1rem;
+  margin-top: .75rem;
+}
+.diff-box.red-flags {
+  background: rgba(239, 68, 68, 0.07);
+  border-left: 4px solid var(--red);
+}
+.diff-box.key-rule {
+  background: rgba(12, 122, 133, 0.08);
+  border-left: 4px solid var(--teal);
+}
+.diff-box-title {
+  font-weight: 800;
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: .35rem;
+  color: var(--ink);
+}
+.diff-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.diff-list li {
+  margin-bottom: .2rem;
+}
+.diff-branches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: .8rem;
+}
+.diff-branch-item {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .8rem .9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform .15s;
+}
+.diff-branch-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--teal);
+}
+.diff-footer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+  gap: 1rem;
+  margin-top: 1.1rem;
+  align-items: stretch;
+}
+@media (max-width: 900px) {
+  .diff-footer-row { grid-template-columns: 1fr; }
+}
+.diff-trap-box {
+  border-radius: 10px;
+  padding: .85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.diff-trap-box.bedside-trap {
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 4px solid var(--red);
+}
+.diff-trap-box.test-trap {
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 4px solid var(--amber);
+}
+.diff-action-box {
+  background: var(--bg);
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Focus & Context (8% wygaszanie) */
+.gsvg.focus-mode .node.dim {
+  opacity: 0.1;
+  transition: opacity .22s ease;
+}
+.gsvg.focus-mode .node.on {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.gsvg.focus-mode .edge.dim {
+  opacity: 0.05 !important;
+  stroke: var(--muted) !important;
+  transition: opacity .22s ease, stroke .22s ease;
+}
+.gsvg.focus-mode .edge.on {
+  opacity: 0.95 !important;
+  stroke-width: 3.5px !important;
+}
+.gsvg.focus-mode .edge.cluster-edge {
+  opacity: 1 !important;
+  stroke-width: 4px !important;
+  stroke: var(--teal) !important;
+  filter: drop-shadow(0 0 5px rgba(12, 122, 133, 0.65));
+}
+
+/* Krawędzie wg opanowania (Mastery Overlay) */
+.edge.m-ok {
+  stroke: var(--green) !important;
+}
+.edge.m-warn {
+  stroke: var(--amber) !important;
+}
+.edge.m-bad {
+  stroke: var(--red) !important;
+}
+.edge.m-none {
+  stroke: rgba(12, 122, 133, 0.35);
+}
+
+/* Semantyczne style krawędzi w Mapie Atlasów */
+.edge.sem-trap {
+  stroke: var(--red) !important;
+}
+.edge.sem-diff {
+  stroke: var(--teal) !important;
+}
+.edge.sem-diag {
+  stroke: var(--violet) !important;
+}
+
+.conn-filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-bottom: 1rem;
+  padding: .55rem .85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}

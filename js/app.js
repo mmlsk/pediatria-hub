@@ -1,7 +1,7 @@
 /* Pediatria V – hub. Vanilla JS, jeden plik, router hash. */
 (function () {
 'use strict';
-const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, modById, atById } = window.HUB_META;
+const { GROUPS, MODS, ATLASES, TRAPS, CONF, BANKS, WIKILINKS, SEMANTIC_GAPS, OSCE_STATIONS, SYMPTOM_CLUSTERS, modById, atById } = window.HUB_META;
 const CUSTOM_Q_KEY = 'pediatria_hub_custom_questions_v1';
 let CUSTOM_Q = [];
 try {
@@ -205,10 +205,26 @@ if (WIKILINKS) {
   Object.entries(WIKILINKS).forEach(([srcId, links]) => {
     links.forEach(l => {
       if (BACKLINKS[l.target]) {
-        BACKLINKS[l.target].push({ source: srcId, label: l.label, type: l.type, concept: l.concept });
+        BACKLINKS[l.target].push({
+          source: srcId,
+          label: l.label,
+          type: l.type,
+          concept: l.concept,
+          atlas: l.atlas || (modById[srcId] ? modById[srcId].at : null),
+          sec: l.sec || (modById[srcId] ? modById[srcId].a : null)
+        });
       }
     });
   });
+}
+
+function edgeStats(a, b) {
+  const qs = Q.filter(q => q.mods.includes(a) && q.mods.includes(b));
+  let att = 0, ok = 0;
+  qs.forEach(q => { const ans = S.ans[q.id]; if (ans) { att++; if (ans.last) ok++; } });
+  const rate = att > 0 ? (ok / att) : null;
+  const status = att === 0 ? 'none' : (rate >= 0.7 ? 'ok' : (rate >= 0.4 ? 'warn' : 'bad'));
+  return { total: qs.length, att, ok, wrong: att - ok, status, rate };
 }
 
 function modStats(id) {
@@ -226,7 +242,7 @@ function atlasHref(q) {
   return '#/atlas/' + q.at + (m ? '/' + modById[m].a : '/zadania');
 }
 
-/* ---------- wykres powiązań ---------- */
+/* ---------- wykres powiązań (Focus & Context + Mastery + Semantyka) ---------- */
 function renderGraph(host, o = {}) {
   const size = 600, cx = 300, cy = 300, R = 196, gap = 0.2, n = MODS.length;
   const step = (Math.PI * 2 - 4 * gap) / n;
@@ -242,13 +258,45 @@ function renderGraph(host, o = {}) {
     const x0 = cx + R * Math.cos(a0), y0 = cy + R * Math.sin(a0), x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
     return `<path d="M${x0} ${y0} A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1} ${y1}" fill="none" stroke="${GROUPS[g].hex}" stroke-width="30" stroke-linecap="round" opacity=".13"/>`;
   }).join('');
+
   const edges = EDGES.filter(e => e.w > 0 || e.traps.length).map(e => {
     const p = pos[e.a], q = pos[e.b];
     const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2, kx = cx + (mx - cx) * .22, ky = cy + (my - cy) * .22;
     const d = `M${p.x.toFixed(1)} ${p.y.toFixed(1)} Q${kx.toFixed(1)} ${ky.toFixed(1)} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`;
-    const w = e.w, sw = (1 + Math.min(w, 8) * .55).toFixed(2), op = (.16 + Math.min(w, 8) * .06 + (e.traps.length ? .12 : 0)).toFixed(2);
-    return `<g class="eg" data-e="${e.a}|${e.b}"><path class="edge${e.traps.length ? ' cur' : ''}" data-e="${e.a}|${e.b}" d="${d}" stroke-width="${sw}" opacity="${op}"/><path d="${d}" fill="none" stroke="transparent" stroke-width="14" ${o.mode === 'select' ? 'style="cursor:pointer"' : ''} data-hit="${e.a}|${e.b}"><title>[${e.a}] ↔ [${e.b}]: ${w} pytań${e.traps.length ? ', ' + e.traps.length + ' pułapek' : ''}</title></path></g>`;
+    const w = e.w;
+
+    let extraClasses = '';
+    let edgeTitle = `[${e.a}] ↔ [${e.b}]: ${w} pytań`;
+    if (e.traps.length) edgeTitle += `, ${e.traps.length} pułapek`;
+
+    if (o.type === 'questions') {
+      const st = edgeStats(e.a, e.b);
+      extraClasses += ` m-${st.status}`;
+      if (st.att > 0) {
+        edgeTitle += ` (Rozwiązane: ${st.att}/${st.total}, Poprawne: ${Math.round(st.rate * 100)}%)`;
+      } else {
+        edgeTitle += ` (Jeszcze niećwiczone)`;
+      }
+    } else if (o.type === 'atlas') {
+      const wA = (WIKILINKS[e.a] || []).filter(w => w.target === e.b);
+      const wB = (WIKILINKS[e.b] || []).filter(w => w.target === e.a);
+      const allW = [...wA, ...wB];
+      if (allW.some(w => w.type === 'trap') || e.traps.length) extraClasses += ' sem-trap cur';
+      else if (allW.some(w => w.type === 'diff')) extraClasses += ' sem-diff';
+      else if (allW.some(w => w.type === 'diag')) extraClasses += ' sem-diag';
+    }
+
+    const sw = (1.2 + Math.min(w, 8) * .55).toFixed(2);
+    const op = (.22 + Math.min(w, 8) * .07 + (e.traps.length ? .14 : 0)).toFixed(2);
+
+    return `<g class="eg" data-e="${e.a}|${e.b}">
+      <path class="edge${e.traps.length ? ' cur' : ''}${extraClasses}" data-e="${e.a}|${e.b}" d="${d}" stroke-width="${sw}" opacity="${op}"/>
+      <path d="${d}" fill="none" stroke="transparent" stroke-width="16" ${o.mode === 'select' ? 'style="cursor:pointer"' : ''} data-hit="${e.a}|${e.b}">
+        <title>${edgeTitle}</title>
+      </path>
+    </g>`;
   }).join('');
+
   const nodes = MODS.map(m => {
     const p = pos[m.id], c = Math.cos(p.a), anchor = c > .25 ? 'start' : c < -.25 ? 'end' : 'middle';
     const lx = cx + (R + 34) * Math.cos(p.a), ly = cy + (R + 34) * Math.sin(p.a) + (Math.abs(c) <= .25 ? (Math.sin(p.a) > 0 ? 10 : -4) : 0);
@@ -258,21 +306,79 @@ function renderGraph(host, o = {}) {
       ${o.labels === false ? '' : `<text class="l" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${esc(SHORT[m.id])}</text>`}
       <title>[${m.id}] ${esc(m.n)}${m.at ? '' : ' (brak atlasu)'}</title></g>`;
   }).join('');
+
   host.innerHTML = `<svg class="gsvg" viewBox="-40 -6 680 612" role="group" aria-label="Mapa powiązań między modułami">${arcs}<g class="edges">${edges}</g>${nodes}</svg>`;
   const svg = $('svg', host);
-  const clear = () => { svg.classList.remove('hl'); $$('.on', svg).forEach(x => x.classList.remove('on')); };
+
+  const clear = () => {
+    svg.classList.remove('hl', 'focus-mode');
+    $$('.node', svg).forEach(x => x.classList.remove('on', 'dim'));
+    $$('.edge', svg).forEach(x => x.classList.remove('on', 'dim', 'cluster-edge'));
+  };
+
   function lit(ids) {
-    clear(); if (!ids || !ids.length) return; svg.classList.add('hl'); const set = new Set(ids);
-    $$('.node', svg).forEach(nd => nd.classList.toggle('on', set.has(nd.dataset.m)));
-    $$('.edge', svg).forEach(ed => { const [a, b] = ed.dataset.e.split('|'); ed.classList.toggle('on', set.has(a) && set.has(b)); });
+    clear();
+    if (!ids || !ids.length) return;
+    svg.classList.add('hl', 'focus-mode');
+    const set = new Set(ids);
+    $$('.node', svg).forEach(nd => {
+      const on = set.has(nd.dataset.m);
+      nd.classList.toggle('on', on);
+      nd.classList.toggle('dim', !on);
+    });
+    $$('.edge', svg).forEach(ed => {
+      const [a, b] = ed.dataset.e.split('|');
+      const on = set.has(a) && set.has(b);
+      ed.classList.toggle('on', on);
+      ed.classList.toggle('dim', !on);
+    });
   }
+
+  function litCluster(mods) {
+    clear();
+    if (!mods || !mods.length) return;
+    svg.classList.add('hl', 'focus-mode');
+    const set = new Set(mods);
+    $$('.node', svg).forEach(nd => {
+      const on = set.has(nd.dataset.m);
+      nd.classList.toggle('on', on);
+      nd.classList.toggle('dim', !on);
+    });
+    $$('.edge', svg).forEach(ed => {
+      const [a, b] = ed.dataset.e.split('|');
+      const on = set.has(a) && set.has(b);
+      ed.classList.toggle('on', on);
+      ed.classList.toggle('cluster-edge', on);
+      ed.classList.toggle('dim', !on);
+    });
+  }
+
   function litNode(id) {
-    clear(); svg.classList.add('hl'); const conn = new Set([id]);
-    $$('.edge', svg).forEach(ed => { const [a, b] = ed.dataset.e.split('|'); if (a === id || b === id) { ed.classList.add('on'); conn.add(a); conn.add(b); } });
-    $$('.node', svg).forEach(nd => nd.classList.toggle('on', conn.has(nd.dataset.m)));
+    clear();
+    svg.classList.add('hl', 'focus-mode');
+    const conn = new Set([id]);
+    $$('.edge', svg).forEach(ed => {
+      const [a, b] = ed.dataset.e.split('|');
+      if (a === id || b === id) {
+        ed.classList.add('on');
+        ed.classList.remove('dim');
+        conn.add(a);
+        conn.add(b);
+      } else {
+        ed.classList.remove('on');
+        ed.classList.add('dim');
+      }
+    });
+    $$('.node', svg).forEach(nd => {
+      const on = conn.has(nd.dataset.m);
+      nd.classList.toggle('on', on);
+      nd.classList.toggle('dim', !on);
+    });
   }
+
   let pinned = null;
   const restore = () => { if (pinned && pinned.length) lit(pinned); else clear(); };
+
   $$('.node', svg).forEach(nd => {
     const id = nd.dataset.m;
     nd.addEventListener('pointerenter', () => litNode(id));
@@ -283,9 +389,19 @@ function renderGraph(host, o = {}) {
     nd.addEventListener('click', act);
     nd.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
   });
+
   if (o.mode === 'select') $$('[data-hit]', svg).forEach(h => h.addEventListener('click', () => o.onEdge && o.onEdge(h.dataset.hit)));
-  if (!reduce && o.draw) $$('.edge', svg).forEach((p, i) => { const l = p.getTotalLength(); p.style.strokeDasharray = l; p.style.strokeDashoffset = l; p.getBoundingClientRect(); p.style.transition = `stroke-dashoffset .9s ${(i * 12) % 500}ms ease`; requestAnimationFrame(() => { p.style.strokeDashoffset = 0; }); setTimeout(() => { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; p.style.transition = ''; }, 1900); });
-  return { pin(ids) { pinned = ids; restore(); }, lit, litNode };
+
+  if (!reduce && o.draw) $$('.edge', svg).forEach((p, i) => {
+    const l = p.getTotalLength();
+    p.style.strokeDasharray = l; p.style.strokeDashoffset = l;
+    p.getBoundingClientRect();
+    p.style.transition = `stroke-dashoffset .9s ${(i * 12) % 500}ms ease`;
+    requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
+    setTimeout(() => { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; p.style.transition = ''; }, 1900);
+  });
+
+  return { pin(ids) { pinned = ids; restore(); }, lit, litNode, litCluster, clear };
 }
 
 /* ---------- komponenty ---------- */
@@ -494,26 +610,218 @@ function viewReader(parts) {
   $('.rtab.on').scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
-/* ---------- POŁĄCZENIA MIĘDZYMODUŁOWE (2 MAPY) ---------- */
+/* ---------- POŁĄCZENIA MIĘDZYMODUŁOWE (Symptom Explorer + 2 Mapy) ---------- */
 function viewConnections(parts, params) {
   let activeTab = params.tab === 'pytania' ? 'pytania' : 'atlas';
+  let activeClusterId = params.cluster || null;
+  let activeClusterTag = 'all';
+  let activeGraph = null;
+  let currentMasteryFilter = 'all';
+  let currentTrapFilter = 'all';
 
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Połączenia międzymodułowe</div>
+    <div class="eyebrow">Połączenia międzymodułowe · Silnik integracji klinicznej</div>
     <h2>Gdzie tematy się przecinają</h2>
-    <div class="conn-tabs" role="tablist">
-      <button class="conn-tab-btn ${activeTab === 'atlas' ? 'active' : ''}" data-tab="atlas" role="tab" aria-selected="${activeTab === 'atlas'}">🗺️ Mapa Atlasów i Modułów (Wikilinks)</button>
-      <button class="conn-tab-btn ${activeTab === 'pytania' ? 'active' : ''}" data-tab="pytania" role="tab" aria-selected="${activeTab === 'pytania'}">🎯 Mapa Zadań i Pułapek (Baza pytań)</button>
+    <p class="lead" style="margin-bottom:1.4rem">Eksploruj powiązania między modułami: ścieżki różnicowania objawowego z algorytmami decyzyjnymi, głębokie wikilinki do sekcji atlasów oraz mapę pytań i pułapek z wizualizacją Twojego opanowania.</p>
+
+    <!-- OMNIBAR OBJAWÓW (Symptom Explorer) -->
+    <div class="conn-omnibar-box">
+      <div class="conn-omnibar-header">
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span style="font-weight:800;font-size:.95rem;color:var(--ink);display:flex;align-items:center;gap:.4rem">
+            <span>🩺</span> Symptom Explorer: 8 Zespołów Różnicowych
+          </span>
+          <span class="chip" style="font-size:.72rem;background:var(--teal-l);color:var(--teal-d);border:0;font-weight:700">Wysokopunktowane LĘK / PES / OSCE</span>
+        </div>
+        <div class="conn-omnibar-filters" id="omnibarTags">
+          <button class="omnibar-tag-btn active" data-tag="all">Wszystkie (8)</button>
+          <button class="omnibar-tag-btn" data-tag="brzuszne">Brzuszne</button>
+          <button class="omnibar-tag-btn" data-tag="zakaźne">Zakaźne & Skazy</button>
+          <button class="omnibar-tag-btn" data-tag="nerkowe">Nerkowe</button>
+          <button class="omnibar-tag-btn" data-tag="stany-nagle">Stany nagłe & OUN</button>
+        </div>
+      </div>
+
+      <div class="conn-clusters-scroll" id="clusterChipsRow">
+        <!-- Generowane z SYMPTOM_CLUSTERS -->
+      </div>
+    </div>
+
+    <!-- KARTA ŚCIEŻKI DECYZYJNEJ -->
+    <div id="diffDecisionCardHost"></div>
+
+    <div class="conn-tabs" role="tablist" style="margin-top:1.8rem">
+      <button class="conn-tab-btn ${activeTab === 'atlas' ? 'active' : ''}" data-tab="atlas" role="tab" aria-selected="${activeTab === 'atlas'}">🗺️ Mapa Atlasów i Wikilinków (Głębokie powiązania)</button>
+      <button class="conn-tab-btn ${activeTab === 'pytania' ? 'active' : ''}" data-tab="pytania" role="tab" aria-selected="${activeTab === 'pytania'}">🎯 Mapa Zadań i Pułapek (Baza pytań & Opanowanie)</button>
       <a class="conn-tab-btn" href="#/graf" style="margin-left:auto;text-decoration:none">🕸️ Otwórz Graf wiedzy →</a>
     </div>
     <div id="connTabContent"></div>
   </div></section>`;
 
   const tabContent = $('#connTabContent');
+  const clustersRow = $('#clusterChipsRow');
+  const cardHost = $('#diffDecisionCardHost');
 
+  // Renderowanie kafelków w Omnibarze
+  function renderClusterChips(tag = 'all') {
+    const clusters = (SYMPTOM_CLUSTERS || []).filter(c => {
+      if (tag === 'all') return true;
+      if (tag === 'brzuszne') return c.id === 's1' || c.id === 's6';
+      if (tag === 'zakaźne') return c.id === 's2' || c.id === 's7';
+      if (tag === 'nerkowe') return c.id === 's3' || c.id === 's8';
+      if (tag === 'stany-nagle') return c.id === 's4' || c.id === 's5';
+      return true;
+    });
+
+    clustersRow.innerHTML = clusters.map(c => {
+      const isSel = c.id === activeClusterId;
+      return `
+        <button class="symptom-chip ${isSel ? 'active' : ''}" data-cluster="${c.id}" type="button">
+          <span class="symptom-icon">${c.icon}</span>
+          <div style="text-align:left">
+            <div class="symptom-name">${esc(c.name)}</div>
+            <div class="symptom-mods">
+              ${c.mods.map(m => `<span class="chip-mini" style="color:${gOf(m).color}">[${m}]</span>`).join('')}
+            </div>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    $$('.symptom-chip[data-cluster]', clustersRow).forEach(chip => {
+      chip.addEventListener('click', () => {
+        const id = chip.dataset.cluster;
+        if (activeClusterId === id) {
+          activeClusterId = null;
+          chip.classList.remove('active');
+          renderDiffDecisionCard(null);
+          if (activeGraph) activeGraph.clear();
+        } else {
+          activeClusterId = id;
+          $$('.symptom-chip', clustersRow).forEach(x => x.classList.toggle('active', x === chip));
+          const cluster = (SYMPTOM_CLUSTERS || []).find(x => x.id === id);
+          renderDiffDecisionCard(cluster);
+          if (activeGraph && cluster) activeGraph.litCluster(cluster.mods);
+          cardHost.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    });
+  }
+
+  // Filtr tagów Omnibara
+  $('#omnibarTags').addEventListener('click', ev => {
+    const btn = ev.target.closest('.omnibar-tag-btn');
+    if (!btn) return;
+    activeClusterTag = btn.dataset.tag;
+    $$('.omnibar-tag-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderClusterChips(activeClusterTag);
+  });
+
+  renderClusterChips('all');
+
+  // Renderowanie Karty Ścieżki Decyzyjnej
+  function renderDiffDecisionCard(cluster) {
+    if (!cluster) {
+      cardHost.innerHTML = '';
+      return;
+    }
+
+    const commonCrossQs = Q.filter(q => {
+      const hits = q.mods.filter(m => cluster.mods.includes(m));
+      return hits.length >= 2;
+    });
+
+    cardHost.innerHTML = `
+      <div class="diff-card-wrapper" id="activeDiffCard">
+        <div class="diff-card-header">
+          <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+            <span style="font-size:1.6rem">${cluster.icon}</span>
+            <div>
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span class="chip" style="font-size:.7rem;font-weight:700">${esc(cluster.tag)}</span>
+                <div class="pillrow" style="margin:0">
+                  ${cluster.mods.map(m => `<span class="chip m" style="color:${gOf(m).color};font-size:.75rem">[${m}] ${esc(SHORT[m])}</span>`).join('')}
+                </div>
+              </div>
+              <h3 style="margin:.25rem 0 0;font-size:1.3rem;font-family:var(--font-display)">${esc(cluster.name)}</h3>
+            </div>
+          </div>
+          <button class="btn sec sm" id="btnCloseDiffCard" style="margin-left:auto" title="Zwiń kartę różnicowania">✕ Zwiń kartę</button>
+        </div>
+
+        <!-- RED FLAGS -->
+        <div class="diff-box red-flags">
+          <div class="diff-box-title">🚨 Czerwone flagi (Red Flags – Natychmiastowa ocena SOR/OIT)</div>
+          <ul class="diff-list">
+            ${cluster.redFlags.map(rf => `<li>${esc(rf)}</li>`).join('')}
+          </ul>
+        </div>
+
+        <!-- KEY RULE -->
+        <div class="diff-box key-rule">
+          <div class="diff-box-title">⚖️ Klucz rozstrzygający (Badanie z wyboru / Pierwszy krok)</div>
+          <p style="margin:0;font-size:.9rem;line-height:1.5;font-weight:600;color:var(--ink)">${esc(cluster.keyRule)}</p>
+        </div>
+
+        <!-- GAŁĘZIE MODUŁOWE (BRANCHES) -->
+        <div style="margin-top:1rem">
+          <div class="flab" style="margin-bottom:.5rem">Kierunki różnicowania i głębokie odnośniki do sekcji w atlasach</div>
+          <div class="diff-branches-grid">
+            ${cluster.branches.map(b => `
+              <div class="diff-branch-item" style="border-left:4px solid ${gOf(b.mod).color}">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
+                  <span class="chip m" style="color:${gOf(b.mod).color};font-size:.72rem">[${b.mod}] ${esc(SHORT[b.mod])}</span>
+                  <span class="muted" style="font-size:.75rem">Atlas: ${b.atlas}</span>
+                </div>
+                <h4 style="font-size:.96rem;margin-bottom:.3rem">${esc(b.name)}</h4>
+                <p class="muted" style="font-size:.82rem;line-height:1.4;margin-bottom:.6rem">${esc(b.clue)}</p>
+                <a class="btn sec sm diff-link-btn" href="#/atlas/${b.atlas}/${b.sec}">
+                  📖 ${esc(b.linkText)} →
+                </a>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- PUŁAPKA I TRENING -->
+        <div class="diff-footer-row">
+          <div class="diff-trap-box ${cluster.trap.type === 'bedside' ? 'bedside-trap' : 'test-trap'}">
+            <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem">
+              <span style="font-weight:800;font-size:.8rem">${esc(cluster.trap.badge)}</span>
+            </div>
+            <div style="font-weight:700;font-size:.88rem;margin-bottom:.2rem">${esc(cluster.trap.title)}</div>
+            <p class="muted" style="font-size:.82rem;margin:0;line-height:1.4">${esc(cluster.trap.desc)}</p>
+            <div style="margin-top:.4rem;font-size:.8rem;color:var(--ink);font-weight:600">💡 <b>Egzamin:</b> ${esc(cluster.examTip)}</div>
+          </div>
+
+          <div class="diff-action-box">
+            <div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">Sprawdź się na styku modułów:</div>
+            <p class="muted" style="font-size:.78rem;margin-bottom:.7rem">Baza zawiera <b>${commonCrossQs.length}</b> pytań łączących te tematy.</p>
+            <a class="btn pri sm" href="#/trening?mods=${cluster.mods.join(',')}" style="width:100%;text-align:center;justify-content:center">
+              🎯 Ćwicz pytania ze styku (${commonCrossQs.length})
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $('#btnCloseDiffCard').addEventListener('click', () => {
+      activeClusterId = null;
+      $$('.symptom-chip').forEach(c => c.classList.remove('active'));
+      cardHost.innerHTML = '';
+      if (activeGraph) activeGraph.clear();
+    });
+  }
+
+  if (activeClusterId) {
+    const cluster = (SYMPTOM_CLUSTERS || []).find(x => x.id === activeClusterId);
+    if (cluster) renderDiffDecisionCard(cluster);
+  }
+
+  /* ------------------- ZAKŁADKA 1: MAPA ATLASÓW ------------------- */
   function renderAtlasMap() {
     tabContent.innerHTML = `
-      <p class="lead">Wizualizacja powiązań między modułami, sekcjami atlasów oraz powiązanymi pojęciami klinicznymi (Wikilinks & Backlinks). Kliknij moduł na mapie, aby prześwietlić jego odniesienia wychodzące i przychodzące.</p>
+      <p class="lead">Wizualizacja powiązań między modułami, sekcjami atlasów oraz powiązanymi pojęciami klinicznymi (Wikilinks & Backlinks). Kliknij moduł na mapie, aby prześwietlić jego odniesienia wychodzące i przychodzące z głębokimi linkami do podstron.</p>
       <div class="conn">
         <div class="card" style="padding:.6rem"><div id="atlasGraph"></div></div>
         <div class="sticky"><div id="atlasPanel"></div></div>
@@ -522,29 +830,31 @@ function viewConnections(parts, params) {
         <h3>Kluczowe mosty wiedzy między atlasami</h3>
         <p class="lead" style="margin-bottom:1rem">Pojęcia i jednostki chorobowe wymagające łączenia wiedzy z różnych atlasów kursu.</p>
         <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))" id="atlasBridgeGrid">
-          ${(SEMANTIC_GAPS || []).slice(0, 6).map(g => `
+          ${(SEMANTIC_GAPS || []).map(g => `
             <div class="card" style="padding:1rem;cursor:pointer" data-mod="${g.from}">
               <div class="pillrow" style="margin-bottom:.4rem">
                 ${g.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}] ${esc(SHORT[m])}</span>`).join('')}
               </div>
               <h4 style="font-size:1rem;margin-bottom:.3rem">${esc(g.title)}</h4>
-              <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 120))}…</p>
+              <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</p>
             </div>
           `).join('')}
         </div>
       </div>`;
 
     const panel = $('#atlasPanel');
-    const g = renderGraph($('#atlasGraph'), { mode: 'select', draw: true, onNode: selAtlasNode, onEdge: selAtlasEdge });
+    const g = renderGraph($('#atlasGraph'), { type: 'atlas', mode: 'select', draw: true, onNode: selAtlasNode, onEdge: selAtlasEdge });
+    activeGraph = g;
 
     function introAtlas() {
       g.pin(null);
       panel.innerHTML = `<div class="card">
         <h3>Mapa Atlasów i Wikilinków</h3>
-        <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł z koła powiązań. Panel pokaże odniesienia wychodzące (Wikilinks), odniesienia przychodzące (Backlinks) oraz sekcje atlasu.</p>
+        <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł z koła powiązań. Panel pokaże odniesienia wychodzące (Wikilinks), odniesienia przychodzące (Backlinks) oraz sekcje atlasu z możliwością natychmiastowego przejścia do treści.</p>
         <div class="legend" style="margin:0">
           ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
-          <span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span>
+          <span><i class="dot" style="background:var(--red)"></i>pułapka kliniczna</span>
+          <span><i class="dot" style="background:var(--teal)"></i>różnicowanie / most</span>
           <span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span>
         </div>
       </div>`;
@@ -577,13 +887,22 @@ function viewConnections(parts, params) {
           <div class="flab">Wikilinks (Odniesienia wychodzące: ${wikis.length})</div>
           <div class="link-list">
             ${wikis.map(w => `
-              <button class="link-item" data-goto="${w.target}" type="button">
+              <div class="link-item">
                 <div class="link-item-header">
                   <span class="link-item-title">${esc(w.label)}</span>
-                  <span class="chip m" style="color:${gOf(w.target).color};font-size:.72rem">[${w.target}] ${esc(SHORT[w.target])}</span>
+                  <button class="chip m link-goto-btn" data-goto="${w.target}" type="button" style="color:${gOf(w.target).color};font-size:.72rem;cursor:pointer;border:1px solid currentColor">
+                    [${w.target}] ${esc(SHORT[w.target])}
+                  </button>
                 </div>
                 <div class="link-item-concept">${esc(w.concept)}</div>
-              </button>
+                ${w.atlas && w.sec ? `
+                  <div style="margin-top:.4rem;text-align:right">
+                    <a class="btn sec sm" href="#/atlas/${w.atlas}/${w.sec}" style="padding:.2rem .5rem;font-size:.72rem">
+                      Otwórz w atlasie: ${w.sec} →
+                    </a>
+                  </div>
+                ` : ''}
+              </div>
             `).join('') || '<span class="muted" style="font-size:.85rem">Brak bezpośrednich odniesień wychodzących.</span>'}
           </div>
         </div>
@@ -592,13 +911,22 @@ function viewConnections(parts, params) {
           <div class="flab">Backlinks (Odniesienia przychodzące: ${backs.length})</div>
           <div class="link-list">
             ${backs.map(b => `
-              <button class="link-item" data-goto="${b.source}" type="button">
+              <div class="link-item">
                 <div class="link-item-header">
                   <span class="link-item-title">${esc(b.label)}</span>
-                  <span class="chip m" style="color:${gOf(b.source).color};font-size:.72rem">[${b.source}] ${esc(SHORT[b.source])}</span>
+                  <button class="chip m link-goto-btn" data-goto="${b.source}" type="button" style="color:${gOf(b.source).color};font-size:.72rem;cursor:pointer;border:1px solid currentColor">
+                    [${b.source}] ${esc(SHORT[b.source])}
+                  </button>
                 </div>
                 <div class="link-item-concept">${esc(b.concept)}</div>
-              </button>
+                ${b.atlas && b.sec ? `
+                  <div style="margin-top:.4rem;text-align:right">
+                    <a class="btn sec sm" href="#/atlas/${b.atlas}/${b.sec}" style="padding:.2rem .5rem;font-size:.72rem">
+                      Otwórz w atlasie: ${b.sec} →
+                    </a>
+                  </div>
+                ` : ''}
+              </div>
             `).join('') || '<span class="muted" style="font-size:.85rem">Brak bezpośrednich odniesień przychodzących.</span>'}
           </div>
         </div>
@@ -613,8 +941,7 @@ function viewConnections(parts, params) {
         ` : ''}
       </div>`;
 
-      // Obsługa kliknięć w linki do innych modułów w panelu
-      $$('.link-item[data-goto]', panel).forEach(btn => {
+      $$('.link-goto-btn[data-goto]', panel).forEach(btn => {
         btn.addEventListener('click', () => selAtlasNode(btn.dataset.goto));
       });
     }
@@ -637,9 +964,16 @@ function viewConnections(parts, params) {
         <p class="muted" style="font-size:.88rem;margin-bottom:.8rem">Most semantyczny i powiązania między atlasami.</p>
 
         ${[...wA, ...wB].map(w => `
-          <div class="link-item" style="cursor:default;margin-bottom:.5rem">
+          <div class="link-item" style="margin-bottom:.5rem">
             <div class="link-item-title" style="margin-bottom:.25rem">${esc(w.label)}</div>
             <div class="link-item-concept">${esc(w.concept)}</div>
+            ${w.atlas && w.sec ? `
+              <div style="margin-top:.4rem;text-align:right">
+                <a class="btn sec sm" href="#/atlas/${w.atlas}/${w.sec}">
+                  Otwórz sekcję [${w.sec}] →
+                </a>
+              </div>
+            ` : ''}
           </div>
         `).join('')}
 
@@ -654,9 +988,13 @@ function viewConnections(parts, params) {
     }
 
     introAtlas();
-    if (params.mod && modById[params.mod]) selAtlasNode(params.mod);
+    if (activeClusterId) {
+      const cluster = (SYMPTOM_CLUSTERS || []).find(x => x.id === activeClusterId);
+      if (cluster) g.litCluster(cluster.mods);
+    } else if (params.mod && modById[params.mod]) {
+      selAtlasNode(params.mod);
+    }
 
-    // Kafelki mostów na dole
     $('#atlasBridgeGrid').addEventListener('click', ev => {
       const card = ev.target.closest('[data-mod]');
       if (card && card.dataset.mod) {
@@ -666,75 +1004,282 @@ function viewConnections(parts, params) {
     });
   }
 
+  /* ------------------- ZAKŁADKA 2: MAPA ZADAŃ I PUŁAPEK ------------------- */
   function renderQuestionsMap() {
+    let totalPairsWithQs = 0, pairsWithWrong = 0;
+    EDGES.forEach(e => {
+      if (e.w > 0) {
+        totalPairsWithQs++;
+        const st = edgeStats(e.a, e.b);
+        if (st.wrong > 0) pairsWithWrong++;
+      }
+    });
+
+    const bedsideCount = TRAPS.filter(t => t.category === 'bedside').length;
+    const testCount = TRAPS.filter(t => t.category === 'test').length;
+
     tabContent.innerHTML = `
-      <p class="lead">Grubość linii to liczba zadań oznaczonych obydwoma modułami (baza ${Q.length} pytań). Turkusowe linie to pułapki kliniczne, w których jeden obraz wymaga wiedzy z kilku modułów.</p>
+      <p class="lead">Grubość linii to liczba wspólnych zadań z bazy (${Q.length} pytań). Kolor odzwierciedla Twoje opanowanie krawędzi (zielony/żółty/czerwony). Kliknij krawędź lub komórkę macierzy, aby uruchomić trening ze styku tematów.</p>
+
+      <div class="conn-filter-toolbar">
+        <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:.82rem;color:var(--ink-2)">Filtruj powiązania:</span>
+          <button class="tgl ${currentMasteryFilter === 'all' ? 'on' : ''}" data-mf="all">Wszystkie (${totalPairsWithQs})</button>
+          <button class="tgl ${currentMasteryFilter === 'wrong' ? 'on' : ''}" data-mf="wrong" style="color:var(--red)">❌ Z błędami (${pairsWithWrong})</button>
+        </div>
+        <div class="legend" style="margin:0;font-size:.78rem">
+          <span><i class="dot" style="background:var(--green)"></i>Opanowane (≥70%)</span>
+          <span><i class="dot" style="background:var(--amber)"></i>W trakcie (40-69%)</span>
+          <span><i class="dot" style="background:var(--red)"></i>Błędy (&lt;40%)</span>
+          <span><i class="dot" style="background:rgba(12,122,133,0.35)"></i>Niećwiczone</span>
+        </div>
+      </div>
+
       <div class="conn">
         <div class="card" style="padding:.6rem"><div id="bigGraph"></div></div>
         <div class="sticky"><div id="panel"></div></div>
       </div>
+
       <div style="margin-top:2.4rem">
-        <h2>Pułapki kliniczne</h2>
-        <p class="lead">Kliknij pułapkę, aby podświetlić powiązane moduły na mapie.</p>
-        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))" id="traps">
-          ${TRAPS.map((t, i) => `<button class="trap" data-t="${i}"><h4>${esc(t.t)}</h4><div class="pillrow">${t.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}]</span>`).join('')}</div><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span></button>`).join('')}
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:.5rem">
+          <div>
+            <h2 style="margin:0">Pułapki kliniczne i egzaminacyjne</h2>
+            <p class="lead" style="margin:0">16 kluczowych pułapek z podziałem na błędy w sztuce (przyłóżkowe) i pułapki testowe.</p>
+          </div>
+          <div class="pillrow" id="trapCatFilters" style="margin:0">
+            <button class="tgl ${currentTrapFilter === 'all' ? 'on' : ''}" data-tf="all">Wszystkie (16)</button>
+            <button class="tgl ${currentTrapFilter === 'bedside' ? 'on' : ''}" data-tf="bedside">🚨 Zagrożenie życia (${bedsideCount})</button>
+            <button class="tgl ${currentTrapFilter === 'test' ? 'on' : ''}" data-tf="test">⚠️ Testowe (${testCount})</button>
+          </div>
+        </div>
+
+        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(310px,1fr))" id="trapsGrid">
+          <!-- Generowane z TRAPS -->
         </div>
       </div>
+
       <div style="margin-top:2.4rem">
-        <h2>Macierz współwystępowania</h2>
-        <p class="lead">Ile zadań łączy dwa moduły. Kliknij komórkę, aby wybrać parę.</p>
+        <h2>Macierz współwystępowania & opanowania</h2>
+        <p class="lead">Wspólne zadania między modułami oraz Twój wynik. Kliknij komórkę, aby wybrać parę i rozpocząć trening.</p>
         <div class="card" style="overflow:auto"><div id="matrix"></div></div>
       </div>`;
 
     const panel = $('#panel');
-    const g = renderGraph($('#bigGraph'), { mode: 'select', draw: true, onNode: selNode, onEdge: selEdge });
+    const g = renderGraph($('#bigGraph'), { type: 'questions', mode: 'select', draw: true, onNode: selNode, onEdge: selEdge });
+    activeGraph = g;
+
+    function renderTrapsList() {
+      const filtered = TRAPS.filter(t => {
+        if (currentTrapFilter === 'all') return true;
+        return t.category === currentTrapFilter;
+      });
+
+      $('#trapsGrid').innerHTML = filtered.map(t => {
+        const idx = TRAPS.indexOf(t);
+        const isBedside = t.category === 'bedside';
+        return `
+          <button class="trap" data-t="${idx}" style="border-left-color:${isBedside ? 'var(--red)' : 'var(--amber)'}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.2rem">
+              <span class="chip" style="font-size:.7rem;font-weight:800;border:0;color:${isBedside ? 'var(--red)' : 'var(--amber)'};background:${isBedside ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)'}">
+                ${isBedside ? '🚨 PRZYŁÓŻKOWA' : '⚠️ TESTOWA'}
+              </span>
+              <div class="pillrow" style="margin:0">
+                ${t.mods.map(m => `<span class="chip m" style="color:${gOf(m).color};font-size:.7rem">[${m}]</span>`).join('')}
+              </div>
+            </div>
+            <h4>${esc(t.t)}</h4>
+            <span class="eq">${esc(t.eq)}</span>
+            <span class="out" style="color:${isBedside ? 'var(--red)' : 'var(--amber)'}">→ ${esc(t.out)}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    renderTrapsList();
+
+    $('#trapCatFilters').addEventListener('click', ev => {
+      const btn = ev.target.closest('[data-tf]');
+      if (!btn) return;
+      currentTrapFilter = btn.dataset.tf;
+      $$('#trapCatFilters [data-tf]').forEach(b => b.classList.toggle('on', b === btn));
+      renderTrapsList();
+    });
 
     function intro() {
       g.pin(null);
-      panel.innerHTML = `<div class="card"><h3>Jak czytać mapę pytań</h3><p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł albo linię. Panel pokaże powiązane tematy, pułapki i zadania łączące oba moduły.</p>
-        <div class="legend" style="margin:0">${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}<span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span><span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span></div></div>`;
+      panel.innerHTML = `<div class="card">
+        <h3>Jak czytać mapę pytań</h3>
+        <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł albo krawędź. Panel pokaże powiązane tematy, pułapki oraz statystyki Twoich odpowiedzi ze styku tych modułów.</p>
+        <div class="legend" style="margin:0">
+          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
+          <span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span>
+          <span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span>
+        </div>
+      </div>`;
     }
 
     function selNode(id) {
-      const m = modById[id]; g.pin([id]); g.litNode(id);
+      const m = modById[id];
+      g.pin([id]);
+      g.litNode(id);
       const conn = EDGES.filter(e => e.a === id || e.b === id).map(e => ({ o: e.a === id ? e.b : e.a, e })).sort((x, y) => y.e.w - x.e.w);
-      panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span><span class="chip">${GROUPS[m.g].short}</span></div>
-        <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3><p class="muted">${esc(m.d)}</p>
-        <div class="acts" style="margin:.9rem 0">${m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Atlas</a>` : '<span class="chip">brak atlasu</span>'}<a class="btn sec sm" href="#/pytania?mods=${id}">Zadania</a>${m.at ? `<a class="btn sec sm" href="#/trening?mods=${id}">Trening</a>` : ''}</div>
+      panel.innerHTML = `<div class="card">
+        <div class="pillrow">
+          <span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span>
+          <span class="chip">${GROUPS[m.g].short}</span>
+        </div>
+        <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3>
+        <p class="muted">${esc(m.d)}</p>
+        <div class="acts" style="margin:.9rem 0">
+          ${m.at ? `<a class="btn pri sm" href="#/atlas/${m.at}/${m.a}">Atlas</a>` : '<span class="chip">brak atlasu</span>'}
+          <a class="btn sec sm" href="#/pytania?mods=${id}">Zadania (${modStats(id).total})</a>
+          ${m.at ? `<a class="btn sec sm" href="#/trening?mods=${id}">Trening</a>` : ''}
+        </div>
         <div class="flab" style="margin-bottom:.4rem">Powiązane moduły</div>
-        <div class="pillrow">${conn.map(c => `<button class="tgl" data-e="${c.e.a}|${c.e.b}">[${c.o}] ${esc(SHORT[c.o])} <b>${c.e.w}</b>${c.e.traps.length ? ' ●' : ''}</button>`).join('') || '<span class="muted">brak</span>'}</div></div>`;
+        <div class="pillrow">
+          ${conn.map(c => {
+            const st = edgeStats(c.e.a, c.e.b);
+            const dotColor = st.status === 'ok' ? 'var(--green)' : st.status === 'bad' ? 'var(--red)' : st.status === 'warn' ? 'var(--amber)' : 'var(--muted)';
+            return `<button class="tgl" data-e="${c.e.a}|${c.e.b}">[${c.o}] ${esc(SHORT[c.o])} <b>${c.e.w}</b> <i class="dot" style="background:${dotColor}"></i></button>`;
+          }).join('') || '<span class="muted">brak</span>'}
+        </div>
+      </div>`;
     }
 
     function selEdge(k) {
-      const e = E[k]; if (!e) return; g.pin([e.a, e.b]); g.lit([e.a, e.b]);
-      panel.innerHTML = `<div class="card"><div class="pillrow"><span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}]</span><span aria-hidden="true">↔</span><span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}]</span></div>
+      const e = E[k];
+      if (!e) return;
+      g.pin([e.a, e.b]);
+      g.lit([e.a, e.b]);
+      const st = edgeStats(e.a, e.b);
+
+      const masteryHtml = st.att > 0
+        ? `<div class="diff-box key-rule" style="margin:.7rem 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
+              <span style="font-weight:700;font-size:.84rem">Twój wynik ze styku:</span>
+              <span class="chip" style="font-size:.72rem;background:${st.status === 'ok' ? 'var(--green-l)' : st.status === 'bad' ? 'var(--red-l)' : 'var(--amber-l)'};color:${st.status === 'ok' ? 'var(--green)' : st.status === 'bad' ? 'var(--red)' : 'var(--amber)'};border:0;font-weight:800">
+                ${st.status === 'ok' ? '🟢 Opanowane' : st.status === 'bad' ? '🔴 Wymaga powtórki' : '🟡 W trakcie'} (${Math.round(st.rate * 100)}%)
+              </span>
+            </div>
+            <div class="muted" style="font-size:.8rem">Rozwiązane: <b>${st.att}</b> / ${st.total} (Poprawne: ${st.ok}, Błędne: ${st.wrong})</div>
+          </div>`
+        : `<div class="diff-box" style="margin:.7rem 0;background:var(--bg)">
+            <span class="muted" style="font-size:.82rem">Jeszcze nie rozwiązywałeś zadań łączących te dwa moduły.</span>
+          </div>`;
+
+      panel.innerHTML = `<div class="card">
+        <div class="pillrow">
+          <span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}]</span>
+          <span aria-hidden="true">↔</span>
+          <span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}]</span>
+        </div>
         <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
         <p><b>${e.w}</b> ${e.w === 1 ? 'zadanie łączy' : 'zadań łączy'} oba moduły.</p>
-        ${e.traps.map(t => `<div class="trap on" style="margin-top:.6rem;cursor:default"><h4>${esc(t.t)}</h4><span class="eq">${esc(t.eq)}</span><span class="out">→ ${esc(t.out)}</span><span class="eq">${esc(t.tip)}</span></div>`).join('')}
-        <div class="acts" style="margin-top:.9rem">${e.w ? `<a class="btn pri sm" href="#/pytania?mods=${e.a},${e.b}&all=1">Pokaż zadania</a>` : ''}<button class="btn sec sm" id="clr">Wyczyść</button></div></div>`;
-      const c = $('#clr'); if (c) c.onclick = () => { intro(); g.lit([]); };
+
+        ${masteryHtml}
+
+        ${e.traps.map(t => `
+          <div class="trap on" style="margin-top:.6rem;cursor:default;border-left-color:${t.category === 'bedside' ? 'var(--red)' : 'var(--amber)'}">
+            <div style="font-size:.72rem;font-weight:800;color:${t.category === 'bedside' ? 'var(--red)' : 'var(--amber)'};margin-bottom:.2rem">
+              ${t.category === 'bedside' ? '🚨 ZAGROŻENIE ŻYCIA' : '⚠️ PUŁAPKA TESTOWA'}
+            </div>
+            <h4>${esc(t.t)}</h4>
+            <span class="eq">${esc(t.eq)}</span>
+            <span class="out">→ ${esc(t.out)}</span>
+            <span class="eq">${esc(t.tip)}</span>
+          </div>
+        `).join('')}
+
+        <div class="acts" style="margin-top:.9rem">
+          ${e.w ? `<a class="btn pri sm" href="#/trening?mods=${e.a},${e.b}">Ćwicz styk (${e.w})</a>` : ''}
+          ${st.wrong ? `<a class="btn sec sm" href="#/trening?mods=${e.a},${e.b}&wrong=1" style="color:var(--red)">Błędne (${st.wrong})</a>` : ''}
+          ${e.w ? `<a class="btn sec sm" href="#/pytania?mods=${e.a},${e.b}&all=1">Baza pytań</a>` : ''}
+          <button class="btn sec sm" id="clr">Wyczyść</button>
+        </div>
+      </div>`;
+
+      const c = $('#clr');
+      if (c) c.onclick = () => { intro(); g.lit([]); };
     }
 
-    panel.addEventListener('click', ev => { const b = ev.target.closest('[data-e]'); if (b) selEdge(b.dataset.e); });
-    $('#traps').addEventListener('click', ev => {
-      const b = ev.target.closest('[data-t]'); if (!b) return; const t = TRAPS[+b.dataset.t];
-      $$('#traps .trap').forEach(x => x.classList.toggle('on', x === b)); g.pin(t.mods); g.lit(t.mods);
-      panel.innerHTML = `<div class="card"><div class="eyebrow">Pułapka</div><h3 style="font-size:1.3rem;font-family:var(--font-display);margin-bottom:.4rem">${esc(t.t)}</h3><p>${esc(t.eq)}</p><p style="color:var(--red);font-weight:800;margin:.4rem 0">→ ${esc(t.out)}</p><p class="muted">${esc(t.tip)}</p>
-        <div class="acts" style="margin-top:.9rem">${t.mods.map(m => modById[m].at ? `<a class="btn sec sm" href="#/atlas/${modById[m].at}/${modById[m].a}">[${m}] ${esc(SHORT[m])}</a>` : `<span class="chip">[${m}] ${esc(SHORT[m])} · brak atlasu</span>`).join('')}</div></div>`;
+    panel.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-e]');
+      if (b) selEdge(b.dataset.e);
+    });
+
+    $('#trapsGrid').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-t]');
+      if (!b) return;
+      const t = TRAPS[+b.dataset.t];
+      $$('#trapsGrid .trap').forEach(x => x.classList.toggle('on', x === b));
+      g.pin(t.mods);
+      g.lit(t.mods);
+
+      const isBedside = t.category === 'bedside';
+      panel.innerHTML = `<div class="card">
+        <div style="font-size:.72rem;font-weight:800;color:${isBedside ? 'var(--red)' : 'var(--amber)'};margin-bottom:.25rem">
+          ${isBedside ? '🚨 PRZYŁÓŻKOWE ZAGROŻENIE ŻYCIA' : '⚠️ PUŁAPKA TESTOWA (KLUCZ VS WYTYCZNE)'}
+        </div>
+        <h3 style="font-size:1.3rem;font-family:var(--font-display);margin-bottom:.4rem">${esc(t.t)}</h3>
+        <p>${esc(t.eq)}</p>
+        <p style="color:${isBedside ? 'var(--red)' : 'var(--amber)'};font-weight:800;margin:.4rem 0">→ ${esc(t.out)}</p>
+        <p class="muted">${esc(t.tip)}</p>
+        <div class="acts" style="margin-top:.9rem">
+          <a class="btn pri sm" href="#/trening?mods=${t.mods.join(',')}">Ćwicz pytania z tej pułapki</a>
+          ${t.mods.map(m => modById[m].at ? `<a class="btn sec sm" href="#/atlas/${modById[m].at}/${modById[m].a}">[${m}] ${esc(SHORT[m])}</a>` : `<span class="chip">[${m}] · brak atlasu</span>`).join('')}
+        </div>
+      </div>`;
+
       if (innerWidth < 1000) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
-    const ids = MODS.map(m => m.id); const mx = Math.max(...EDGES.map(e => e.w));
-    $('#matrix').innerHTML = `<table class="matrix"><tr><th></th>${ids.map(i => `<th style="color:${gOf(i).color}">${i}</th>`).join('')}</tr>${ids.map((r, ri) => `<tr><th style="text-align:right;color:${gOf(r).color}">${r}</th>${ids.map((c, ci) => {
-      if (ci > ri) return '<td></td>'; if (ci === ri) return `<td style="background:${gOf(r).soft}"></td>`;
-      const e = E[edgeKey(r, c)]; const w = e ? e.w : 0;
-      return `<td data-e="${e ? e.a + '|' + e.b : ''}" style="background:${w ? `rgba(12,122,133,${(.14 + .86 * w / mx).toFixed(2)})` : 'var(--line-2)'};color:${w / mx > .5 ? '#fff' : 'var(--ink-2)'};${e ? 'cursor:pointer' : ''}" title="[${r}] ↔ [${c}]: ${w}">${w || ''}</td>`;
-    }).join('')}</tr>`).join('')}</table>`;
-    $('#matrix').addEventListener('click', ev => { const td = ev.target.closest('td[data-e]'); if (td && td.dataset.e) selEdge(td.dataset.e); });
+    // Macierz współwystępowania & opanowania
+    const ids = MODS.map(m => m.id);
+    const mx = Math.max(...EDGES.map(e => e.w));
+
+    $('#matrix').innerHTML = `<table class="matrix">
+      <tr><th></th>${ids.map(i => `<th style="color:${gOf(i).color}">${i}</th>`).join('')}</tr>
+      ${ids.map((r, ri) => `
+        <tr>
+          <th style="text-align:right;color:${gOf(r).color}">${r}</th>
+          ${ids.map((c, ci) => {
+            if (ci > ri) return '<td></td>';
+            if (ci === ri) return `<td style="background:${gOf(r).soft}"></td>`;
+            const e = E[edgeKey(r, c)];
+            const w = e ? e.w : 0;
+            if (!w) return `<td style="background:var(--line-2)"></td>`;
+
+            const st = edgeStats(r, c);
+            let cellBg = `rgba(12,122,133,${(.14 + .86 * w / mx).toFixed(2)})`;
+            let cellColor = w / mx > .5 ? '#fff' : 'var(--ink-2)';
+
+            if (st.att > 0) {
+              if (st.status === 'ok') { cellBg = 'rgba(16, 185, 129, 0.4)'; cellColor = 'var(--ink)'; }
+              else if (st.status === 'bad') { cellBg = 'rgba(239, 68, 68, 0.4)'; cellColor = 'var(--ink)'; }
+              else { cellBg = 'rgba(245, 158, 11, 0.4)'; cellColor = 'var(--ink)'; }
+            }
+
+            return `<td data-e="${e ? e.a + '|' + e.b : ''}" style="background:${cellBg};color:${cellColor};cursor:pointer" title="[${r}] ↔ [${c}]: ${w} pytań${st.att > 0 ? ` (Wynik: ${Math.round(st.rate * 100)}%)` : ''}">${w}</td>`;
+          }).join('')}
+        </tr>
+      `).join('')}
+    </table>`;
+
+    $('#matrix').addEventListener('click', ev => {
+      const td = ev.target.closest('td[data-e]');
+      if (td && td.dataset.e) selEdge(td.dataset.e);
+    });
 
     intro();
-    if (params.mod && modById[params.mod]) selNode(params.mod);
-    else if (params.trap != null && TRAPS[+params.trap]) { const b = $(`#traps [data-t="${+params.trap}"]`); b && b.click(); }
+    if (activeClusterId) {
+      const cluster = (SYMPTOM_CLUSTERS || []).find(x => x.id === activeClusterId);
+      if (cluster) g.litCluster(cluster.mods);
+    } else if (params.mod && modById[params.mod]) {
+      selNode(params.mod);
+    } else if (params.trap != null && TRAPS[+params.trap]) {
+      const b = $(`#trapsGrid [data-t="${+params.trap}"]`);
+      if (b) b.click();
+    }
   }
 
   // Przełączanie zakładek
