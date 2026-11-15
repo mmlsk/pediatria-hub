@@ -3210,3 +3210,195 @@ body.reader footer.ft{display:none}
   border-radius: 10px;
   padding: .85rem 1rem;
 }
+
+/* ---------- dyskretne pochodzenie pytania & ocr ---------- */
+.q-source-details {
+  margin-top: .7rem;
+  border-top: 1px dashed var(--line);
+  padding-top: .4rem;
+}
+.q-source-details summary {
+  list-style: none;
+  user-select: none;
+  cursor: pointer;
+}
+.q-source-details summary::-webkit-details-marker {
+  display: none;
+}
+.q-source-details summary:hover span {
+  color: var(--teal-d);
+}
+.q-source-box {
+  font-size: .82rem;
+  color: var(--ink-2);
+  margin-top: .35rem;
+  padding: .5rem .75rem;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  line-height: 1.45;
+}
+
+/* ---------- pulpit puli zakładowej (dashboard) ---------- */
+.zd-banner {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(184, 115, 15, 0.08) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1.4rem;
+  margin-bottom: 1.4rem;
+  box-shadow: var(--shadow);
+}
+.zd-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: .8rem;
+  margin-top: 1rem;
+}
+.zd-mcard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+.zd-mcard b {
+  font-size: 1.6rem;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.zd-mcard span {
+  font-size: .78rem;
+  color: var(--muted);
+  font-weight: 700;
+  margin-top: .25rem;
+}
+.zd-prog {
+  margin-top: 1rem;
+}
+.zd-prog-bar {
+  height: 8px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+.zd-prog-fill {
+  background: var(--green);
+  transition: width .3s ease;
+}
+.zd-jump-bar {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .7rem 1rem;
+  margin-bottom: 1.4rem;
+}
+.zd-jump-input {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  padding: .45rem .8rem;
+  border-radius: 8px;
+  font: 700 .92rem var(--font-body);
+}
+.zd-jump-input:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: var(--surface);
+}
+.zd-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+.zd-mode-card {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  cursor: pointer;
+}
+.zd-mode-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--teal);
+  box-shadow: var(--shadow);
+}
+.zd-mode-card.hit { border-top: 4px solid #E65100; }
+.zd-mode-card.gap { border-top: 4px solid var(--amber); }
+.zd-mode-card.marathon { border-top: 4px solid var(--teal); }
+.zd-mode-card.flash { border-top: 4px solid var(--violet); }
+.zd-mode-card.wrong { border-top: 4px solid var(--red); }
+.zd-mode-card h3 {
+  font-size: 1.15rem;
+  margin-bottom: .3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.zd-mode-card p {
+  font-size: .88rem;
+  color: var(--ink-2);
+  margin-bottom: .8rem;
+  flex: 1;
+}
+.zd-mode-card .zd-count {
+  font-size: .8rem;
+  font-weight: 800;
+  color: var(--teal-d);
+}
+
+.zd-mods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .65rem;
+}
+.zd-mod-pill {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .65rem .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background .15s, border-color .15s;
+}
+.zd-mod-pill:hover {
+  background: var(--teal-l);
+  border-color: var(--teal);
+}
+.zd-mod-pill .m-badge {
+  font-weight: 800;
+  font-size: .82rem;
+}
+.zd-mod-pill .m-name {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-left: .4rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zd-mod-pill .m-cnt {
+  font-size: .76rem;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--bg);
+  padding: .15rem .45rem;
+  border-radius: 999px;
+}
+

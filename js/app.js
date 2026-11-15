@@ -431,10 +431,19 @@ function explain(q) {
   }
   if (q.why) h += `<div class="why"><h4>Omówienie</h4>${/<p>/i.test(q.why) ? rich(q.why) : '<p>' + rich(q.why) + '</p>'}</div>`;
   if (q.tip) h += `<div class="tip"><h4>Jak to zapamiętać</h4>${rich(q.tip)}</div>`;
-  const bits = [];
-  if (q.src) bits.push('Źródło: ' + esc(q.src));
-  if (q.adapt) bits.push('Opcje odpowiedzi uzupełnione lub zrekonstruowane (plik zawiera tylko klucz lub fragment)');
-  if (bits.length) h += `<p class="srcline">${bits.join(' · ')}</p>`;
+  
+  if (q.src || q.isGlued) {
+    h += `<details class="q-source-details">
+      <summary><span class="muted" style="font-size:.76rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem">
+        📜 Pochodzenie pytania (${q.reps ? q.reps + 'x' : '1x'}) <span style="opacity:.6;font-size:.68rem">▾</span>
+      </span></summary>
+      <div class="q-source-box">
+        <strong>Źródła w puli:</strong> ${esc(q.src || 'Baza zakładowa')}
+        ${q.isGlued ? '<div style="color:var(--amber);margin-top:.35rem;font-weight:700">⚠️ Uwaga: Pytanie sklejone z wieloczęściowego skanu OCR testu historycznego.</div>' : ''}
+        ${q.adapt ? '<div class="muted" style="margin-top:.25rem">Opcje odpowiedzi uzupełnione lub zrekonstruowane.</div>' : ''}
+      </div>
+    </details>`;
+  }
   return h;
 }
 function optsStatic(q) {
@@ -452,7 +461,7 @@ function qCard(q, open) {
   const hasKey = q.keys && q.keys.length > 0;
   return `<details class="qc" data-q="${q.id}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip" style="background:#FEE2E2;color:#991B1B;font-weight:700;border-color:#FECACA" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
       <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
@@ -523,6 +532,7 @@ function viewStart() {
       <p class="sub">Osiem atlasów modułowych, ${Q.length} zadań testowych i mapa powiązań między tematami. Czytasz, ćwiczysz, wracasz do błędów, a hub pamięta, gdzie skończyłeś.</p>
       <div class="cta">
         <a class="btn pri" href="${contHref}" id="cont">${last ? 'Kontynuuj: ' + esc(ASHORT[S.last.at]) : 'Zacznij od bólu brzucha'} <span aria-hidden="true">→</span></a>
+        <a class="btn pri" href="#/pytania?tab=zaklad" style="background:#D97706;border-color:#D97706;color:#fff;font-weight:800">🏛️ Pula Zakładowa (2256 pytań) →</a>
         <a class="btn sec" href="#/trening?auto=1">Trening mieszany · 10 pytań</a>
         <a class="btn sec" href="#/pacjent" style="border-color:var(--teal);color:var(--teal-d);font-weight:700">🩺 Wirtualny Pacjent (SOR)</a>
         <a class="btn sec" href="#/kalkulator?tab=recepty" style="border-color:var(--blue);color:var(--blue-d);font-weight:700">💊 Apteczka & Recepty</a>
@@ -531,7 +541,8 @@ function viewStart() {
       <div class="stats" aria-label="Zakres hubu">
         <div class="stat"><b data-n="${ATLASES.length}">${ATLASES.length}</b><span>atlasów</span></div>
         <div class="stat"><b><i style="font-style:normal" data-n="${coveredBase.length}">${coveredBase.length}</i><small style="font-size:1rem;color:var(--muted)">/${baseNums.length}</small></b><span>modułów pokrytych</span></div>
-        <div class="stat"><b data-n="${Q.length}">${Q.length}</b><span>zadań z omówieniem</span></div>
+        <div class="stat"><b data-n="2256">2256</b><span>pytań zakładowych</span></div>
+        <div class="stat"><b data-n="${Q.length}">${Q.length}</b><span>zadań łącznie</span></div>
         <div class="stat"><b data-n="${gapCount}">${gapCount}</b><span>rozbieżności klucz ↔ wytyczne</span></div>
       </div>
     </div>
@@ -1948,7 +1959,7 @@ function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
 }
 
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, open: 'all', limit: 30, tab: 'browse', addMode: 'single' };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, open: 'all', limit: 30, tab: 'zaklad', addMode: 'single' };
 let parsedImportStash = [];
 
 function viewQuestions(parts, params) {
@@ -1965,7 +1976,8 @@ function viewQuestions(parts, params) {
     <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
 
     <div class="qtabs" id="qTabs">
-      <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Przeglądaj pytania (${Q.length})</button>
+      <button class="qtab${F.tab === 'zaklad' ? ' on' : ''}" data-t="zaklad" style="${F.tab === 'zaklad' ? '' : 'border-color:#F59E0B;color:#D97706;font-weight:700'}">🏛️ Pula Zakładowa (${Q.filter(q => q.bank === 'zaklad').length})</button>
+      <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Wyszukiwarka pytań (${Q.length})</button>
       <button class="qtab${F.tab === 'add' ? ' on' : ''}" data-t="add">➕ Dodaj nowe pytanie / Import</button>
       <button class="qtab${F.tab === 'export' ? ' on' : ''}" data-t="export">📤 Eksport dodanych (${CUSTOM_Q.length})</button>
     </div>
@@ -1988,13 +2000,204 @@ function renderTabContent() {
   const container = $('#qTabContent');
   if (!container) return;
 
-  if (F.tab === 'browse') {
+  if (F.tab === 'zaklad') {
+    renderZakladTab(container);
+  } else if (F.tab === 'browse') {
     renderBrowseTab(container);
   } else if (F.tab === 'add') {
     renderAddTab(container);
   } else if (F.tab === 'export') {
     renderExportTab(container);
   }
+}
+
+function renderZakladTab(container) {
+  const zakladQs = Q.filter(q => q.bank === 'zaklad');
+  const tot = zakladQs.length;
+  
+  let att = 0, ok = 0, wrong = 0;
+  zakladQs.forEach(q => {
+    const a = S.ans[q.id];
+    if (a) {
+      att++;
+      if (a.last) ok++;
+      else wrong++;
+    }
+  });
+  const fresh = tot - att;
+  const pctMastered = tot ? Math.round((ok / tot) * 100) : 0;
+  const hitsCount = zakladQs.filter(q => q.reps >= 2).length;
+  const gapCount = zakladQs.filter(q => q.gap).length;
+  const openCount = zakladQs.filter(q => q.type === 'open').length;
+
+  container.innerHTML = `
+    <div class="zd-banner">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">
+        <div>
+          <div class="eyebrow" style="color:var(--amber)">Pulpit Puli Zakładowej</div>
+          <h3 style="font-size:1.4rem;margin:.2rem 0">Opanowanie pytań z kolokwiów i zaliczeń</h3>
+        </div>
+        <div style="text-align:right">
+          <span style="font-size:1.8rem;font-weight:800;color:var(--teal)">${pctMastered}%</span>
+          <span class="muted" style="font-size:.84rem;display:block">opanowanej puli</span>
+        </div>
+      </div>
+
+      <div class="zd-prog">
+        <div class="zd-prog-bar">
+          <div class="zd-prog-fill" style="width:${pctMastered}%"></div>
+        </div>
+      </div>
+
+      <div class="zd-metrics">
+        <div class="zd-mcard">
+          <b style="color:var(--ink)">${tot}</b>
+          <span>Wszystkie zadania</span>
+        </div>
+        <div class="zd-mcard">
+          <b style="color:var(--green)">${ok}</b>
+          <span>Opanowane (ostatnia ✓)</span>
+        </div>
+        <div class="zd-mcard">
+          <b style="color:var(--red)">${wrong}</b>
+          <span>Do powtórki (błędne)</span>
+        </div>
+        <div class="zd-mcard">
+          <b style="color:var(--muted)">${fresh}</b>
+          <span>Jeszcze nieruszone</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Szybki skok po numerze pytania Q... -->
+    <div class="zd-jump-bar">
+      <span style="font-weight:800;font-size:.9rem;white-space:nowrap">🎯 Szybki skok:</span>
+      <input type="text" class="zd-jump-input" id="zdJumpInput" placeholder="Wpisz nr pytania (np. 142, Q0500, #42)…" aria-label="Skocz do pytania">
+      <button class="btn sec sm" id="zdJumpBtn" style="font-weight:700">Otwórz pytanie →</button>
+    </div>
+
+    <!-- Kafelki dedykowanych trybów nauki -->
+    <h3 style="margin:1.6rem 0 .5rem">Dedykowane tryby nauki</h3>
+    <p class="muted" style="margin-bottom:1rem">Wybierz profil nauki dopasowany do Twojego etapu przygotowań do kolokwium lub egzaminu.</p>
+
+    <div class="zd-modes-grid">
+      <div class="zd-mode-card hit" data-mode="hits">
+        <h3>🔥 Hity Zakładowe <span class="zd-count">${hitsCount} pytań</span></h3>
+        <p>Pytania powtórzone w co najmniej dwóch niezależnych rocznikach/zaliczeniach (2014–2026). Absolutny priorytet powtórkowy!</p>
+        <button class="btn pri sm" style="background:#E65100;border-color:#E65100">Trenuj Hity Zakładowe →</button>
+      </div>
+
+      <div class="zd-mode-card gap" data-mode="gap">
+        <h3>⚠️ Pułapki i Rozbieżności <span class="zd-count">${gapCount} pytań</span></h3>
+        <p>Zadania, w których klucz zakładowy różni się od współczesnych wytycznych. Dwutorowy panel: „Pod zaliczenie” vs „Klinicznie”.</p>
+        <button class="btn pri sm" style="background:var(--amber);border-color:var(--amber)">Ćwicz Rozbieżności →</button>
+      </div>
+
+      <div class="zd-mode-card marathon" data-mode="marathon">
+        <h3>⚡ Maraton Zakładowy <span class="zd-count">25 pytań</span></h3>
+        <p>Losowa sesja 25 pytań z całej puli zakładowej w trybie nauki – natychmiastowe wyjaśnienie merytoryczne i analiza dystraktorów.</p>
+        <button class="btn pri sm">Rozpocznij Maraton →</button>
+      </div>
+
+      <div class="zd-mode-card flash" data-mode="flash">
+        <h3>🃏 Fiszki Kliniczne <span class="zd-count">${openCount} pytań</span></h3>
+        <p>Pytania otwarte i rekonstrukcyjne – wymusza aktywne przypominanie (retrieval practice) przed odsłonięciem klucza i omówienia.</p>
+        <button class="btn pri sm" style="background:var(--violet);border-color:var(--violet)">Uruchom Fiszki →</button>
+      </div>
+
+      ${wrong > 0 ? `
+      <div class="zd-mode-card wrong" data-mode="wrong">
+        <h3>❌ Koryguj Błędy <span class="zd-count" style="color:var(--red)">${wrong} do powtórki</span></h3>
+        <p>Sesja powtórkowa skupiona wyłącznie na zadaniach zakładowych, w których ostatnia odpowiedź była błędna.</p>
+        <button class="btn pri sm" style="background:var(--red);border-color:var(--red)">Powtórz błędy →</button>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Modułowy rozkład pytań zakładowych -->
+    <h3 style="margin:2rem 0 .5rem">Pula zakładowa wg modułów kursu</h3>
+    <p class="muted" style="margin-bottom:1rem">Wybierz moduł, aby natychmiast uruchomić sesję treningową wyłącznie z pytań zakładowych z danego działu.</p>
+
+    <div class="zd-mods-grid">
+      ${MODS.map(m => {
+        const qCount = zakladQs.filter(q => q.mods.includes(m.id)).length;
+        if (!qCount) return '';
+        const g = gOf(m.id).color;
+        return `<a class="zd-mod-pill" href="#/trening?mods=${m.id}&bank=zaklad" title="Rozpocznij trening z modułu ${m.id}: ${esc(m.n)}">
+          <span class="m-badge" style="color:${g}">[${m.id}]</span>
+          <span class="m-name">${esc(SHORT[m.id] || m.n)}</span>
+          <span class="m-cnt">${qCount} Q</span>
+        </a>`;
+      }).join('')}
+    </div>
+  `;
+
+  // Obsługa skoku po numerze pytania
+  const doJump = () => {
+    const val = $('#zdJumpInput').value.trim();
+    if (!val) return;
+    const m = val.match(/^#?q?(\d{1,4})$/i);
+    if (!m) {
+      toast('Wpisz poprawny numer pytania (np. 142, Q0500)');
+      return;
+    }
+    const targetId = 'q' + m[1].padStart(4, '0');
+    const found = Q.find(q => q.id === targetId);
+    if (!found) {
+      toast(`Nie znaleziono pytania ${targetId.toUpperCase()} w bazie`);
+      return;
+    }
+    F.tab = 'browse';
+    F.q = targetId;
+    $$('#qTabs .qtab').forEach(x => x.classList.toggle('on', x.dataset.t === 'browse'));
+    renderTabContent();
+    toast(`Otwarto pytanie ${targetId.toUpperCase()}`);
+  };
+
+  $('#zdJumpBtn').onclick = doJump;
+  $('#zdJumpInput').onkeydown = e => { if (e.key === 'Enter') doJump(); };
+
+  // Obsługa kliknięć w kafelki trybów
+  container.querySelectorAll('[data-mode]').forEach(card => {
+    card.onclick = () => {
+      const mode = card.dataset.mode;
+      if (mode === 'hits') {
+        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
+        C.hitsOnly = true;
+        C.banks = new Set(['zaklad']);
+        C.mode = 'learn';
+        C.n = 25;
+        startSession();
+      } else if (mode === 'gap') {
+        viewTrening(['trening'], { bank: 'zaklad', gap: 1, auto: 1 });
+        C.gap = true;
+        C.banks = new Set(['zaklad']);
+        C.mode = 'learn';
+        C.n = 25;
+        startSession();
+      } else if (mode === 'marathon') {
+        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
+        C.banks = new Set(['zaklad']);
+        C.mode = 'learn';
+        C.n = 25;
+        startSession();
+      } else if (mode === 'flash') {
+        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
+        C.banks = new Set(['zaklad']);
+        C.open = true;
+        C.mode = 'flash';
+        C.n = 20;
+        startSession();
+      } else if (mode === 'wrong') {
+        viewTrening(['trening'], { bank: 'zaklad', wrong: 1, auto: 1 });
+        C.banks = new Set(['zaklad']);
+        C.wrong = true;
+        C.mode = 'learn';
+        C.n = 0;
+        startSession();
+      }
+    };
+  });
 }
 
 function renderBrowseTab(container) {
@@ -2020,8 +2223,12 @@ function renderBrowseTab(container) {
 
   const list = $('#qlist');
   function filtered() {
+    const rawQuery = (F.q || '').trim();
+    const numMatch = rawQuery.match(/^#?q?(\d{1,4})$/i);
+    const targetQId = numMatch ? 'q' + numMatch[1].padStart(4, '0') : null;
     const toks = norm(F.q).split(/\s+/).filter(Boolean);
     return Q.filter(q => {
+      if (targetQId && q.id === targetQId) return true;
       if (F.hit && (!q.reps || q.reps < 2)) return false;
       if (F.hasKey && (!q.keys || !q.keys.length)) return false;
       if (F.hasWhy && !q.why) return false;
@@ -2299,9 +2506,9 @@ function renderExportTab(container) {
 const C = { at: new Set(), mods: new Set(), banks: new Set(), conf: new Set(), gap: false, wrong: false, bm: false, fresh: false, open: false, hitsOnly: false, includeUnverified: false, n: 10, mode: 'learn' };
 function pool() {
   return Q.filter(q => {
-    if (!C.includeUnverified && (!q.keys || !q.keys.length)) return false;
+    if (!C.includeUnverified && (!q.keys || !q.keys.length) && q.type !== 'open') return false;
     if (C.hitsOnly && (!q.reps || q.reps < 2)) return false;
-    if (q.type === 'open' && !C.open) return false;
+    if (q.type === 'open' && !C.open && C.mode !== 'flash') return false;
     if (C.banks.size && !C.banks.has(q.bank)) return false;
     if (C.at.size && !C.at.has(q.at)) return false;
     if (C.mods.size && ![...C.mods].some(m => q.mods.includes(m))) return false;
@@ -11245,10 +11452,11 @@ function viewDiagnostics(parts, params) {
 
 /* ---------- TRENING ---------- */
 function viewTrening(parts, params) {
-  if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank) {
+  if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank || params.mode) {
     C.at = new Set((params.at || '').split(',').filter(Boolean)); C.mods = new Set((params.mods || '').split(',').filter(Boolean));
     C.banks = new Set((params.bank || '').split(',').filter(Boolean));
-    C.wrong = !!params.wrong; C.gap = !!params.gap; C.conf = new Set(); C.bm = false; C.fresh = false; C.open = false;
+    if (params.mode) C.mode = params.mode;
+    C.wrong = !!params.wrong; C.gap = !!params.gap; C.conf = new Set(); C.bm = false; C.fresh = false; C.open = params.mode === 'flash' || !!params.open;
     SESSION = null;
     if (params.auto) { startSession(); return; }
     history.replaceState && (() => { try { history.replaceState(null, '', '#/trening'); } catch (e) { /* tryb piaskownicy */ } })();
@@ -11259,7 +11467,7 @@ function viewTrening(parts, params) {
 function renderConfig() {
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:900px">
     <div class="eyebrow">Trening mieszany</div><h2>Ułóż sesję</h2>
-    <p class="lead">Pytania pochodzą ze wszystkich atlasów naraz. W trybie nauki omówienie pojawia się od razu, w trybie egzaminu dopiero na końcu.</p>
+    <p class="lead">Pytania pochodzą ze wszystkich atlasów naraz. W trybie nauki omówienie pojawia się od razu, w trybie egzaminu dopiero na końcu, a w trybie fiszek trenujesz aktywne przypominanie.</p>
     <div class="tool">
       <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="cBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${C.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="cAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${C.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
@@ -11267,7 +11475,7 @@ function renderConfig() {
       <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="cConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${C.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="cFlag"><button class="tgl" data-f="hitsOnly" aria-pressed="${C.hitsOnly}">🔥 hity bazy (≥2)</button><button class="tgl" data-f="includeUnverified" aria-pressed="${C.includeUnverified}">uwzględnij bez klucza</button><button class="tgl" data-f="gap" aria-pressed="${C.gap}">klucz ≠ wytyczne</button><button class="tgl" data-f="wrong" aria-pressed="${C.wrong}">moje błędne</button><button class="tgl" data-f="fresh" aria-pressed="${C.fresh}">jeszcze nie ruszone</button><button class="tgl" data-f="bm" aria-pressed="${C.bm}">zakładki</button><button class="tgl" data-f="open" aria-pressed="${C.open}">z fiszkami (otwarte)</button></div></div>
       <div class="frow"><span class="flab">Liczba</span><div class="seg" id="cN">${[10, 20, 40, 0].map(n => `<button data-n="${n}" aria-pressed="${C.n === n}">${n || 'Wszystkie'}</button>`).join('')}</div>
-        <span class="flab" style="min-width:0;margin-left:1rem">Tryb</span><div class="seg" id="cMode"><button data-m="learn" aria-pressed="${C.mode === 'learn'}">Nauka</button><button data-m="exam" aria-pressed="${C.mode === 'exam'}">Egzamin</button></div></div>
+        <span class="flab" style="min-width:0;margin-left:1rem">Tryb</span><div class="seg" id="cMode"><button data-m="learn" aria-pressed="${C.mode === 'learn'}">Nauka</button><button data-m="exam" aria-pressed="${C.mode === 'exam'}">Egzamin</button><button data-m="flash" aria-pressed="${C.mode === 'flash'}">🃏 Fiszki</button></div></div>
       <div class="frow" style="justify-content:space-between;border-top:1px solid var(--line-2);padding-top:.9rem"><span id="cPool" style="font-weight:800"></span><button class="btn pri" id="go">Rozpocznij sesję →</button></div>
     </div></div></section>`;
   const upd = () => { const p = pool().length; $('#cPool').textContent = p ? `Pula: ${p} ${p === 1 ? 'pytanie' : 'pytań'}` : 'Pula pusta, poluzuj filtry'; $('#go').disabled = !p; };
@@ -11275,7 +11483,7 @@ function renderConfig() {
   tgl('#cBank', C.banks); tgl('#cAt', C.at); tgl('#cConf', C.conf);
   $('#cFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; C[b.dataset.f] = !C[b.dataset.f]; b.setAttribute('aria-pressed', C[b.dataset.f]); upd(); });
   $('#cN').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (!b) return; C.n = +b.dataset.n; $$('#cN button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
-  $('#cMode').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; C.mode = b.dataset.m; $$('#cMode button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  $('#cMode').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; C.mode = b.dataset.m; $$('#cMode button').forEach(x => x.setAttribute('aria-pressed', x === b)); upd(); });
   $$('[data-rm]').forEach(b => b.addEventListener('click', () => { C.mods.delete(b.dataset.rm); renderConfig(); }));
   $('#go').addEventListener('click', () => startSession());
   upd();
@@ -11290,11 +11498,30 @@ function startSession(ids) {
 function renderSession() {
   const s = SESSION; if (!s) return renderConfig();
   if (s.i >= s.list.length) return renderResults();
-  const q = s.list[s.i], done = s.locked, learn = s.mode === 'learn';
+  const q = s.list[s.i], done = s.locked, learn = s.mode === 'learn', isFlash = s.mode === 'flash';
   const good = s.log.filter(x => x.ok).length;
   let body = '';
-  if (q.type === 'open') {
-    body = done ? `${explain(q)}<div class="acts" id="nextRow"></div>` : `<div class="acts"><button class="btn dark" id="reveal">Pokaż odpowiedź</button></div>`;
+  if (q.type === 'open' || isFlash) {
+    if (isFlash && q.type !== 'open' && q.opts && q.opts.length) {
+      body = `<div class="opts" id="opts">${q.opts.map((o, i) => {
+        let cls = ''; if (done) cls = q.keys.includes(i) ? 'ok' : 'dim';
+        return `<div class="opt ${cls}" style="cursor:default"><span class="l">${L[i]}</span><span>${esc(o)}</span></div>`;
+      }).join('')}</div>`;
+      if (!done) {
+        body += `<div class="acts" style="margin-top:1.2rem"><button class="btn pri" id="reveal" style="background:#4F46E5;border-color:#4F46E5;color:#fff;font-weight:700">Pokaż klucz i omówienie ▾</button></div>`;
+      } else {
+        body += explain(q);
+        body += `<div class="acts" id="flashEvalRow" style="display:flex;gap:.8rem;align-items:center;background:var(--surface);padding:.9rem 1.1rem;border-radius:10px;border:1px solid var(--line);margin-top:1.2rem;flex-wrap:wrap">
+          <span style="font-weight:700">Twoja samoocena:</span>
+          <button class="btn pri sm" id="flashYes" style="background:var(--green);border-color:var(--green);color:#fff;font-weight:700">Znam to ✓</button>
+          <button class="btn sec sm" id="flashNo" style="border-color:var(--red);color:var(--red);font-weight:700">Muszę powtórzyć ✗</button>
+          <span style="flex:1"></span>
+          <button class="bm" data-bm="${q.id}" aria-pressed="${!!S.bm[q.id]}" aria-label="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${S.bm[q.id] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>
+        </div>`;
+      }
+    } else {
+      body = done ? `${explain(q)}<div class="acts" id="nextRow"></div>` : `<div class="acts" style="margin-top:1rem"><button class="btn dark" id="reveal">Pokaż odpowiedź i omówienie ▾</button></div>`;
+    }
   } else {
     const multi = q.keys.length > 1;
     body = `${multi ? '<p class="srcline" style="margin-bottom:.5rem">Zadanie wielokrotnego wyboru: zaznacz wszystkie poprawne odpowiedzi.</p>' : ''}<div class="opts" id="opts">${q.opts.map((o, i) => {
@@ -11302,11 +11529,20 @@ function renderSession() {
       return `<button class="opt ${cls}" data-i="${i}" ${done ? 'disabled' : ''}><span class="l">${L[i]}</span><span>${esc(o)}</span></button>`;
     }).join('')}</div>${!done && multi ? '<div class="acts" style="margin-top:.7rem"><button class="btn dark" id="check" ' + (s.sel.size ? '' : 'disabled') + '>Sprawdź</button></div>' : ''}${done && learn ? explain(q) : ''}${done && !learn ? '<p class="srcline">Odpowiedź zapisana. Omówienie zobaczysz po zakończeniu sesji.</p>' : ''}<div class="acts" id="nextRow"></div>`;
   }
+  const modeLabel = s.mode === 'learn' ? 'tryb nauki' : (s.mode === 'flash' ? '🃏 tryb fiszek' : 'tryb egzaminu');
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap qz">
     <div class="qprog" role="progressbar" aria-valuemin="0" aria-valuemax="${s.list.length}" aria-valuenow="${s.i}"><i style="width:${100 * s.i / s.list.length}%"></i></div>
-    <div class="qhead"><span>Pytanie ${s.i + 1} z ${s.list.length} · ${s.mode === 'learn' ? 'tryb nauki' : 'tryb egzaminu'}</span><span>${learn || !done ? `Poprawne: ${good}/${s.log.length}` : ''}</span><button class="btn sec sm" id="quit">Zakończ sesję</button></div>
-    <div class="qbox"><div class="tags" style="display:flex;gap:.3rem;flex-wrap:wrap">${modChips(q)}${learn || q.type === 'open' ? confChip(q.conf) : ''}<span class="chip">${esc(ASHORT[q.at])}</span></div>
-      <div class="stemL">${escB(q.stem)}</div>${body}</div></div></section>`;
+    <div class="qhead"><span>Pytanie ${s.i + 1} z ${s.list.length} · ${modeLabel}</span><span>${learn || isFlash || !done ? `Poprawne: ${good}/${s.log.length}` : ''}</span><button class="btn sec sm" id="quit">Zakończ sesję</button></div>
+    <div class="qbox"><div class="tags" style="display:flex;gap:.3rem;flex-wrap:wrap">
+      ${bankChip(q.bank)}
+      ${modChips(q)}
+      ${q.reps >= 2 ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2">🔥 Hit (${q.reps}x)</span>` : ''}
+      ${q.gap ? `<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082">⚠️ klucz ≠ wytyczne</span>` : ''}
+      ${q.isGlued ? `<span class="chip" style="background:#FEE2E2;color:#991B1B;font-weight:700;border-color:#FECACA">⚠️ OCR łączone</span>` : ''}
+      ${learn || isFlash || q.type === 'open' ? confChip(q.conf) : ''}
+      <span class="chip">${esc(ASHORT[q.at] || q.at || 'Moduł')}</span>
+    </div>
+    <div class="stemL">${escB(q.stem)}</div>${body}</div></div></section>`;
   const nextBtn = (ok) => { $('#nextRow').innerHTML = `<a class="btn sec sm" href="${atlasHref(q)}" target="_self">Temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${!!S.bm[q.id]}" aria-label="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${S.bm[q.id] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button><span style="flex:1"></span><button class="btn pri" id="next">${s.i + 1 < s.list.length ? 'Dalej →' : 'Zobacz wynik →'}</button>`; $('#next').focus({ preventScroll: true }); $('#next').onclick = () => { s.i++; s.locked = false; s.sel = new Set(); renderSession(); window.scrollTo(0, 0); }; };
   delegateBm(main);
   $('#quit').onclick = () => { s.i = s.list.length; renderSession(); };
@@ -11315,9 +11551,18 @@ function renderSession() {
     a.n++; if (ok) a.c++; a.last = ok; a.ts = Date.now(); S.ans[q.id] = a; save();
     s.locked = true;
   }
+  if (isFlash && q.type !== 'open' && q.opts && q.opts.length) {
+    if (!done) {
+      $('#reveal').onclick = () => { s.locked = true; renderSession(); };
+    } else {
+      $('#flashYes').onclick = () => { s.sel = new Set(q.keys); record(true); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); };
+      $('#flashNo').onclick = () => { s.sel = new Set(); record(false); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); };
+    }
+    return;
+  }
   if (q.type === 'open') {
     if (!done) { $('#reveal').onclick = () => { s.locked = true; renderSession(); }; }
-    else { $('#nextRow').innerHTML = `<span class="muted" style="font-weight:700">Czy znałeś odpowiedź?</span><button class="btn sec sm" id="yes">Tak</button><button class="btn sec sm" id="no">Nie</button>`; $('#yes').onclick = () => { s.sel = new Set(); record(true); s.locked = true; s.i++; s.locked = false; renderSession(); }; $('#no').onclick = () => { s.sel = new Set(); record(false); s.i++; s.locked = false; renderSession(); }; }
+    else { $('#nextRow').innerHTML = `<span class="muted" style="font-weight:700">Czy znałeś odpowiedź?</span><button class="btn pri sm" id="yes" style="background:var(--green);border-color:var(--green);color:#fff">Tak ✓</button><button class="btn sec sm" id="no" style="border-color:var(--red);color:var(--red)">Nie ✗</button>`; $('#yes').onclick = () => { s.sel = new Set(); record(true); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; $('#no').onclick = () => { s.sel = new Set(); record(false); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; }
     return;
   }
   const multi = q.keys.length > 1;
