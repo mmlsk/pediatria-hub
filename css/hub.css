@@ -156,8 +156,8 @@ a.mtile:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:v
 .dual{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
 .dbox{border-radius:12px;padding:.9rem 1rem;font-size:.92rem}
 .dbox h4{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;font-weight:800;margin-bottom:.3rem}
-.dbox.z{background:var(--amber-l);border:1px solid #EBD3A3}.dbox.z h4{color:var(--amber)}
-.dbox.a{background:var(--green-l);border:1px solid #BFE2CB}.dbox.a h4{color:var(--green)}
+.dbox.z{background:var(--amber-l);border:1px solid rgba(184,115,15,.35)}.dbox.z h4{color:var(--amber)}
+.dbox.a{background:var(--green-l);border:1px solid rgba(47,132,80,.35)}.dbox.a h4{color:var(--green)}
 .dcase{display:grid;gap:.8rem;margin-top:1rem}
 .dcase .q{font-weight:700}
 

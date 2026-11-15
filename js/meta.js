@@ -88,11 +88,12 @@ window.HUB_META = (function () {
   };
 
   const BANKS = {
-    zaklad: { id: 'zaklad', n: 'Pula zakładowa (V rok)', short: 'Zakładowa', icon: '🏛️', desc: 'Baza pytań z kolokwiów i zaliczeń zakładowych' },
-    lek:    { id: 'lek',    n: 'Baza pytań LEK',          short: 'LEK',       icon: '🩺', desc: 'Pytania z Państwowego Egzaminu Lekarskiego' },
-    pes:    { id: 'pes',    n: 'Baza pytań PES',          short: 'PES',       icon: '🎓', desc: 'Pytania z Państwowego Egzaminu Specjalizacyjnego' },
-    mp:     { id: 'mp',     n: 'Medycyna Praktyczna (5000 pytań)', short: 'MP 5000', icon: '📖', desc: 'Pytania z bazy mp.premium i 5000 pytań z pediatrii' },
-    custom: { id: 'custom', n: 'Dodane pytania (Własne)', short: 'Własne',   icon: '✏️', desc: 'Pytania wprowadzone przez użytkownika' }
+    zaklad:   { id: 'zaklad',   n: 'Pula zakładowa (2256 pytań)', short: 'Pula zakładowa', icon: '🏛️', desc: 'Baza pytań z kolokwiów i zaliczeń zakładowych z pełnymi rozwiązaniami i analizą wytycznych' },
+    modulowa: { id: 'modulowa', n: 'Baza modułowa i atlasy (413 pytań)', short: 'Baza modułowa', icon: '🗺️', desc: 'Pytania zintegrowane bezpośrednio z atlasami klinicznymi i modułami 1–15' },
+    lek:      { id: 'lek',      n: 'Baza pytań LEK',              short: 'LEK',             icon: '🩺', desc: 'Pytania z Państwowego Egzaminu Lekarskiego' },
+    pes:      { id: 'pes',      n: 'Baza pytań PES',              short: 'PES',             icon: '🎓', desc: 'Pytania z Państwowego Egzaminu Specjalizacyjnego' },
+    mp:       { id: 'mp',       n: 'Medycyna Praktyczna',         short: 'MP 5000',         icon: '📖', desc: 'Pytania z bazy mp.premium i 5000 pytań z pediatrii' },
+    custom:   { id: 'custom',   n: 'Dodane pytania (Własne)',     short: 'Własne',         icon: '✏️', desc: 'Pytania wprowadzone przez użytkownika' }
   };
 
   /* Wikilinks & Backlinks – powiązania między atlasami i modułami z głębokimi kotwicami */

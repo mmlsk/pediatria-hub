@@ -152,6 +152,7 @@ try {
 function getBank(q) {
   if (q.bank && BANKS[q.bank]) return q.bank;
   if (q.isCustom) return 'custom';
+  if (q.id && !q.id.startsWith('q')) return 'modulowa';
   const s = String(q.src || '').toUpperCase();
   if (s.includes('LEK')) return 'lek';
   if (s.includes('PES')) return 'pes';
@@ -167,12 +168,23 @@ function prepQuestion(q, isCustom = false) {
   return q;
 }
 
-let Q = [...(window.HUB_Q || []).map(q => prepQuestion(q, false)), ...CUSTOM_Q.map(q => prepQuestion(q, true))];
+function loadAllQuestions() {
+  const map = new Map();
+  // 1. Wczytaj bazę podstawową HUB_Q (zawiera bazę modułową i pytania zakładowe)
+  (window.HUB_Q || []).forEach(q => map.set(q.id, prepQuestion(q, false)));
+  // 2. Jeśli załadowano dedykowany plik HUB_ZAKLAD_Q, nadpisz/wzbogać pełną pulą zakładową (2256 pytań)
+  (window.HUB_ZAKLAD_Q || []).forEach(q => map.set(q.id, prepQuestion(q, false)));
+  // 3. Własne pytania użytkownika
+  CUSTOM_Q.forEach(q => map.set(q.id, prepQuestion(q, true)));
+  return Array.from(map.values());
+}
+
+let Q = loadAllQuestions();
 let qById = Object.fromEntries(Q.map(q => [q.id, q]));
 
 function saveCustomQ() {
   try { localStorage.setItem(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q)); } catch (e) {}
-  Q = [...(window.HUB_Q || []).map(q => prepQuestion(q, false)), ...CUSTOM_Q.map(q => prepQuestion(q, true))];
+  Q = loadAllQuestions();
   qById = Object.fromEntries(Q.map(q => [q.id, q]));
 }
 
@@ -409,8 +421,14 @@ function confChip(c) { const k = CONF[c] || CONF.inf; return `<span class="chip"
 function modChips(q) { return q.mods.map(m => `<span class="chip m" style="${modById[m] ? 'color:' + gOf(m).color : ''}">[${m}]</span>`).join(''); }
 function explain(q) {
   let h = '';
-  if (q.type === 'open') h += `<div class="why"><h4>Odpowiedź</h4><p>${rich(q.ans)}</p></div>`;
-  if (q.zal && q.akt) h += `<div class="dual"><div class="dbox z"><h4>Pod zaliczenie</h4>${rich(q.zal)}</div><div class="dbox a"><h4>Aktualnie klinicznie</h4>${rich(q.akt)}</div></div>`;
+  if (q.type === 'open' && q.ans) h += `<div class="why"><h4>Odpowiedź</h4><p>${rich(q.ans)}</p></div>`;
+  if (q.zal && q.akt) {
+    h += `<div class="dual"><div class="dbox z"><h4>🏛️ Do zaliczenia (wg klucza zakładu)</h4>${rich(q.zal)}</div><div class="dbox a"><h4>🩺 Aktualna wiedza kliniczna</h4>${rich(q.akt)}</div></div>`;
+  } else if (q.zal) {
+    h += `<div class="dual"><div class="dbox z"><h4>🏛️ Do zaliczenia (wg klucza zakładu)</h4>${rich(q.zal)}</div></div>`;
+  } else if (q.akt) {
+    h += `<div class="dual"><div class="dbox a"><h4>🩺 Aktualna wiedza kliniczna</h4>${rich(q.akt)}</div></div>`;
+  }
   if (q.why) h += `<div class="why"><h4>Omówienie</h4>${/<p>/i.test(q.why) ? rich(q.why) : '<p>' + rich(q.why) + '</p>'}</div>`;
   if (q.tip) h += `<div class="tip"><h4>Jak to zapamiętać</h4>${rich(q.tip)}</div>`;
   const bits = [];
@@ -434,7 +452,7 @@ function qCard(q, open) {
   const hasKey = q.keys && q.keys.length > 0;
   return `<details class="qc" data-q="${q.id}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent">klucz ≠ wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.type === 'open' ? '<span class="chip">otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
       <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
@@ -1991,7 +2009,7 @@ function renderBrowseTab(container) {
         <button class="tgl" data-f="hit" aria-pressed="${F.hit}">🔥 hity bazy (≥2)</button>
         <button class="tgl" data-f="hasKey" aria-pressed="${F.hasKey}">z oficjalnym kluczem</button>
         <button class="tgl" data-f="hasWhy" aria-pressed="${F.hasWhy}">z omówieniem</button>
-        <button class="tgl" data-f="gap" aria-pressed="${F.gap}">klucz ≠ wytyczne</button>
+        <button class="tgl" data-f="gap" aria-pressed="${F.gap}" style="${F.gap ? 'border-color:#F59E0B;color:#D97706' : ''}">⚠️ klucz ≠ wytyczne (${Q.filter(q => q.gap).length})</button>
         <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
         <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
       </div>
@@ -2989,6 +3007,7 @@ let EXAM_CONF = {
   mods: new Set(MODS.map(m => m.id)),
   shuffleQ: true,
   hitsOnly: false,
+  gapOnly: false,
   includeUnverified: false
 };
 
@@ -2998,6 +3017,7 @@ function getExamQuestionsPool() {
   return Q.filter(q => {
     if (!EXAM_CONF.includeUnverified && (!q.keys || !q.keys.length)) return false;
     if (EXAM_CONF.hitsOnly && (!q.reps || q.reps < 2)) return false;
+    if (EXAM_CONF.gapOnly && !q.gap) return false;
     if (EXAM_CONF.banks.size && !EXAM_CONF.banks.has(q.bank)) return false;
     if (EXAM_CONF.mods.size && !q.mods.some(m => EXAM_CONF.mods.has(m))) return false;
     return true;
@@ -3095,6 +3115,7 @@ function renderExamSetup() {
         <span class="flab">Zawartość</span>
         <div class="pillrow" id="exFilters">
           <button class="tgl" id="exHitsOnly" aria-pressed="${EXAM_CONF.hitsOnly}">🔥 Tylko hity zakładowe (≥2 źródła)</button>
+          <button class="tgl" id="exGapOnly" aria-pressed="${EXAM_CONF.gapOnly}">⚠️ Tylko pytania sporne (klucz vs wytyczne: ${Q.filter(q => q.gap).length})</button>
           <button class="tgl" id="exUnverified" aria-pressed="${EXAM_CONF.includeUnverified}">Uwzględnij pytania bez oficjalnego klucza (do dyskusji)</button>
         </div>
       </div>
@@ -3190,6 +3211,15 @@ function renderExamSetup() {
     btnHitsOnly.onclick = () => {
       EXAM_CONF.hitsOnly = !EXAM_CONF.hitsOnly;
       btnHitsOnly.setAttribute('aria-pressed', EXAM_CONF.hitsOnly);
+      updatePoolInfo();
+    };
+  }
+
+  const btnGapOnly = $('#exGapOnly');
+  if (btnGapOnly) {
+    btnGapOnly.onclick = () => {
+      EXAM_CONF.gapOnly = !EXAM_CONF.gapOnly;
+      btnGapOnly.setAttribute('aria-pressed', EXAM_CONF.gapOnly);
       updatePoolInfo();
     };
   }
