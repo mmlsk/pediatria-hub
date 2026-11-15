@@ -10,7 +10,8 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous">
 <link rel="stylesheet" href="css/hub.css">
 <script>
 try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(t==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';}catch(e){}
@@ -25,21 +26,31 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
       <li><a href="#/" data-r="start">Start</a></li>
       <li><a href="#/atlasy" data-r="atlasy">Atlasy</a></li>
       <li><a href="#/trening" data-r="trening">Trening</a></li>
-      <li><a href="#/egzamin" data-r="egzamin">Egzamin</a></li>
-      <li><a href="#/pacjent" data-r="pacjent">Pacjent (SOR)</a></li>
-      <li><a href="#/kalkulator" data-r="kalkulator">Kalkulator</a></li>
-      <li><a href="#/szczepienia" data-r="szczepienia">Szczepienia</a></li>
-      <li><a href="#/badania" data-r="badania">Badania</a></li>
       <li><a href="#/pytania" data-r="pytania">Pytania</a></li>
-      <li><a href="#/notatki" data-r="notatki">Notatki</a></li>
-      <li><a href="#/polaczenia" data-r="polaczenia">Połączenia</a></li>
-      <li><a href="#/graf" data-r="graf">Graf wiedzy</a></li>
-      <li><a href="#/postep" data-r="postep">Postęp</a></li>
+      <li class="nav-dd" data-group="klinika">
+        <button type="button" class="nav-dd-btn" aria-expanded="false" aria-haspopup="true">Klinika <span class="caret" aria-hidden="true">▾</span></button>
+        <div class="nav-pop" role="menu" hidden>
+          <a href="#/pacjent" data-r="pacjent" role="menuitem">🩺 Pacjent (SOR & OSCE)</a>
+          <a href="#/kalkulator" data-r="kalkulator" role="menuitem">🧮 Kalkulator & Recepty</a>
+          <a href="#/badania" data-r="badania" role="menuitem">🔬 Badania & Atlas Osutek</a>
+          <a href="#/szczepienia" data-r="szczepienia" role="menuitem">💉 Kalendarz szczepień</a>
+        </div>
+      </li>
+      <li class="nav-dd" data-group="wiecej">
+        <button type="button" class="nav-dd-btn" aria-expanded="false" aria-haspopup="true">Więcej <span class="caret" aria-hidden="true">▾</span></button>
+        <div class="nav-pop" role="menu" hidden>
+          <a href="#/egzamin" data-r="egzamin" role="menuitem">⏱️ Egzamin próbny</a>
+          <a href="#/polaczenia" data-r="polaczenia" role="menuitem">🔀 Mapa połączeń</a>
+          <a href="#/graf" data-r="graf" role="menuitem">🕸️ Graf wiedzy</a>
+          <a href="#/notatki" data-r="notatki" role="menuitem">📝 Notatki Markdown</a>
+          <a href="#/postep" data-r="postep" role="menuitem">📊 Postęp i historia</a>
+        </div>
+      </li>
     </ul>
-    <button class="pwa-install" id="btnInstall" aria-label="Zainstaluj aplikację" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Zainstaluj</span></button>
-    <a class="srch btn-calc" href="#/kalkulator" aria-label="Kalkulator dawek pediatrycznych" title="Kalkulator dawek i PALS"><span>🧮</span><span>Dawki</span></a>
-    <button class="srch btn-theme" id="btnTheme" aria-label="Zmień motyw" title="Motyw: Auto (systemowy)"><span id="themeIcon">🖥️</span><span id="themeLabel">Auto</span></button>
-    <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span>Szukaj</span><kbd>Ctrl K</kbd></button>
+    <button class="pwa-install" id="btnInstall" aria-label="Zainstaluj aplikację" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="lbl">Zainstaluj</span></button>
+    <a class="srch btn-calc" href="#/kalkulator" aria-label="Kalkulator dawek pediatrycznych" title="Kalkulator dawek i PALS"><span class="ico" aria-hidden="true">🧮</span><span class="lbl">Dawki</span></a>
+    <button class="srch btn-theme" id="btnTheme" aria-label="Zmień motyw" title="Motyw: Auto (systemowy)"><span class="ico" id="themeIcon" aria-hidden="true">🖥️</span><span class="lbl" id="themeLabel">Auto</span></button>
+    <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span class="lbl">Szukaj</span><kbd>Ctrl K</kbd></button>
   </div>
 </header>
 <main id="view" tabindex="-1"></main>
@@ -89,7 +100,7 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
 
 <script src="js/meta.js"></script>
 <script src="js/questions.js"></script>
-<script src="js/questions_zaklad.js"></script>
+<script src="js/logic.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

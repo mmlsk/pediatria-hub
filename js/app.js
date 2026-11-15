@@ -13,10 +13,25 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const main = $('#view');
 
+const { esc, escB, norm, pct, b64EncodeUtf8, b64DecodeUtf8, estimateWeightFromAge, getAgeFormulaHint, calcHollidaySegar, parseQuestionsInput: _parseQ, parseMarkdown, scoreExam } = window.HUB_LOGIC;
+const parseQuestionsInput = (input, defaultBank = 'zaklad', defaultMod = '1') => _parseQ(input, defaultBank, defaultMod, { modById, banks: BANKS });
+
+let lastStorageWarnAt = 0;
+function safeStorageSet(key, val) {
+  try {
+    localStorage.setItem(key, val);
+    return true;
+  } catch (e) {
+    const now = Date.now();
+    if (now - lastStorageWarnAt > 6000) {
+      lastStorageWarnAt = now;
+      toast('Brak miejsca w pamięci przeglądarki – wyeksportuj kopię zapasową.');
+    }
+    return false;
+  }
+}
+
 /* ---------- helpers ---------- */
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const escB = s => esc(s).replace(/&lt;br\s*\/?&gt;/gi, '<br>');
-const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
 const L = 'ABCDEFGH';
 function rich(h) {
   const t = document.createElement('template'); t.innerHTML = String(h || '');
@@ -33,7 +48,6 @@ function rich(h) {
   return t.innerHTML;
 }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
 let toastT;
 function toast(msg, opts = {}) {
   const t = $('#toast');
@@ -52,13 +66,14 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ---------- krótkie nazwy ---------- */
 const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN', '0': 'Ogólna' };
 const ASHORT = { brzuch: 'Ból brzucha', zakazenia: 'Zakażenia', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID', ogolne: 'Pediatria ogólna' };
-const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#9B7ED6'], lite: ['var(--violet)', '#C06BA8'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'], ogolne: ['var(--blue)', 'var(--teal)'] };
+const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#4D7C97'], lite: ['var(--violet)', '#2D6A7E'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'], ogolne: ['var(--blue)', 'var(--teal)'] };
 const gOf = id => (modById[id] && GROUPS[modById[id].g]) ? GROUPS[modById[id].g] : GROUPS.A;
 
 /* ---------- magazyn postępu ---------- */
 const KEY = 'pediatria-hub.v1:';
 const STORAGE_KEY = 'pediatria_hub_state_v1';
-let S = { visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [], patientCases: {}, osceCases: {} };
+const defaultState = () => ({ visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [], patientCases: {}, osceCases: {} });
+let S = defaultState();
 
 // Wczytanie stanu: localStorage z fallbackiem do window.name
 try {
@@ -77,7 +92,7 @@ S.osceCases = (S.osceCases && typeof S.osceCases === 'object') ? S.osceCases : {
 
 const save = () => {
   const serialized = JSON.stringify(S);
-  try { localStorage.setItem(STORAGE_KEY, serialized); } catch (e) { /* ignoruj jeśli zablokowany */ }
+  safeStorageSet(STORAGE_KEY, serialized);
   try { window.name = KEY + serialized; } catch (e) { /* ignoruj */ }
 };
 
@@ -94,9 +109,7 @@ function getEffectiveTheme() {
 
 function applyTheme(t, persist = true) {
   currentTheme = t;
-  if (persist) {
-    try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-  }
+  if (persist) safeStorageSet(THEME_KEY, t);
   const eff = getEffectiveTheme();
   if (eff === 'dark') {
     document.documentElement.dataset.theme = 'dark';
@@ -184,121 +197,19 @@ function loadAllQuestions() {
 
 let Q = loadAllQuestions();
 let qById = Object.fromEntries(Q.map(q => [q.id, q]));
+let ALL = [];
+let onBmMutate = null;
 
 function saveCustomQ() {
-  try { localStorage.setItem(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q)); } catch (e) {}
+  safeStorageSet(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q));
   Q = loadAllQuestions();
   qById = Object.fromEntries(Q.map(q => [q.id, q]));
+  if (typeof buildSearchIndex === 'function') ALL = buildSearchIndex();
 }
 
-/* ---------- SYSTEM PAMIĘCI PODRĘCZNEJ INDEXEDDB & GZIP (Cold-Cache) ---------- */
-const HUB_BUILD_ID = '20261115_v19';
-const IDB_NAME = 'pediatria_hub_db';
-const IDB_STORE = 'cache';
-
-function openHubDb() {
-  return new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') return reject(new Error('IndexedDB niedostępne'));
-    try {
-      const req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    } catch (e) {
-      reject(e);
-    }
-  });
-}
-
-async function idbGet(key) {
-  try {
-    const db = await openHubDb();
-    return new Promise(resolve => {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.get(key);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => resolve(null);
-    });
-  } catch (e) {
-    return null;
-  }
-}
-
-async function idbSet(key, val) {
-  try {
-    const db = await openHubDb();
-    return new Promise(resolve => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      const store = tx.objectStore(IDB_STORE);
-      const req = store.put(val, key);
-      req.onsuccess = () => resolve(true);
-      req.onerror = () => resolve(false);
-    });
-  } catch (e) {
-    return false;
-  }
-}
-
-async function compressGzip(str) {
-  if (typeof CompressionStream === 'undefined') return null;
-  try {
-    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
-    return await new Response(stream).arrayBuffer();
-  } catch (e) {
-    return null;
-  }
-}
-
-async function decompressGzip(buffer) {
-  if (typeof DecompressionStream === 'undefined') return null;
-  try {
-    const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return await new Response(stream).text();
-  } catch (e) {
-    return null;
-  }
-}
-
-async function initColdCache() {
-  try {
-    const cachedBuild = await idbGet('build_id');
-    // 1. Jeśli baza zakładowa nie załadowała się ze skryptu, odtwórz z IndexedDB
-    if ((!window.HUB_ZAKLAD_Q || !window.HUB_ZAKLAD_Q.length) && cachedBuild === HUB_BUILD_ID) {
-      const compressed = await idbGet('zaklad_q_gz');
-      if (compressed) {
-        const jsonStr = await decompressGzip(compressed);
-        if (jsonStr) {
-          window.HUB_ZAKLAD_Q = JSON.parse(jsonStr);
-          Q = loadAllQuestions();
-          qById = Object.fromEntries(Q.map(q => [q.id, q]));
-          console.log('[Cache] Odtworzono bazę zakładową z kompresji IndexedDB (Stale-While-Revalidate).');
-          if (location.hash.startsWith('#/pytania') || location.hash === '#/') route();
-        }
-      }
-    }
-    // 2. Jeśli nowa wersja bazy zakładowej, zbuforuj skompresowany Blob w tle
-    if (cachedBuild !== HUB_BUILD_ID && window.HUB_ZAKLAD_Q && window.HUB_ZAKLAD_Q.length) {
-      const jsonStr = JSON.stringify(window.HUB_ZAKLAD_Q);
-      const gzBuf = await compressGzip(jsonStr);
-      if (gzBuf) {
-        await idbSet('zaklad_q_gz', gzBuf);
-        await idbSet('build_id', HUB_BUILD_ID);
-        await idbSet('cached_at', Date.now());
-        console.log(`[Cache] Zbuforowano ${window.HUB_ZAKLAD_Q.length} pytań zakładowych w IndexedDB (gzip: ${(gzBuf.byteLength/1024).toFixed(0)} KB).`);
-      }
-    }
-  } catch (err) {
-    console.warn('[Cache] Błąd operacji IndexedDB:', err);
-  }
-}
-
-if (typeof window !== 'undefined') {
-  if ('requestIdleCallback' in window) requestIdleCallback(() => initColdCache());
-  else setTimeout(initColdCache, 1200);
+// Reclaim legacy zaklad IndexedDB cache left over from pre-v21 builds.
+if (typeof indexedDB !== 'undefined') {
+  try { indexedDB.deleteDatabase('pediatria_hub_db'); } catch (e) {}
 }
 
 /* ---------- dane pochodne ---------- */
@@ -358,7 +269,6 @@ function modStats(id) {
   return { total: qs.length, att, ok, wrong: att - ok };
 }
 const doneCount = () => covered.filter(m => S.done[m.id]).length;
-function updateRing() { /* miejsce na wskaźnik w nagłówku – pasek jest w widoku Postęp */ }
 
 /* ---------- link do atlasu ---------- */
 function atlasHref(q) {
@@ -530,8 +440,8 @@ function renderGraph(host, o = {}) {
 }
 
 /* ---------- komponenty ---------- */
-function confChip(c) { const k = CONF[c] || CONF.inf; return `<span class="chip" style="background:${k.l};border-color:transparent;color:${k.c}" title="${esc(k.d)}"><i class="dot" style="background:${k.c}"></i>${k.n}</span>`; }
-function modChips(q) { return q.mods.map(m => `<span class="chip m" style="${modById[m] ? 'color:' + gOf(m).color : ''}">[${m}]</span>`).join(''); }
+function confChip(c) { const k = CONF[c] || CONF.inf; return `<span class="chip" style="background:${k.l};border-color:transparent;color:${k.c}" title="${esc(k.d)}"><i class="dot" style="background:${k.c}"></i>${esc(k.n)}</span>`; }
+function modChips(q) { return (q.mods || []).map(m => `<span class="chip m" style="${modById[m] ? 'color:' + gOf(m).color : ''}">[${esc(m)}]</span>`).join(''); }
 function explain(q) {
   let h = '';
   if (q.type === 'open' && q.ans) h += `<div class="why"><h4>Odpowiedź</h4><p>${rich(q.ans)}</p></div>`;
@@ -565,19 +475,19 @@ function optsStatic(q) {
 }
 function bankChip(b) {
   const bank = BANKS[b] || BANKS.zaklad;
-  return `<span class="chip" style="font-weight:700;background:var(--surface);border-color:var(--line)" title="${esc(bank.desc)}">${bank.icon} ${bank.short}</span>`;
+  return `<span class="chip" style="font-weight:700;background:var(--surface);border-color:var(--line)" title="${esc(bank.desc)}">${bank.icon} ${esc(bank.short)}</span>`;
 }
 function qCard(q, open) {
   const bm = !!S.bm[q.id];
   const a = S.ans[q.id];
   const isHit = q.reps && q.reps >= 2;
   const hasKey = q.keys && q.keys.length > 0;
-  return `<details class="qc" data-q="${q.id}"${open ? ' open' : ''}>
+  return `<details class="qc" data-q="${esc(q.id)}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
       <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip" style="background:#FEE2E2;color:#991B1B;font-weight:700;border-color:#FECACA" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
-      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${q.id}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${q.id}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
+      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${esc(q.id)}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${esc(q.id)}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
     </div></details>`;
 }
 function delegateBm(root, onMutate) {
@@ -610,12 +520,56 @@ function parseHash() {
 }
 let current = { name: null, id: null };
 let SESSION = null;
+let pendingRetryIds = null;
+let pendingAutoTrain = false;
+const KLINIKA_ROUTES = new Set(['pacjent', 'kalkulator', 'badania', 'szczepienia']);
+const WIECEJ_ROUTES = new Set(['egzamin', 'polaczenia', 'graf', 'notatki', 'postep']);
+
+function closeNavDropdowns() {
+  $$('.nav-dd').forEach(dd => {
+    const btn = $('.nav-dd-btn', dd);
+    const pop = $('.nav-pop', dd);
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    if (pop) pop.hidden = true;
+  });
+}
+
+function initNavMenus() {
+  $$('.nav-dd-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const dd = btn.closest('.nav-dd');
+      const pop = $('.nav-pop', dd);
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      closeNavDropdowns();
+      if (!isOpen && pop) {
+        btn.setAttribute('aria-expanded', 'true');
+        pop.hidden = false;
+      }
+    });
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.nav-dd')) closeNavDropdowns(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNavDropdowns(); });
+}
+
 function route() {
+  closeNavDropdowns();
+  onBmMutate = null;
   const { parts, params } = parseHash(); const name = parts[0] || 'start';
+  if (name !== 'egzamin' && EXAM_SESSION && EXAM_SESSION.timer) {
+    clearInterval(EXAM_SESSION.timer);
+    EXAM_SESSION.timer = null;
+  }
   // czytnik: ten sam atlas → tylko kotwica
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
-  $$('#menu a').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
+  $$('#menu a[data-r]').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
+  $$('#menu .nav-dd').forEach(dd => {
+    const btn = $('.nav-dd-btn', dd);
+    if (!btn) return;
+    const isMatch = (dd.dataset.group === 'klinika' && KLINIKA_ROUTES.has(name)) || (dd.dataset.group === 'wiecej' && WIECEJ_ROUTES.has(name));
+    btn.classList.toggle('on', isMatch);
+  });
   const v = { start: viewStart, atlasy: viewGallery, atlas: viewReader, trening: viewTrening, egzamin: viewExam, pacjent: viewPatient, kalkulator: viewCalculator, szczepienia: viewVaccines, badania: viewDiagnostics, pytania: viewQuestions, notatki: viewNotes, polaczenia: viewConnections, graf: viewKnowledgeGraph, postep: viewProgress }[name];
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
@@ -637,24 +591,20 @@ function viewStart() {
     const seg = ['src', 'inf', 'unk', 'did', 'own'].map(k => { const c = qs.filter(q => q.conf === k).length; return c ? `<i style="width:${100 * c / tot}%;background:${CONF[k].c}" title="${CONF[k].n}: ${c}"></i>` : ''; }).join('');
     return `<div class="crow"><span>${esc(ASHORT[a.id])}</span><div class="cstack">${seg}</div><span class="mono muted">${tot}</span></div>`;
   }).join('');
+  const zakladCount = Q.filter(q => q.bank === 'zaklad').length;
   main.innerHTML = `
   <section class="hero"><div class="wrap grid">
     <div>
       <div class="eyebrow">Pediatria · V rok · zaliczenie</div>
       <h1>Cały materiał w <em>jednym</em> miejscu.</h1>
-      <p class="sub">Osiem atlasów modułowych, ${Q.length} zadań testowych i mapa powiązań między tematami. Czytasz, ćwiczysz, wracasz do błędów, a hub pamięta, gdzie skończyłeś.</p>
+      <p class="sub">${ATLASES.length} atlasów modułowych, ${Q.length} zadań testowych i mapa powiązań między tematami. Czytasz, ćwiczysz, wracasz do błędów, a hub pamięta, gdzie skończyłeś.</p>
       <div class="cta">
         <a class="btn pri" href="${contHref}" id="cont">${last ? 'Kontynuuj: ' + esc(ASHORT[S.last.at]) : 'Zacznij od bólu brzucha'} <span aria-hidden="true">→</span></a>
-        <a class="btn pri" href="#/pytania?tab=zaklad" style="background:#D97706;border-color:#D97706;color:#fff;font-weight:800">🏛️ Pula Zakładowa (2256 pytań) →</a>
-        <a class="btn sec" href="#/trening?auto=1">Trening mieszany · 10 pytań</a>
-        <a class="btn sec" href="#/pacjent" style="border-color:var(--teal);color:var(--teal-d);font-weight:700">🩺 Wirtualny Pacjent (SOR)</a>
-        <a class="btn sec" href="#/kalkulator?tab=recepty" style="border-color:var(--blue);color:var(--blue-d);font-weight:700">💊 Apteczka & Recepty</a>
-        <a class="btn sec" href="#/badania?tab=osutki" style="border-color:var(--violet);color:var(--violet-d);font-weight:700">🧬 Atlas Osutek</a>
+        ${zakladCount > 0 ? `<a class="btn sec" href="#/pytania?tab=zaklad">🏛️ Pula Zakładowa (${zakladCount} pytań) →</a>` : `<a class="btn sec" href="#/trening">Ćwicz pytania (${Q.length}) →</a>`}
       </div>
       <div class="stats" aria-label="Zakres hubu">
         <div class="stat"><b data-n="${ATLASES.length}">${ATLASES.length}</b><span>atlasów</span></div>
         <div class="stat"><b><i style="font-style:normal" data-n="${coveredBase.length}">${coveredBase.length}</i><small style="font-size:1rem;color:var(--muted)">/${baseNums.length}</small></b><span>modułów pokrytych</span></div>
-        <div class="stat"><b data-n="2256">2256</b><span>pytań zakładowych</span></div>
         <div class="stat"><b data-n="${Q.length}">${Q.length}</b><span>zadań łącznie</span></div>
         <div class="stat"><b data-n="${gapCount}">${gapCount}</b><span>rozbieżności klucz ↔ wytyczne</span></div>
       </div>
@@ -675,7 +625,7 @@ function viewStart() {
 
   <section class="blk" id="petla"><div class="wrap">
     <div class="eyebrow">Pętla nauki</div><h2>Od zrozumienia do powtórki</h2>
-    <p class="lead">Cztery kroki, które hub łączy w jedną ścieżkę zamiast siedmiu osobnych plików.</p>
+    <p class="lead">Cztery kroki, które hub łączy w jedną ścieżkę zamiast ${ATLASES.length} osobnych plików.</p>
     <div class="loop">
       <a class="step" href="#/atlasy"><h3>Atlas</h3><p>Schematy, algorytmy, wiek a przyczyna i karty chorób, osobno dla każdego modułu.</p><span class="go">Otwórz atlasy →</span></a>
       <a class="step" href="#/trening"><h3>Trening</h3><p>Mieszane sesje ze wszystkich atlasów, w trybie nauki albo egzaminu.</p><span class="go">Ułóż sesję →</span></a>
@@ -712,7 +662,7 @@ function viewStart() {
 /* ---------- GALERIA ATLASÓW ---------- */
 function viewGallery() {
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
-    <div class="eyebrow">Atlasy</div><h2>Osiem atlasów modułowych</h2>
+    <div class="eyebrow">Atlasy</div><h2>${ATLASES.length} atlasów modułowych</h2>
     <p class="lead">Atlasy działają wewnątrz hubu, ale zachowują własną nawigację. Ostatnio otwarte są oznaczone.</p>
     <div class="agrid">${ATLASES.map(a => {
       const qs = Q.filter(q => q.at === a.id), g = GA[a.id]; const vis = S.visited[a.id];
@@ -1450,46 +1400,46 @@ function viewConnections(parts, params) {
 const KG_DATA = (function () {
   const nodes = [
     // --- KLASTER A: Stany nagłe & zakażenia (gr: 'A', hex: '#C23B2A') ---
-    { id: 'm1',  type: 'mod',  mid: '1',   n: 'Ból brzucha',               g: 'A', x: 410, y: 150 },
-    { id: 'm2',  type: 'mod',  mid: '2',   n: 'Zakażenia u dzieci',        g: 'A', x: 190, y: 130 },
-    { id: 'm5',  type: 'mod',  mid: '5',   n: 'Stany nagłe',               g: 'A', x: 290, y: 220 },
-    { id: 'm0',  type: 'mod',  mid: '0',   n: 'Ogólna pediatria',          g: 'A', x: 110, y: 250 },
-    { id: 'd_dka',    type: 'dis', n: 'Kwasica ketonowa (DKA)',       g: 'A', x: 350, y: 300, icon: '⚡' },
-    { id: 'd_krup',   type: 'dis', n: 'Krup (podgłośniowe ZK)',        g: 'A', x: 190, y: 60,  icon: '🫁' },
-    { id: 'd_sepsa',  type: 'dis', n: 'Sepsa meningokokowa',          g: 'A', x: 260, y: 110, icon: '🩸' },
-    { id: 'd_zomr',   type: 'dis', n: 'Ropne ZOMR',                   g: 'A', x: 110, y: 160, icon: '🧠' },
-    { id: 'p_pals',   type: 'proc',n: 'PALS / Resuscytacja',          g: 'A', x: 250, y: 290, icon: '🚨' },
-    { id: 'b_pmr',    type: 'diag',n: 'Badanie PMR (punkcja)',        g: 'A', x: 90,  y: 80,  icon: '🔬' },
-    { id: 'b_gazo',   type: 'diag',n: 'Gazometria krwi',              g: 'A', x: 420, y: 260, icon: '🧪' },
+    { id: 'm1',  type: 'mod',  mid: '1',   n: 'Ból brzucha',               g: 'A', x: 410, y: 155 },
+    { id: 'm2',  type: 'mod',  mid: '2',   n: 'Zakażenia u dzieci',        g: 'A', x: 195, y: 150 },
+    { id: 'm5',  type: 'mod',  mid: '5',   n: 'Stany nagłe',               g: 'A', x: 300, y: 225 },
+    { id: 'm0',  type: 'mod',  mid: '0',   n: 'Ogólna pediatria',          g: 'A', x: 100, y: 255 },
+    { id: 'd_dka',    type: 'dis', n: 'Kwasica ketonowa (DKA)',       g: 'A', x: 360, y: 300, icon: '⚡' },
+    { id: 'd_krup',   type: 'dis', n: 'Krup (podgłośniowe ZK)',        g: 'A', x: 205, y: 88,  icon: '🫁' },
+    { id: 'd_sepsa',  type: 'dis', n: 'Sepsa meningokokowa',          g: 'A', x: 325, y: 102, icon: '🩸' },
+    { id: 'd_zomr',   type: 'dis', n: 'Ropne ZOMR',                   g: 'A', x: 100, y: 175, icon: '🧠' },
+    { id: 'p_pals',   type: 'proc',n: 'PALS / Resuscytacja',          g: 'A', x: 235, y: 295, icon: '🚨' },
+    { id: 'b_pmr',    type: 'diag',n: 'Badanie PMR (punkcja)',        g: 'A', x: 92,  y: 92,  icon: '🔬' },
+    { id: 'b_gazo',   type: 'diag',n: 'Gazometria krwi',              g: 'A', x: 430, y: 250, icon: '🧪' },
 
     // --- KLASTER B: Gastroenterologia & alergie (gr: 'B', hex: '#B8730F') ---
-    { id: 'm3',  type: 'mod',  mid: '3',   n: 'Biegunki i odwodnienie',    g: 'B', x: 600, y: 130 },
-    { id: 'm6',  type: 'mod',  mid: '6',   n: 'Choroba wrzodowa',          g: 'B', x: 740, y: 100 },
-    { id: 'm7',  type: 'mod',  mid: '7',   n: 'IBD (ChLC / WZJG)',         g: 'B', x: 790, y: 180 },
-    { id: 'm8',  type: 'mod',  mid: '8',   n: 'Alergie pokarmowe',         g: 'B', x: 610, y: 240 },
-    { id: 'd_wglob',  type: 'dis', n: 'Wgłobienie jelitowe',          g: 'B', x: 500, y: 140, icon: '🌀' },
-    { id: 'd_fpies',  type: 'dis', n: 'Zespół FPIES',                 g: 'B', x: 520, y: 270, icon: '⚠️' },
-    { id: 'd_celiak', type: 'dis', n: 'Celiakia i enteropatia',       g: 'B', x: 720, y: 250, icon: '🌾' },
-    { id: 'b_usg',    type: 'diag',n: 'USG jamy brzusznej',           g: 'B', x: 490, y: 200, icon: '📡' },
+    { id: 'm3',  type: 'mod',  mid: '3',   n: 'Biegunki i odwodnienie',    g: 'B', x: 615, y: 125 },
+    { id: 'm6',  type: 'mod',  mid: '6',   n: 'Choroba wrzodowa',          g: 'B', x: 750, y: 98 },
+    { id: 'm7',  type: 'mod',  mid: '7',   n: 'IBD (ChLC / WZJG)',         g: 'B', x: 810, y: 185 },
+    { id: 'm8',  type: 'mod',  mid: '8',   n: 'Alergie pokarmowe',         g: 'B', x: 625, y: 245 },
+    { id: 'd_wglob',  type: 'dis', n: 'Wgłobienie jelitowe',          g: 'B', x: 525, y: 120, icon: '🌀' },
+    { id: 'd_fpies',  type: 'dis', n: 'Zespół FPIES',                 g: 'B', x: 540, y: 285, icon: '⚠️' },
+    { id: 'd_celiak', type: 'dis', n: 'Celiakia i enteropatia',       g: 'B', x: 745, y: 265, icon: '🌾' },
+    { id: 'b_usg',    type: 'diag',n: 'USG jamy brzusznej',           g: 'B', x: 515, y: 205, icon: '📡' },
 
     // --- KLASTER C: Nefrologia (gr: 'C', hex: '#2B63AE') ---
-    { id: 'm4',  type: 'mod',  mid: '4',   n: 'Kłębuszkowe ZN (KZN)',      g: 'C', x: 630, y: 440 },
-    { id: 'm14', type: 'mod',  mid: '14',  n: 'ZUM u dzieci',              g: 'C', x: 780, y: 450 },
-    { id: 'm15', type: 'mod',  mid: '15',  n: 'AKI i PChN',                g: 'C', x: 660, y: 570 },
-    { id: 'd_zn',     type: 'dis', n: 'Zespół nerczycowy',            g: 'C', x: 540, y: 480, icon: '💧' },
-    { id: 'd_hus',    type: 'dis', n: 'Zespół HUS (STEC)',            g: 'C', x: 530, y: 590, icon: '⚠️' },
-    { id: 'b_mocz',   type: 'diag',n: 'Badanie moczu i osad',         g: 'C', x: 740, y: 540, icon: '🧪' },
+    { id: 'm4',  type: 'mod',  mid: '4',   n: 'Kłębuszkowe ZN (KZN)',      g: 'C', x: 650, y: 440 },
+    { id: 'm14', type: 'mod',  mid: '14',  n: 'ZUM u dzieci',              g: 'C', x: 800, y: 450 },
+    { id: 'm15', type: 'mod',  mid: '15',  n: 'AKI i PChN',                g: 'C', x: 675, y: 580 },
+    { id: 'd_zn',     type: 'dis', n: 'Zespół nerczycowy',            g: 'C', x: 545, y: 485, icon: '💧' },
+    { id: 'd_hus',    type: 'dis', n: 'Zespół HUS (STEC)',            g: 'C', x: 540, y: 595, icon: '⚠️' },
+    { id: 'b_mocz',   type: 'diag',n: 'Badanie moczu i osad',         g: 'C', x: 790, y: 545, icon: '🧪' },
 
-    // --- KLASTER D: Onkologia, hemato, odporność (gr: 'D', hex: '#6E4CB0') ---
-    { id: 'm9',   type: 'mod', mid: '9',   n: 'Guzy mózgu',                g: 'D', x: 190, y: 400 },
-    { id: 'm10',  type: 'mod', mid: '10',  n: 'Nowotwory lite',            g: 'D', x: 330, y: 430 },
-    { id: 'm11',  type: 'mod', mid: '11',  n: 'Nowotwory krwiotwórcze',    g: 'D', x: 210, y: 500 },
-    { id: 'm12',  type: 'mod', mid: '12',  n: 'Skazy krwotoczne',          g: 'D', x: 340, y: 530 },
-    { id: 'm13a', type: 'mod', mid: '13a', n: 'Niedokrwistości',           g: 'D', x: 160, y: 600 },
-    { id: 'm13b', type: 'mod', mid: '13b', n: 'Zaburzenia odporności',     g: 'D', x: 250, y: 620 },
-    { id: 'd_wilms',  type: 'dis', n: 'Guz Wilmsa (Nefroblastoma)',   g: 'D', x: 430, y: 440, icon: '🪨' },
-    { id: 'd_igav',   type: 'dis', n: 'Plamica Schönleina-Henocha',   g: 'D', x: 440, y: 560, icon: '🟣' },
-    { id: 'b_rozmaz', type: 'diag',n: 'Morfologia z rozmazem',        g: 'D', x: 250, y: 560, icon: '🩸' }
+    // --- KLASTER D: Onkologia, hemato, odporność (gr: 'D', hex: '#245B7A') ---
+    { id: 'm9',   type: 'mod', mid: '9',   n: 'Guzy mózgu',                g: 'D', x: 165, y: 432 },
+    { id: 'm10',  type: 'mod', mid: '10',  n: 'Nowotwory lite',            g: 'D', x: 300, y: 438 },
+    { id: 'm11',  type: 'mod', mid: '11',  n: 'Nowotwory krwiotwórcze',    g: 'D', x: 155, y: 525 },
+    { id: 'm12',  type: 'mod', mid: '12',  n: 'Skazy krwotoczne',          g: 'D', x: 335, y: 530 },
+    { id: 'm13a', type: 'mod', mid: '13a', n: 'Niedokrwistości',           g: 'D', x: 110, y: 615 },
+    { id: 'm13b', type: 'mod', mid: '13b', n: 'Zaburzenia odporności',     g: 'D', x: 245, y: 625 },
+    { id: 'd_wilms',  type: 'dis', n: 'Guz Wilmsa (Nefroblastoma)',   g: 'D', x: 418, y: 445, icon: '🪨' },
+    { id: 'd_igav',   type: 'dis', n: 'Plamica Schönleina-Henocha',   g: 'D', x: 418, y: 585, icon: '🩺' },
+    { id: 'b_rozmaz', type: 'diag',n: 'Morfologia z rozmazem',        g: 'D', x: 235, y: 548, icon: '🩸' }
   ];
 
   const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
@@ -1769,10 +1719,10 @@ function viewKnowledgeGraph(parts, params) {
         Graf wizualizuje 34 kluczowe encje programu pediatrii oraz 8 krytycznych luk semantycznych (thinking bridges).
       </p>
       <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem">
-        <div style="font-size:.84rem">🔴 <b>Klaster A</b>: Stany nagłe, zakażenia, PALS</div>
-        <div style="font-size:.84rem">🟠 <b>Klaster B</b>: Gastro, alergologia, ból brzucha</div>
-        <div style="font-size:.84rem">🔵 <b>Klaster C</b>: Nefrologia, ZUM, AKI i PChN</div>
-        <div style="font-size:.84rem">🟣 <b>Klaster D</b>: Onkologia, hematologia, odporność</div>
+        <div style="font-size:.84rem;display:flex;align-items:center;gap:.45rem"><span class="dot" style="background:var(--red)"></span> <b>Klaster A</b>: Stany nagłe, zakażenia, PALS</div>
+        <div style="font-size:.84rem;display:flex;align-items:center;gap:.45rem"><span class="dot" style="background:var(--amber)"></span> <b>Klaster B</b>: Gastro, alergologia, ból brzucha</div>
+        <div style="font-size:.84rem;display:flex;align-items:center;gap:.45rem"><span class="dot" style="background:var(--blue)"></span> <b>Klaster C</b>: Nefrologia, ZUM, AKI i PChN</div>
+        <div style="font-size:.84rem;display:flex;align-items:center;gap:.45rem"><span class="dot" style="background:var(--violet)"></span> <b>Klaster D</b>: Onkologia, hematologia, odporność</div>
       </div>
       <div style="padding:.75rem;background:var(--bg);border-radius:var(--r);border:1px solid var(--line);font-size:.82rem;line-height:1.4">
         💡 <b>Wskazówka</b>: Kliknij linię przerywaną lub wybierz filtr <b>„Luki wiedzy”</b>, aby przeanalizować pułapki PES i kolokwiów.
@@ -1932,147 +1882,8 @@ function viewKnowledgeGraph(parts, params) {
 
 
 /* ---------- PARSER IMPORTU PYTAŃ ---------- */
-function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
-  const trimmed = String(input || '').trim();
-  if (!trimmed) return [];
-
-  // 1. Sprawdź czy dane są w formacie JSON
-  if (trimmed.startsWith('[') || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      const arr = Array.isArray(parsed) ? parsed : [parsed];
-      return arr.map((item, idx) => {
-        const id = 'cq-' + Date.now() + '-' + idx + '-' + Math.floor(Math.random() * 1000);
-        const stem = String(item.stem || item.question || '').trim();
-        const opts = Array.isArray(item.opts || item.answers || item.options) ? (item.opts || item.answers || item.options).map(String) : [];
-        let keys = [];
-        if (Array.isArray(item.keys)) keys = item.keys;
-        else if (typeof item.key === 'number') keys = [item.key];
-        else if (typeof item.key === 'string') {
-          const l = item.key.trim().toUpperCase();
-          const idxL = 'ABCDEFGH'.indexOf(l);
-          if (idxL !== -1) keys = [idxL];
-        }
-        const b = item.bank || defaultBank;
-        const m = (Array.isArray(item.mods) && item.mods.length) ? item.mods : [defaultMod];
-        return {
-          id: item.id || id,
-          at: item.at || (modById[m[0]]?.at) || 'brzuch',
-          type: opts.length ? 'mcq' : 'open',
-          mods: m,
-          topic: item.topic || '',
-          stem: stem,
-          opts: opts,
-          keys: keys.length ? keys : [0],
-          conf: item.conf || 'src',
-          adapt: !!item.adapt,
-          gap: !!item.gap,
-          src: item.src || (BANKS[b]?.n || 'Własne'),
-          bank: b,
-          why: item.why || item.explanation || '',
-          tip: item.tip || '',
-          zal: item.zal || '',
-          akt: item.akt || '',
-          ans: item.ans || '',
-          isCustom: true
-        };
-      }).filter(q => q.stem && (q.type === 'open' || q.opts.length >= 2));
-    } catch (e) {
-      /* Niepoprawny JSON - spróbuj parsowania tekstu */
-    }
-  }
-
-  // 2. Parser tekstu ze standardowych formatów testów (1. Pytanie... A. ... B. ... Klucz: B)
-  const rawBlocks = trimmed.split(/(?=(?:^|\n)\s*(?:\d+[\.\)]|Pytanie\s*\d+[\.:]?)\s*)/i).filter(b => b.trim());
-  const questions = [];
-
-  rawBlocks.forEach((block, bIdx) => {
-    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
-    if (!lines.length) return;
-
-    let stemLines = [];
-    let opts = [];
-    let correctKey = -1;
-    let why = '';
-    let src = '';
-    let inWhy = false;
-
-    lines.forEach(line => {
-      const keyMatch = line.match(/^(?:Prawid(?:ł|l)owa|Poprawna|Klucz|Odpowied(?:ź|z)|Odp|Odp\.)\s*[:=-]?\s*([A-H])/i);
-      if (keyMatch) {
-        correctKey = 'ABCDEFGH'.indexOf(keyMatch[1].toUpperCase());
-        inWhy = false;
-        return;
-      }
-
-      const whyMatch = line.match(/^(?:Om(?:ó|o)wienie|Wyja(?:ś|s)nienie|Komentarz)\s*[:=-]?\s*(.*)/i);
-      if (whyMatch) {
-        inWhy = true;
-        if (whyMatch[1]) why += (why ? ' ' : '') + whyMatch[1];
-        return;
-      }
-
-      const srcMatch = line.match(/^(?:(?:Ź|Z|z|ź)r(?:ó|o)d(?:ł|l)o|Pula|Egzamin)\s*[:=-]?\s*(.*)/i);
-      if (srcMatch) {
-        src = srcMatch[1];
-        inWhy = false;
-        return;
-      }
-
-      const optMatch = line.match(/^[\(\[]?([A-H])[\)\.\:]\s*(.*)/i);
-      if (optMatch) {
-        inWhy = false;
-        const optLetter = optMatch[1].toUpperCase();
-        const optIdx = 'ABCDEFGH'.indexOf(optLetter);
-        const optText = optMatch[2].trim();
-        if (/\*|\[x\]|\(x\)|\(prawid(?:ł|l)owa\)/i.test(line)) {
-          correctKey = optIdx;
-        }
-        opts[optIdx] = optText.replace(/\*|\[x\]|\(x\)|\(prawid(?:ł|l)owa\)/gi, '').trim();
-        return;
-      }
-
-      if (inWhy) {
-        why += (why ? ' ' : '') + line;
-      } else if (!opts.length) {
-        const cleaned = line.replace(/^\d+[\.\)]\s*/, '');
-        stemLines.push(cleaned);
-      }
-    });
-
-    const stem = stemLines.join(' ').trim();
-    const cleanOpts = opts.filter(Boolean);
-
-    if (stem && cleanOpts.length >= 2) {
-      questions.push({
-        id: 'cq-' + Date.now() + '-' + bIdx + '-' + Math.floor(Math.random() * 1000),
-        at: modById[defaultMod]?.at || 'brzuch',
-        type: 'mcq',
-        mods: [defaultMod],
-        topic: '',
-        stem: stem,
-        opts: cleanOpts,
-        keys: [correctKey >= 0 ? correctKey : 0],
-        conf: 'src',
-        adapt: false,
-        gap: false,
-        src: src || BANKS[defaultBank]?.n || 'Własne',
-        bank: defaultBank,
-        why: why,
-        tip: '',
-        zal: '',
-        akt: '',
-        ans: '',
-        isCustom: true
-      });
-    }
-  });
-
-  return questions;
-}
-
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, open: 'all', limit: 30, tab: 'zaklad', addMode: 'single' };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, open: 'all', limit: 30, tab: Q.some(q => q.bank === 'zaklad') ? 'zaklad' : 'browse', addMode: 'single' };
 let parsedImportStash = [];
 
 function viewQuestions(parts, params) {
@@ -2127,6 +1938,23 @@ function renderTabContent() {
 function renderZakladTab(container) {
   const zakladQs = Q.filter(q => q.bank === 'zaklad');
   const tot = zakladQs.length;
+  if (!tot) {
+    container.innerHTML = `<div class="zd-banner">
+      <div class="eyebrow" style="color:var(--amber)">Pulpit Puli Zakładowej</div>
+      <h3 style="font-size:1.3rem;margin:.2rem 0 .5rem">Pula zakładowa jest obecnie wyłączona</h3>
+      <p class="muted" style="margin-bottom:1rem">Plik zewnętrzny (<code>js/questions_zaklad.js</code>) został odpięty od startowego ładowania i zachowany jako kopia zapasowa. Wszystkie ${Q.length} aktywnych pytań klinicznych znajdziesz w wyszukiwarce oraz trybie treningu.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.6rem">
+        <button class="btn pri sm" id="zdGoBrowse">🔍 Przeglądaj aktywną bazę (${Q.length}) →</button>
+        <a class="btn sec sm" href="#/trening">⚡ Uruchom trening →</a>
+      </div>
+    </div>`;
+    $('#zdGoBrowse').onclick = () => {
+      F.tab = 'browse';
+      $$('#qTabs .qtab').forEach(x => x.classList.toggle('on', x.dataset.t === 'browse'));
+      renderTabContent();
+    };
+    return;
+  }
   
   let att = 0, ok = 0, wrong = 0;
   zakladQs.forEach(q => {
@@ -2215,7 +2043,7 @@ function renderZakladTab(container) {
       <div class="zd-mode-card flash" data-mode="flash">
         <h3>🃏 Fiszki Kliniczne <span class="zd-count">${openCount} pytań</span></h3>
         <p>Pytania otwarte i rekonstrukcyjne – wymusza aktywne przypominanie (retrieval practice) przed odsłonięciem klucza i omówienia.</p>
-        <button class="btn pri sm" style="background:var(--violet);border-color:var(--violet)">Uruchom Fiszki →</button>
+        <button class="btn pri sm">Uruchom Fiszki →</button>
       </div>
 
       ${wrong > 0 ? `
@@ -2274,41 +2102,18 @@ function renderZakladTab(container) {
   container.querySelectorAll('[data-mode]').forEach(card => {
     card.onclick = () => {
       const mode = card.dataset.mode;
-      if (mode === 'hits') {
-        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
-        C.hitsOnly = true;
-        C.banks = new Set(['zaklad']);
-        C.mode = 'learn';
-        C.n = 25;
-        startSession();
-      } else if (mode === 'gap') {
-        viewTrening(['trening'], { bank: 'zaklad', gap: 1, auto: 1 });
-        C.gap = true;
-        C.banks = new Set(['zaklad']);
-        C.mode = 'learn';
-        C.n = 25;
-        startSession();
-      } else if (mode === 'marathon') {
-        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
-        C.banks = new Set(['zaklad']);
-        C.mode = 'learn';
-        C.n = 25;
-        startSession();
-      } else if (mode === 'flash') {
-        viewTrening(['trening'], { bank: 'zaklad', auto: 1 });
-        C.banks = new Set(['zaklad']);
-        C.open = true;
-        C.mode = 'flash';
-        C.n = 20;
-        startSession();
-      } else if (mode === 'wrong') {
-        viewTrening(['trening'], { bank: 'zaklad', wrong: 1, auto: 1 });
-        C.banks = new Set(['zaklad']);
-        C.wrong = true;
-        C.mode = 'learn';
-        C.n = 0;
-        startSession();
-      }
+      C.at = new Set(); C.mods = new Set(); C.conf = new Set();
+      C.banks = new Set(['zaklad']);
+      C.hitsOnly = mode === 'hits';
+      C.gap = mode === 'gap';
+      C.wrong = mode === 'wrong';
+      C.bm = false; C.fresh = false;
+      C.open = mode === 'flash';
+      C.mode = mode === 'flash' ? 'flash' : 'learn';
+      C.n = mode === 'wrong' ? 0 : (mode === 'flash' ? 20 : 25);
+      SESSION = null;
+      pendingAutoTrain = true;
+      location.hash = '#/trening';
     };
   });
 }
@@ -2373,7 +2178,7 @@ function renderBrowseTab(container) {
   $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 30; draw(); });
   $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 30; draw(); });
   $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, limit: 30 }); renderBrowseTab(container); });
-  delegateBm(list, () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; });
+  onBmMutate = () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; };
   draw();
 }
 
@@ -2640,82 +2445,6 @@ function pool() {
   });
 }
 /* ---------- LEKKI PARSER MARKDOWN & NOTATNIK ---------- */
-function parseMarkdown(src) {
-  if (!src) return '';
-  const codeBlocks = [];
-  // Ekstrakcja bloków kodu ```...```
-  let s = String(src).replace(/```([a-z0-9_-]*)\n([\s\S]*?)```/gi, (_, lang, code) => {
-    const idx = codeBlocks.length;
-    codeBlocks.push(`<pre><code class="${lang ? 'lang-' + esc(lang) : ''}">${esc(code.trim())}</code></pre>`);
-    return `@@CODE_BLOCK_${idx}@@`;
-  });
-
-  // Bezpieczna ucieczka tagów
-  s = esc(s);
-
-  // Tabele Markdown
-  s = s.replace(/(?:^|\n)(\|[^\n]+\|\n\|[\s:|-]+\|\n(?:\|[^\n]+\|(?:\n|$))+)/g, match => {
-    const lines = match.trim().split('\n').map(l => l.trim());
-    if (lines.length < 3) return match;
-    const parseRow = row => row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
-    const headers = parseRow(lines[0]);
-    const bodyRows = lines.slice(2).map(parseRow);
-    const ths = headers.map(h => `<th>${h}</th>`).join('');
-    const trs = bodyRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
-    return `\n<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>\n`;
-  });
-
-  // Nagłówki
-  s = s.replace(/^#### (.*?)$/gm, '<h4>$1</h4>')
-       .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
-       .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-       .replace(/^# (.*?)$/gm, '<h1>$1</h1>');
-
-  // Poziome linie
-  s = s.replace(/^(?:---|\*\*\*|___)$/gm, '<hr>');
-
-  // Cytaty
-  s = s.replace(/^(?:&gt;|>)\s?(.*?)$/gm, '<blockquote>$1</blockquote>');
-
-  // Checklisty (task list)
-  s = s.replace(/^[-*]\s+\[x\]\s+(.*?)$/gim, '<li class="task-item checked"><input type="checkbox" checked disabled> <span>$1</span></li>')
-       .replace(/^[-*]\s+\[ \]\s+(.*?)$/gim, '<li class="task-item"><input type="checkbox" disabled> <span>$1</span></li>');
-
-  // Zwykłe listy
-  s = s.replace(/^[-*]\s+(.*?)$/gm, '<li class="bullet-item">$1</li>');
-  s = s.replace(/^\d+\.\s+(.*?)$/gm, '<li class="num-item">$1</li>');
-
-  // Grupowanie <li> w <ul> / <ol> z odstępami blokowymi
-  s = s.replace(/(?:<li class="task-item[^"]*"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ul class="task-list" style="list-style:none;padding-left:.3rem">\n${m.trim()}\n</ul>\n\n`);
-  s = s.replace(/(?:<li class="bullet-item"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ul>\n${m.replace(/class="bullet-item"/g, '').trim()}\n</ul>\n\n`);
-  s = s.replace(/(?:<li class="num-item"[^>]*>.*?<\/li>\s*)+/gs, m => `\n\n<ol>\n${m.replace(/class="num-item"/g, '').trim()}\n</ol>\n\n`);
-
-  // Formatowanie liniowe
-  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
-  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|#[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-  // Przywrócenie bloków kodu
-  codeBlocks.forEach((codeHtml, idx) => {
-    s = s.replace(`@@CODE_BLOCK_${idx}@@`, codeHtml);
-  });
-
-  // Akapity
-  const blocks = s.split(/\n{2,}/);
-  const htmlBlocks = blocks.map(b => {
-    b = b.trim();
-    if (!b) return '';
-    if (/^<(h[1-4]|table|ul|ol|pre|blockquote|hr)/i.test(b)) return b;
-    return `<p>${b.replace(/\n/g, '<br>')}</p>`;
-  });
-
-  return htmlBlocks.filter(Boolean).join('\n');
-}
-
 function downloadFile(filename, content, mime = 'text/markdown') {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -2886,7 +2615,7 @@ function getNotes() {
 }
 
 function saveNotes(notes) {
-  try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch (e) {}
+  return safeStorageSet(NOTES_KEY, JSON.stringify(notes));
 }
 
 function initNotesDrawer() {
@@ -2928,8 +2657,8 @@ function initNotesDrawer() {
     clearTimeout(saveT);
     if (status) status.textContent = 'Zapisywanie...';
     saveT = setTimeout(() => {
-      try { localStorage.setItem(SCRATCH_KEY, input.value); } catch (e) {}
-      if (status) status.textContent = 'Zapisano ✓';
+      const ok = safeStorageSet(SCRATCH_KEY, input.value);
+      if (status) status.textContent = ok ? 'Zapisano ✓' : '⚠️ Brak miejsca';
       updatePreview();
     }, 300);
   });
@@ -2971,7 +2700,7 @@ function initNotesDrawer() {
   $$('[data-md]', drawer).forEach(b => {
     b.onclick = () => {
       insertMarkdownAt(input, b.dataset.md);
-      try { localStorage.setItem(SCRATCH_KEY, input.value); } catch (e) {}
+      safeStorageSet(SCRATCH_KEY, input.value);
       updatePreview();
     };
   });
@@ -3225,8 +2954,8 @@ function viewNotes(parts, params) {
           allNotes[idx].content = contentIn.value;
           allNotes[idx].mod = modSel.value;
           allNotes[idx].updatedAt = Date.now();
-          saveNotes(allNotes);
-          if (saveInd) saveInd.textContent = '✓ Zapisano automatycznie';
+          const saved = saveNotes(allNotes);
+          if (saveInd) saveInd.textContent = saved ? '✓ Zapisano automatycznie' : '⚠️ Brak miejsca – nie zapisano';
           listCont.innerHTML = renderNoteItems(allNotes, activeNoteId, (searchIn || {}).value || '', curFilterMod);
         }
       }, 400);
@@ -3591,20 +3320,23 @@ function startExam() {
     report: null
   };
 
-  if (totalSec) {
-    EXAM_SESSION.timer = setInterval(() => {
-      if (!EXAM_SESSION || EXAM_SESSION.finished) return;
-      EXAM_SESSION.remainingSec--;
-      updateExamTimerUI();
-      if (EXAM_SESSION.remainingSec <= 0) {
-        clearInterval(EXAM_SESSION.timer);
-        toast('Czas egzaminu dobiegł końca! Przechodzę do podsumowania...');
-        finishExam();
-      }
-    }, 1000);
-  }
-
+  startExamTimer();
   renderActiveExam();
+}
+
+function startExamTimer() {
+  if (!EXAM_SESSION || EXAM_SESSION.finished || EXAM_SESSION.remainingSec <= 0 || EXAM_SESSION.timer) return;
+  EXAM_SESSION.timer = setInterval(() => {
+    if (!EXAM_SESSION || EXAM_SESSION.finished) return;
+    EXAM_SESSION.remainingSec--;
+    updateExamTimerUI();
+    if (EXAM_SESSION.remainingSec <= 0) {
+      clearInterval(EXAM_SESSION.timer);
+      EXAM_SESSION.timer = null;
+      toast('Czas egzaminu dobiegł końca! Przechodzę do podsumowania...');
+      finishExam();
+    }
+  }, 1000);
 }
 
 function updateExamTimerUI() {
@@ -3625,6 +3357,7 @@ function updateExamTimerUI() {
 function renderActiveExam() {
   const es = EXAM_SESSION;
   if (!es || es.finished) return renderExamSetup();
+  startExamTimer();
   const q = es.list[es.i];
   const total = es.list.length;
   const answeredCount = Object.keys(es.userAnswers).filter(k => es.userAnswers[k] && es.userAnswers[k].size).length;
@@ -3785,29 +3518,13 @@ document.addEventListener('keydown', e => {
 
 function finishExam() {
   if (!EXAM_SESSION) return;
-  if (EXAM_SESSION.timer) clearInterval(EXAM_SESSION.timer);
+  if (EXAM_SESSION.timer) { clearInterval(EXAM_SESSION.timer); EXAM_SESSION.timer = null; }
 
   const es = EXAM_SESSION;
-  let score = 0;
-  const byMod = {};
-  const wrongQIds = [];
-
-  es.list.forEach(q => {
-    const userSet = es.userAnswers[q.id] || new Set();
-    const isCorrect = userSet.size === q.keys.length && q.keys.every(k => userSet.has(k));
-    if (isCorrect) score++;
-    else wrongQIds.push(q.id);
-
-    const m = q.pm || q.mods[0] || '1';
-    byMod[m] = byMod[m] || { total: 0, correct: 0 };
-    byMod[m].total++;
-    if (isCorrect) byMod[m].correct++;
-  });
-
-  const total = es.list.length;
-  const pctScore = pct(score, total);
-  const passed = pctScore >= 60;
-  const durationSec = Math.round((Date.now() - es.startedAt) / 1000);
+  const { score, total, pct: pctScore, passed, byMod, wrongQIds } = scoreExam(es.list, es.userAnswers);
+  const durationSec = es.totalSec
+    ? Math.max(0, es.totalSec - Math.max(0, es.remainingSec))
+    : Math.round((Date.now() - es.startedAt) / 1000);
 
   const report = {
     id: es.id,
@@ -4102,16 +3819,7 @@ try {
 } catch (e) {}
 
 function saveCalcState() {
-  try { localStorage.setItem(CALC_KEY, JSON.stringify(CALC_STATE)); } catch (e) {}
-}
-
-function estimateWeightFromAge(val, unit) {
-  if (unit === 'm') {
-    return Math.max(2.5, Math.min(11, Math.round(((val + 9) / 2) * 10) / 10));
-  }
-  if (val <= 5) return Math.max(9, Math.round(((val + 4) * 2) * 10) / 10);
-  if (val <= 12) return Math.round((val * 3 + 7) * 10) / 10;
-  return Math.min(75, Math.round(val * 3.5));
+  safeStorageSet(CALC_KEY, JSON.stringify(CALC_STATE));
 }
 
 /* ---------- WIRTUALNY PACJENT (SOR / IZBA PRZYJĘĆ) ---------- */
@@ -7773,6 +7481,7 @@ function viewCalculator(parts, params) {
       <div class="eyebrow">Narzędzia kliniczne</div>
       <h2>Kalkulator dawek pediatrycznych & Stany nagłe</h2>
       <p class="lead">Przeliczaj dawki leków ratunkowych (PALS), płynoterapię odwodnienia (Holliday-Segar), syropy przeciwgorączkowe, antybiotyki oraz skale kliniczne w czasie rzeczywistym.</p>
+      <p class="srcline" style="margin:-.8rem 0 1.2rem">⚠️ Narzędzie dydaktyczne — przed zastosowaniem u pacjenta zweryfikuj dawkę w ChPL i aktualnych wytycznych klinicznych.</p>
 
       <!-- Panel parametrów pacjenta -->
       <div class="calc-param-card">
@@ -7781,14 +7490,14 @@ function viewCalculator(parts, params) {
           <div class="calc-field-group">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span class="muted" style="font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Masa ciała pacjenta</span>
-              <span class="srcline">Zakres: 1.0 – 80.0 kg</span>
+              <span class="srcline">Zakres: 1.0 – 100.0 kg</span>
             </div>
             <div class="calc-val-display">
               <span class="calc-val-number" id="calcWeightNum">${w.toFixed(1)}</span>
               <span style="font-weight:800;color:var(--muted);font-size:1.1rem">kg</span>
               <input type="number" id="calcWeightIn" min="1" max="100" step="0.5" value="${w}" style="width:80px;padding:.3rem .5rem;margin-left:auto;border:1.5px solid var(--line);border-radius:8px;font-weight:800;font-size:1.1rem;background:var(--bg);color:var(--ink);text-align:right">
             </div>
-            <input type="range" class="calc-slider" id="calcWeightSlider" min="1" max="80" step="0.5" value="${w}">
+            <input type="range" class="calc-slider" id="calcWeightSlider" min="1" max="100" step="0.5" value="${w}">
             <div class="calc-quick-pills">
               <span class="muted" style="font-size:.74rem;align-self:center;font-weight:700;margin-right:.2rem">Szybki wybór:</span>
               <button class="calc-pill ${w === 3.5 ? 'active' : ''}" data-pw="3.5">3.5 kg (Noworodek)</button>
@@ -7805,7 +7514,7 @@ function viewCalculator(parts, params) {
           <div class="calc-field-group" style="border-left:1px solid var(--line-2);padding-left:1.2rem">
             <span class="muted" style="font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Szacowanie wagi z wieku (APLS)</span>
             <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
-              <input type="number" id="calcAgeVal" min="1" max="18" value="${CALC_STATE.ageVal}" style="width:70px;padding:.4rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:800;background:var(--bg);color:var(--ink)">
+              <input type="number" id="calcAgeVal" min="0" max="18" value="${CALC_STATE.ageVal}" style="width:70px;padding:.4rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:800;background:var(--bg);color:var(--ink)">
               <select id="calcAgeUnit" style="padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:700;background:var(--bg);color:var(--ink)">
                 <option value="y" ${CALC_STATE.ageUnit === 'y' ? 'selected' : ''}>lat</option>
                 <option value="m" ${CALC_STATE.ageUnit === 'm' ? 'selected' : ''}>miesięcy</option>
@@ -7841,12 +7550,6 @@ function viewCalculator(parts, params) {
     attachEvents();
   };
 
-  const getAgeFormulaHint = (val, unit) => {
-    if (unit === 'm') return `(<12 m.ż.): (miesiące + 9) / 2 = ${((val + 9) / 2).toFixed(1)} kg`;
-    if (val <= 5) return `(1–5 lat): (wiek + 4) × 2 = ${((val + 4) * 2).toFixed(1)} kg`;
-    if (val <= 12) return `(6–12 lat): wiek × 3 + 7 = ${(val * 3 + 7).toFixed(1)} kg`;
-    return `(>12 lat): wiek × 3.5 = ${(val * 3.5).toFixed(1)} kg`;
-  };
 
   const renderTabContent = (tab, w) => {
     switch (tab) {
@@ -8051,15 +7754,7 @@ function viewCalculator(parts, params) {
 
   /* Zakładka 2: Płynoterapia */
   const renderTabFluids = w => {
-    // Holliday-Segar
-    let dailyMl = 0;
-    if (w <= 10) dailyMl = w * 100;
-    else if (w <= 20) dailyMl = 1000 + (w - 10) * 50;
-    else dailyMl = 1500 + Math.min(60, w - 20) * 20;
-
-    const hourlyMl = Math.round(dailyMl / 24);
-    const dropRateStandard = Math.round(hourlyMl / 3);
-    const dropRateMicro = hourlyMl;
+    const { dailyMl, hourlyMl, dropRateStandard, dropRateMicro } = calcHollidaySegar(w);
 
     // Deficyt odwodnienia
     const dStage = CALC_STATE.dehydr;
@@ -9088,7 +8783,8 @@ Uwagi: Obserwować tolerancję, wkłucie obwodowe, parametry życiowe.` : '';
     const numIn = $('#calcWeightIn');
 
     const updateWeight = val => {
-      const clamped = Math.max(1, Math.min(100, Math.round(val * 10) / 10));
+      const safeVal = Number.isFinite(val) ? val : 1;
+      const clamped = Math.max(1, Math.min(100, Math.round(safeVal * 10) / 10));
       CALC_STATE.weight = clamped;
       saveCalcState();
       render();
@@ -9174,10 +8870,7 @@ Uwagi: Obserwować tolerancję, wkłucie obwodowe, parametry życiowe.` : '';
         const w = CALC_STATE.weight;
         const age = `${CALC_STATE.ageVal} ${CALC_STATE.ageUnit === 'y' ? 'lat' : 'miesięcy'}`;
 
-        let dailyMl = 0;
-        if (w <= 10) dailyMl = w * 100;
-        else if (w <= 20) dailyMl = 1000 + (w - 10) * 50;
-        else dailyMl = 1500 + Math.min(60, w - 20) * 20;
+        const { dailyMl } = calcHollidaySegar(w);
 
         const md = `# Karta zlecenia i dawek leków pacjenta
 **Data wygenerowania:** ${new Date().toLocaleString('pl-PL')}
@@ -9776,7 +9469,7 @@ try {
   }
 } catch (e) { /* ignoruj */ }
 function saveRashState() {
-  try { localStorage.setItem(RASH_STORE_KEY, JSON.stringify(RASH_STATE)); } catch (e) {}
+  safeStorageSet(RASH_STORE_KEY, JSON.stringify(RASH_STATE));
 }
 const IMAGING_STORE_KEY = 'pediatria_hub_imaging_v1';
 let IMAGING_PROGRESS = {};
@@ -9785,7 +9478,7 @@ try {
   if (ipRaw) IMAGING_PROGRESS = JSON.parse(ipRaw);
 } catch (e) { /* ignoruj */ }
 function saveImagingProgress() {
-  try { localStorage.setItem(IMAGING_STORE_KEY, JSON.stringify(IMAGING_PROGRESS)); } catch (e) {}
+  safeStorageSet(IMAGING_STORE_KEY, JSON.stringify(IMAGING_PROGRESS));
 }
 let ACTIVE_IMAGING_CASE_ID = 'ekg-norm';
 let IMAGING_MODALITY_FILTER = 'all'; // 'all' | 'ekg' | 'rtg' | 'usg'
@@ -10611,9 +10304,9 @@ function viewDiagnostics(parts, params) {
             [54,88],[46,108],[116,88],[124,108],[74,155],[96,155],[72,185],[98,185]
           ].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fb7185"/>`).join('')}
           <!-- Tył węzły podpotyliczne powiększone (charakterystyczne!) -->
-          <circle cx="218" cy="44" r="5" fill="#8b5cf6" stroke="#fff" stroke-width="1.5"/>
-          <circle cx="252" cy="44" r="5" fill="#8b5cf6" stroke="#fff" stroke-width="1.5"/>
-          <text x="235" y="52" font-size="7" font-weight="800" text-anchor="middle" fill="#8b5cf6">Węzły zauszne</text>
+          <circle cx="218" cy="44" r="5" fill="var(--blue)" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="252" cy="44" r="5" fill="var(--blue)" stroke="#fff" stroke-width="1.5"/>
+          <text x="235" y="52" font-size="7" font-weight="800" text-anchor="middle" fill="var(--blue-d)">Węzły zauszne</text>
           ${[
             [226,74],[236,72],[246,76],[222,88],[232,86],[242,90],[250,86],
             [224,104],[234,102],[244,106],[226,118],[236,120],[246,116]
@@ -10886,7 +10579,7 @@ function viewDiagnostics(parts, params) {
 
         <!-- Kolumna prawa: Kompendium wiedzy klinicznej -->
         <div class="rash-details-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;border-bottom:1px solid var(--line);padding-bottom:.8rem">
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:.45rem;border-bottom:1px solid var(--line);padding-bottom:.8rem">
             <div>
               <div class="srcline">${esc(activeRash.altName || 'Choroba osutkowa')}</div>
               <h3 style="margin:.15rem 0 .2rem;font-size:1.25rem;color:var(--ink)">${esc(activeRash.name)}</h3>
@@ -11572,6 +11265,19 @@ function viewDiagnostics(parts, params) {
 
 /* ---------- TRENING ---------- */
 function viewTrening(parts, params) {
+  if (pendingRetryIds) {
+    const ids = pendingRetryIds;
+    pendingRetryIds = null;
+    SESSION = null;
+    startSession(ids);
+    return;
+  }
+  if (pendingAutoTrain) {
+    pendingAutoTrain = false;
+    SESSION = null;
+    startSession();
+    return;
+  }
   if (params.at !== undefined || params.mods !== undefined || params.wrong || params.auto || params.gap || params.bank || params.mode) {
     C.at = new Set((params.at || '').split(',').filter(Boolean)); C.mods = new Set((params.mods || '').split(',').filter(Boolean));
     C.banks = new Set((params.bank || '').split(',').filter(Boolean));
@@ -11609,7 +11315,7 @@ function renderConfig() {
   upd();
 }
 function startSession(ids) {
-  let list = ids ? ids.map(i => qById[i]) : shuffle(pool());
+  let list = ids ? ids.map(i => qById[i]).filter(Boolean) : shuffle(pool());
   if (!ids && C.n) list = list.slice(0, C.n);
   if (!list.length) { renderConfig(); return; }
   SESSION = { list, i: 0, log: [], mode: ids ? C.mode : C.mode, locked: false, sel: new Set() };
@@ -11628,7 +11334,7 @@ function renderSession() {
         return `<div class="opt ${cls}" style="cursor:default"><span class="l">${L[i]}</span><span>${esc(o)}</span></div>`;
       }).join('')}</div>`;
       if (!done) {
-        body += `<div class="acts" style="margin-top:1.2rem"><button class="btn pri" id="reveal" style="background:#4F46E5;border-color:#4F46E5;color:#fff;font-weight:700">Pokaż klucz i omówienie ▾</button></div>`;
+        body += `<div class="acts" style="margin-top:1.2rem"><button class="btn pri" id="reveal">Pokaż klucz i omówienie ▾</button></div>`;
       } else {
         body += explain(q);
         body += `<div class="acts" id="flashEvalRow" style="display:flex;gap:.8rem;align-items:center;background:var(--surface);padding:.9rem 1.1rem;border-radius:10px;border:1px solid var(--line);margin-top:1.2rem;flex-wrap:wrap">
@@ -11664,7 +11370,6 @@ function renderSession() {
     </div>
     <div class="stemL">${escB(q.stem)}</div>${body}</div></div></section>`;
   const nextBtn = (ok) => { $('#nextRow').innerHTML = `<a class="btn sec sm" href="${atlasHref(q)}" target="_self">Temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${!!S.bm[q.id]}" aria-label="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${S.bm[q.id] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button><span style="flex:1"></span><button class="btn pri" id="next">${s.i + 1 < s.list.length ? 'Dalej →' : 'Zobacz wynik →'}</button>`; $('#next').focus({ preventScroll: true }); $('#next').onclick = () => { s.i++; s.locked = false; s.sel = new Set(); renderSession(); window.scrollTo(0, 0); }; };
-  delegateBm(main);
   $('#quit').onclick = () => { s.i = s.list.length; renderSession(); };
   function record(ok) {
     s.log.push({ id: q.id, ok, sel: [...s.sel] }); const a = S.ans[q.id] || { n: 0, c: 0 };
@@ -11697,8 +11402,8 @@ function renderSession() {
 }
 function renderResults() {
   const s = SESSION; const tot = s.log.length, good = s.log.filter(x => x.ok).length;
-  const by = {}; s.log.forEach(x => { const q = qById[x.id]; const k = q.pm; (by[k] = by[k] || { t: 0, g: 0 }).t++; if (x.ok) by[k].g++; });
-  const wrong = s.log.filter(x => !x.ok).map(x => qById[x.id]);
+  const by = {}; s.log.forEach(x => { const q = qById[x.id]; if (!q) return; const k = q.pm; (by[k] = by[k] || { t: 0, g: 0 }).t++; if (x.ok) by[k].g++; });
+  const wrong = s.log.filter(x => !x.ok).map(x => qById[x.id]).filter(Boolean);
   const p = pct(good, tot), col = p >= 80 ? 'var(--green)' : p >= 60 ? 'var(--amber)' : 'var(--red)';
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap" style="max-width:900px">
     <div class="eyebrow">Wynik sesji</div>
@@ -11707,7 +11412,6 @@ function renderResults() {
     <div class="acts" style="margin:1.2rem 0">${wrong.length ? `<button class="btn pri" id="redo">Powtórz błędne (${wrong.length})</button>` : ''}<button class="btn sec" id="again">Nowa sesja</button><a class="btn sec" href="#/postep">Postęp</a></div>
     ${wrong.length ? `<h3 style="margin:1.6rem 0 .2rem">Do powtórki</h3><div class="qlist">${wrong.map(q => qCard(q)).join('')}</div>` : '<div class="card" style="text-align:center;padding:2rem"><h3>Bez błędów</h3><p class="muted" style="margin:.3rem auto">Spróbuj trudniejszej puli, na przykład pytań z niepewnym kluczem.</p></div>'}
   </div></section>`;
-  delegateBm(main);
   if ($('#redo')) $('#redo').onclick = () => { const ids = wrong.map(q => q.id); SESSION = null; startSession(ids); };
   $('#again').onclick = () => { SESSION = null; renderConfig(); };
   if (s.mode === 'exam') $$('details.qc', main).forEach(d => d.open = false);
@@ -11814,8 +11518,8 @@ function viewProgress() {
       const id = b.dataset.retryExam;
       const ex = (S.examHistory || []).find(x => x.id === id);
       if (ex && ex.wrongQIds.length) {
+        pendingRetryIds = ex.wrongQIds.slice();
         location.hash = '#/trening';
-        setTimeout(() => startSession(ex.wrongQIds), 50);
       }
     };
   });
@@ -11841,16 +11545,16 @@ function viewProgress() {
   }
   $$('[data-done]').forEach(c => c.addEventListener('change', () => { c.checked ? S.done[c.dataset.done] = 1 : delete S.done[c.dataset.done]; save(); viewProgressSummaryRefresh(); }));
   function viewProgressSummaryRefresh() { const cards = $$('.agrid .card .big'); if (cards[0]) cards[0].innerHTML = `${doneCount()}<span class="muted" style="font-size:1.2rem">/${covered.length}</span>`; }
-  const enc = () => btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  const enc = () => b64EncodeUtf8(JSON.stringify(S));
   $('#bkGen').onclick = () => { $('#bk').value = enc(); };
   $('#bkCopy').onclick = async () => { $('#bk').value = enc(); try { await navigator.clipboard.writeText($('#bk').value); toast('Skopiowano kod'); } catch (e) { $('#bk').select(); toast('Zaznaczono kod, skopiuj ręcznie'); } };
-  $('#bkLoad').onclick = () => { try { const d = JSON.parse(decodeURIComponent(escape(atob($('#bk').value.trim())))); S = Object.assign({ visited: {}, last: null, done: {}, ans: {}, bm: {} }, d); save(); toast('Wczytano postęp'); viewProgress(); } catch (e) { toast('Nieprawidłowy kod'); } };
-  $('#bkReset').onclick = () => { if ($('#bkReset').dataset.s) { S = { visited: {}, last: null, done: {}, ans: {}, bm: {} }; save(); toast('Postęp wyzerowany'); viewProgress(); } else { $('#bkReset').dataset.s = 1; $('#bkReset').textContent = 'Kliknij ponownie, aby potwierdzić'; setTimeout(() => { const b = $('#bkReset'); if (b) { delete b.dataset.s; b.textContent = 'Zeruj postęp'; } }, 3000); } };
+  $('#bkLoad').onclick = () => { try { const d = JSON.parse(b64DecodeUtf8($('#bk').value.trim())); S = Object.assign(defaultState(), d); S.examHistory = Array.isArray(S.examHistory) ? S.examHistory : []; S.patientCases = (S.patientCases && typeof S.patientCases === 'object') ? S.patientCases : {}; S.osceCases = (S.osceCases && typeof S.osceCases === 'object') ? S.osceCases : {}; save(); toast('Wczytano postęp'); viewProgress(); } catch (e) { toast('Nieprawidłowy kod'); } };
+  $('#bkReset').onclick = () => { if ($('#bkReset').dataset.s) { S = defaultState(); save(); toast('Postęp wyzerowany'); viewProgress(); } else { $('#bkReset').dataset.s = 1; $('#bkReset').textContent = 'Kliknij ponownie, aby potwierdzić'; setTimeout(() => { const b = $('#bkReset'); if (b) { delete b.dataset.s; b.textContent = 'Zeruj postęp'; } }, 3000); } };
 }
 
 /* ---------- STOPKA ---------- */
 function renderFooter() {
-  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p></div>
+  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p><p class="muted" style="margin-top:.5rem;font-size:.78rem">Wersja v22 · Materiał edukacyjny; decyzje kliniczne weryfikuj z ChPL i aktualnymi wytycznymi.</p></div>
   <div><h3>Jak czytać źródła</h3><p>Powtarzalność pytania to sygnał do nauki, nie prognoza egzaminu. Tam, gdzie klucz puli rozmija się z wytycznymi, hub pokazuje „pod zaliczenie” i „aktualnie klinicznie” osobno. Brakujących lokalnych wymogów zakładu nie uzupełniono domysłami.</p><p style="margin-top:.5rem">Szybkie wyszukiwanie: <b>Ctrl K</b> lub <b>/</b>.</p></div></div>`;
 }
 
@@ -11872,15 +11576,17 @@ const VIEWS = [
   ['Graf wiedzy', '#/graf'],
   ['Postęp i historia', '#/postep']
 ];
-const ALL = [
-  ...VIEWS.map(v => ({ k: 'Widok', t: v[0], h: v[1], n: norm(v[0]) })),
-  ...PATIENT_CASES.map(c => ({ k: 'Pacjent SOR', t: c.title, h: '#/pacjent/' + c.id, n: norm(c.shortTitle + ' ' + c.title + ' ' + c.category + ' ' + c.debrief.diagnosis) })),
-  ...(OSCE_STATIONS || []).map(s => ({ k: 'Stacja OSCE', t: s.title, h: '#/pacjent/osce/' + s.id, n: norm(s.shortTitle + ' ' + s.title + ' ' + s.topic) })),
-  ...(SEMANTIC_GAPS || []).map(g => ({ k: 'Luka wiedzy', t: g.title, h: `#/graf?gap=${g.id}`, n: norm(`${g.title} ${g.clinicalReason} ${g.examTrap}`) })),
-  ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
-  ...ATLASES.flatMap(a => a.secs.map(s => ({ k: 'Sekcja', t: `${ASHORT[a.id]} › ${s[1]}`, h: `#/atlas/${a.id}/${s[0]}`, n: norm(`${ASHORT[a.id]} ${s[1]}`) }))),
-  ...Q.map(q => ({ k: 'Zadanie', t: q.stem.length > 120 ? q.stem.slice(0, 118) + '…' : q.stem, h: `#/pytania?q=${encodeURIComponent(q.stem.slice(0, 40))}`, n: q._n }))
-];
+function buildSearchIndex() {
+  return [
+    ...VIEWS.map(v => ({ k: 'Widok', t: v[0], h: v[1], n: norm(v[0]) })),
+    ...PATIENT_CASES.map(c => ({ k: 'Pacjent SOR', t: c.title, h: '#/pacjent/' + c.id, n: norm(c.shortTitle + ' ' + c.title + ' ' + c.category + ' ' + c.debrief.diagnosis) })),
+    ...(OSCE_STATIONS || []).map(s => ({ k: 'Stacja OSCE', t: s.title, h: '#/pacjent/osce/' + s.id, n: norm(s.shortTitle + ' ' + s.title + ' ' + s.topic) })),
+    ...(SEMANTIC_GAPS || []).map(g => ({ k: 'Luka wiedzy', t: g.title, h: `#/graf?gap=${g.id}`, n: norm(`${g.title} ${g.clinicalReason} ${g.examTrap}`) })),
+    ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
+    ...ATLASES.flatMap(a => a.secs.map(s => ({ k: 'Sekcja', t: `${ASHORT[a.id]} › ${s[1]}`, h: `#/atlas/${a.id}/${s[0]}`, n: norm(`${ASHORT[a.id]} ${s[1]}`) }))),
+    ...Q.map(q => ({ k: 'Zadanie', t: q.stem.length > 120 ? q.stem.slice(0, 118) + '…' : q.stem, h: `#/pytania?q=${encodeURIComponent(q.stem.slice(0, 40))}`, n: q._n }))
+  ];
+}
 function palRender() {
   const toks = norm(palIn.value).split(/\s+/).filter(Boolean);
   palItems = (toks.length ? ALL.filter(i => toks.every(t => i.n.includes(t))) : ALL.slice(0, 22)).slice(0, 40);
@@ -11932,6 +11638,7 @@ function initPWA() {
   });
 
   if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         reg.addEventListener('updatefound', () => {
@@ -11958,7 +11665,7 @@ function initPWA() {
 
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
+        if (hadController && !refreshing) {
           refreshing = true;
           window.location.reload();
         }
@@ -11973,6 +11680,9 @@ function initTheme() {
   applyTheme(currentTheme, false);
 }
 
+ALL = buildSearchIndex();
+delegateBm(main, () => { if (onBmMutate) onBmMutate(); });
+initNavMenus();
 initTheme();
 initPWA();
 initNotesDrawer();

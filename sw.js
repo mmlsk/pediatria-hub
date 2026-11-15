@@ -1,5 +1,5 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v20';
+const CACHE_NAME = 'pediatria-hub-v22';
 
 const PRECACHE_ASSETS = [
   './',
@@ -7,8 +7,8 @@ const PRECACHE_ASSETS = [
   './manifest.webmanifest',
   './css/hub.css',
   './js/meta.js',
-  './js/questions_zaklad.js',
   './js/questions.js',
+  './js/logic.js',
   './js/app.js',
   './icons/icon.svg',
   './icons/icon-192.png',
@@ -106,7 +106,7 @@ self.addEventListener('fetch', event => {
       caches.match(request).then(cachedResponse => {
         // Stale-While-Revalidate dla zasobów lokalnych i czcionek
         const fetchPromise = fetch(request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(request, responseToCache);
@@ -116,8 +116,9 @@ self.addEventListener('fetch', event => {
         }).catch(() => {
           // W przypadku błędu sieci (offline) i braku w cache nawigacji - fallback do index.html
           if (request.mode === 'navigate') {
-            return caches.match('./index.html');
+            return caches.match('./index.html').then(r => r || Response.error());
           }
+          return Response.error();
         });
 
         return cachedResponse || fetchPromise;

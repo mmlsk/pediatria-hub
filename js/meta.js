@@ -4,7 +4,7 @@ window.HUB_META = (function () {
     A: { name: 'Stany nagłe i choroby zakaźne', short: 'Nagłe i zakaźne', color: 'var(--red)', soft: 'var(--red-l)', hex: '#C23B2A' },
     B: { name: 'Gastroenterologia i alergologia', short: 'Gastro i alergie', color: 'var(--amber)', soft: 'var(--amber-l)', hex: '#B8730F' },
     C: { name: 'Nefrologia', short: 'Nefrologia', color: 'var(--blue)', soft: 'var(--blue-l)', hex: '#2B63AE' },
-    D: { name: 'Onkologia, hematologia i immunologia', short: 'Onko-hemato-immuno', color: 'var(--violet)', soft: 'var(--violet-l)', hex: '#6E4CB0' }
+    D: { name: 'Onkologia, hematologia i immunologia', short: 'Onko-hemato-immuno', color: 'var(--violet)', soft: 'var(--violet-l)', hex: '#245B7A' }
   };
 
   /* Moduły wg zakresu przedmiotu. at = atlas, a = kotwica w atlasie */
@@ -1599,7 +1599,7 @@ window.HUB_META = (function () {
         {
           id: 'skora_plamica',
           name: 'Skóra – ocena osutki i wybroczyn',
-          icon: '🟣',
+          icon: '🔍',
           x: 35, y: 72, backX: 48, backY: 64,
           maneuvers: [
             { id: 'm_purpura_palpabilis', label: 'Zbadaj wykwity na kończynach dolnych i pośladkach', isKey: true, isFatal: false, finding: 'Symetryczna, uniesiona plamica (purpura palpabilis) – wyczuwalne palpacyjnie grudki i plamki krwotoczne na pośladkach, udach i podudziach. Nie bledną pod uciskiem.', reaction: 'normal' },
