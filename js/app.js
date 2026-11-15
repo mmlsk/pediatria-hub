@@ -170,13 +170,16 @@ function prepQuestion(q, isCustom = false) {
 
 function loadAllQuestions() {
   const map = new Map();
-  // 1. Wczytaj bazę podstawową HUB_Q (zawiera bazę modułową i pytania zakładowe)
-  (window.HUB_Q || []).forEach(q => map.set(q.id, prepQuestion(q, false)));
+  // 1. Wczytaj bazę modułową HUB_MODULOWA_Q lub HUB_Q (413 pytań)
+  const modQ = window.HUB_MODULOWA_Q || window.HUB_Q || [];
+  modQ.forEach(q => map.set(q.id, prepQuestion(q, false)));
   // 2. Jeśli załadowano dedykowany plik HUB_ZAKLAD_Q, nadpisz/wzbogać pełną pulą zakładową (2256 pytań)
   (window.HUB_ZAKLAD_Q || []).forEach(q => map.set(q.id, prepQuestion(q, false)));
   // 3. Własne pytania użytkownika
   CUSTOM_Q.forEach(q => map.set(q.id, prepQuestion(q, true)));
-  return Array.from(map.values());
+  const all = Array.from(map.values());
+  window.HUB_Q = all; // kompatybilność wsteczna z atlasami i modułami
+  return all;
 }
 
 let Q = loadAllQuestions();
@@ -186,6 +189,116 @@ function saveCustomQ() {
   try { localStorage.setItem(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q)); } catch (e) {}
   Q = loadAllQuestions();
   qById = Object.fromEntries(Q.map(q => [q.id, q]));
+}
+
+/* ---------- SYSTEM PAMIĘCI PODRĘCZNEJ INDEXEDDB & GZIP (Cold-Cache) ---------- */
+const HUB_BUILD_ID = '20261115_v19';
+const IDB_NAME = 'pediatria_hub_db';
+const IDB_STORE = 'cache';
+
+function openHubDb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') return reject(new Error('IndexedDB niedostępne'));
+    try {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function idbGet(key) {
+  try {
+    const db = await openHubDb();
+    return new Promise(resolve => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function idbSet(key, val) {
+  try {
+    const db = await openHubDb();
+    return new Promise(resolve => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.put(val, key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => resolve(false);
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
+async function compressGzip(str) {
+  if (typeof CompressionStream === 'undefined') return null;
+  try {
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+    return await new Response(stream).arrayBuffer();
+  } catch (e) {
+    return null;
+  }
+}
+
+async function decompressGzip(buffer) {
+  if (typeof DecompressionStream === 'undefined') return null;
+  try {
+    const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(stream).text();
+  } catch (e) {
+    return null;
+  }
+}
+
+async function initColdCache() {
+  try {
+    const cachedBuild = await idbGet('build_id');
+    // 1. Jeśli baza zakładowa nie załadowała się ze skryptu, odtwórz z IndexedDB
+    if ((!window.HUB_ZAKLAD_Q || !window.HUB_ZAKLAD_Q.length) && cachedBuild === HUB_BUILD_ID) {
+      const compressed = await idbGet('zaklad_q_gz');
+      if (compressed) {
+        const jsonStr = await decompressGzip(compressed);
+        if (jsonStr) {
+          window.HUB_ZAKLAD_Q = JSON.parse(jsonStr);
+          Q = loadAllQuestions();
+          qById = Object.fromEntries(Q.map(q => [q.id, q]));
+          console.log('[Cache] Odtworzono bazę zakładową z kompresji IndexedDB (Stale-While-Revalidate).');
+          if (location.hash.startsWith('#/pytania') || location.hash === '#/') route();
+        }
+      }
+    }
+    // 2. Jeśli nowa wersja bazy zakładowej, zbuforuj skompresowany Blob w tle
+    if (cachedBuild !== HUB_BUILD_ID && window.HUB_ZAKLAD_Q && window.HUB_ZAKLAD_Q.length) {
+      const jsonStr = JSON.stringify(window.HUB_ZAKLAD_Q);
+      const gzBuf = await compressGzip(jsonStr);
+      if (gzBuf) {
+        await idbSet('zaklad_q_gz', gzBuf);
+        await idbSet('build_id', HUB_BUILD_ID);
+        await idbSet('cached_at', Date.now());
+        console.log(`[Cache] Zbuforowano ${window.HUB_ZAKLAD_Q.length} pytań zakładowych w IndexedDB (gzip: ${(gzBuf.byteLength/1024).toFixed(0)} KB).`);
+      }
+    }
+  } catch (err) {
+    console.warn('[Cache] Błąd operacji IndexedDB:', err);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) requestIdleCallback(() => initColdCache());
+  else setTimeout(initColdCache, 1200);
 }
 
 /* ---------- dane pochodne ---------- */
@@ -1959,7 +2072,7 @@ function parseQuestionsInput(input, defaultBank = 'zaklad', defaultMod = '1') {
 }
 
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, open: 'all', limit: 30, tab: 'zaklad', addMode: 'single' };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, open: 'all', limit: 30, tab: 'zaklad', addMode: 'single' };
 let parsedImportStash = [];
 
 function viewQuestions(parts, params) {
@@ -1967,7 +2080,7 @@ function viewQuestions(parts, params) {
     F.q = params.q || ''; F.at = new Set((params.at || '').split(',').filter(Boolean)); F.mods = new Set((params.mods || '').split(',').filter(Boolean));
     F.banks = new Set((params.bank || '').split(',').filter(Boolean));
     F.all = !!params.all; F.conf = new Set((params.conf || '').split(',').filter(Boolean)); F.gap = !!params.gap; F.bm = !!params.bm; F.wrong = !!params.wrong;
-    F.hit = !!params.hit; F.hasKey = !!params.hasKey; F.hasWhy = !!params.hasWhy; F.limit = 30;
+    F.hit = !!params.hit; F.hasKey = !!params.hasKey; F.hasWhy = !!params.hasWhy; F.searchWhy = !!params.searchWhy; F.limit = 30;
     if (params.tab) F.tab = params.tab;
   }
 
@@ -2212,6 +2325,7 @@ function renderBrowseTab(container) {
         <button class="tgl" data-f="hit" aria-pressed="${F.hit}">🔥 hity bazy (≥2)</button>
         <button class="tgl" data-f="hasKey" aria-pressed="${F.hasKey}">z oficjalnym kluczem</button>
         <button class="tgl" data-f="hasWhy" aria-pressed="${F.hasWhy}">z omówieniem</button>
+        <button class="tgl" data-f="searchWhy" aria-pressed="${F.searchWhy}" title="Przeszukuj również pełne teksty wyjaśnień i analizy dystraktorów">🔍 szukaj też w omówieniach</button>
         <button class="tgl" data-f="gap" aria-pressed="${F.gap}" style="${F.gap ? 'border-color:#F59E0B;color:#D97706' : ''}">⚠️ klucz ≠ wytyczne (${Q.filter(q => q.gap).length})</button>
         <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
         <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
@@ -2238,7 +2352,13 @@ function renderBrowseTab(container) {
       if (F.conf.size && !F.conf.has(q.conf)) return false;
       if (F.gap && !q.gap) return false; if (F.bm && !S.bm[q.id]) return false;
       if (F.wrong && !(S.ans[q.id] && !S.ans[q.id].last)) return false;
-      return toks.every(t => q._n.includes(t));
+      if (!toks.length) return true;
+      if (toks.every(t => q._n.includes(t))) return true;
+      if (F.searchWhy && (q.why || q.zal || q.akt)) {
+        if (!q._whyN) q._whyN = norm([q.why || '', q.zal || '', q.akt || ''].join(' '));
+        return toks.every(t => q._n.includes(t) || q._whyN.includes(t));
+      }
+      return false;
     });
   }
   function draw() {
@@ -2252,7 +2372,7 @@ function renderBrowseTab(container) {
   $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); draw(); });
   $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 30; draw(); });
   $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 30; draw(); });
-  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, limit: 30 }); renderBrowseTab(container); });
+  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, limit: 30 }); renderBrowseTab(container); });
   delegateBm(list, () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; });
   draw();
 }
