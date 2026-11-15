@@ -116,6 +116,8 @@ function applyTheme(t, persist = true) {
   } else {
     delete document.documentElement.dataset.theme;
   }
+  const tc = $('meta[name="theme-color"]');
+  if (tc) tc.content = eff === 'dark' ? '#090C0E' : '#F5F6F2';
   updateThemeUI();
   syncIframeTheme(eff);
 }
@@ -485,7 +487,7 @@ function qCard(q, open) {
   const hasKey = q.keys && q.keys.length > 0;
   return `<details class="qc" data-q="${esc(q.id)}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${isHit ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip" style="background:#FEE2E2;color:#991B1B;font-weight:700;border-color:#FECACA" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${isHit ? `<span class="chip hit" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip gap" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip glued" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
     <div class="body">${optsStatic(q)}${explain(q)}
       <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${esc(q.id)}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${esc(q.id)}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
@@ -982,7 +984,7 @@ function viewConnections(parts, params) {
           ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
           <span><i class="dot" style="background:var(--red)"></i>pułapka kliniczna</span>
           <span><i class="dot" style="background:var(--teal)"></i>różnicowanie / most</span>
-          <span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span>
+          <span><i class="dot" style="border:2px dashed var(--muted);background:var(--surface)"></i>brak atlasu</span>
         </div>
       </div>`;
     }
@@ -1240,7 +1242,7 @@ function viewConnections(parts, params) {
         <div class="legend" style="margin:0">
           ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
           <span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span>
-          <span><i class="dot" style="border:2px dashed var(--muted);background:#fff"></i>brak atlasu</span>
+          <span><i class="dot" style="border:2px dashed var(--muted);background:var(--surface)"></i>brak atlasu</span>
         </div>
       </div>`;
     }
@@ -1934,7 +1936,7 @@ function viewQuestions(parts, params) {
     <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
 
     <div class="qtabs" id="qTabs">
-      <button class="qtab${F.tab === 'zaklad' ? ' on' : ''}" data-t="zaklad" style="${F.tab === 'zaklad' ? '' : 'border-color:#F59E0B;color:#D97706;font-weight:700'}">🏛️ Pula Zakładowa (${Q.filter(q => q.bank === 'zaklad').length})</button>
+      <button class="qtab zaklad-tab${F.tab === 'zaklad' ? ' on' : ''}" data-t="zaklad">🏛️ Pula Zakładowa (${Q.filter(q => q.bank === 'zaklad').length})</button>
       <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Wyszukiwarka pytań (${Q.length})</button>
       <button class="qtab${F.tab === 'add' ? ' on' : ''}" data-t="add">➕ Dodaj nowe pytanie / Import</button>
       <button class="qtab${F.tab === 'export' ? ' on' : ''}" data-t="export">📤 Eksport dodanych (${CUSTOM_Q.length})</button>
@@ -2059,7 +2061,7 @@ function renderZakladTab(container) {
       <div class="zd-mode-card hit" data-mode="hits">
         <h3>🔥 Hity Zakładowe <span class="zd-count">${hitsCount} pytań</span></h3>
         <p>Pytania powtórzone w co najmniej dwóch niezależnych rocznikach/zaliczeniach (2014–2026). Absolutny priorytet powtórkowy!</p>
-        <button class="btn pri sm" style="background:#E65100;border-color:#E65100">Trenuj Hity Zakładowe →</button>
+        <button class="btn pri sm hit">Trenuj Hity Zakładowe →</button>
       </div>
 
       <div class="zd-mode-card gap" data-mode="gap">
@@ -2165,7 +2167,7 @@ function renderBrowseTab(container) {
         <button class="tgl" data-f="hasKey" aria-pressed="${F.hasKey}">z oficjalnym kluczem</button>
         <button class="tgl" data-f="hasWhy" aria-pressed="${F.hasWhy}">z omówieniem</button>
         <button class="tgl" data-f="searchWhy" aria-pressed="${F.searchWhy}" title="Przeszukuj również pełne teksty wyjaśnień i analizy dystraktorów">🔍 szukaj też w omówieniach</button>
-        <button class="tgl" data-f="gap" aria-pressed="${F.gap}" style="${F.gap ? 'border-color:#F59E0B;color:#D97706' : ''}">⚠️ klucz ≠ wytyczne (${Q.filter(q => q.gap).length})</button>
+        <button class="tgl gap-tgl" data-f="gap" aria-pressed="${F.gap}">⚠️ klucz ≠ wytyczne (${Q.filter(q => q.gap).length})</button>
         <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
         <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
       </div>
@@ -11455,9 +11457,9 @@ function renderSession() {
     <div class="qbox"><div class="tags" style="display:flex;gap:.3rem;flex-wrap:wrap">
       ${bankChip(q.bank)}
       ${modChips(q)}
-      ${q.reps >= 2 ? `<span class="chip" style="background:#FFF3E0;color:#E65100;font-weight:700;border-color:#FFE0B2">🔥 Hit (${q.reps}x)</span>` : ''}
-      ${q.gap ? `<span class="chip" style="background:#FFF8E1;color:#B78103;font-weight:700;border-color:#FFE082">⚠️ klucz ≠ wytyczne</span>` : ''}
-      ${q.isGlued ? `<span class="chip" style="background:#FEE2E2;color:#991B1B;font-weight:700;border-color:#FECACA">⚠️ OCR łączone</span>` : ''}
+      ${q.reps >= 2 ? `<span class="chip hit">🔥 Hit (${q.reps}x)</span>` : ''}
+      ${q.gap ? `<span class="chip gap">⚠️ klucz ≠ wytyczne</span>` : ''}
+      ${q.isGlued ? `<span class="chip glued">⚠️ OCR łączone</span>` : ''}
       ${learn || isFlash || q.type === 'open' ? confChip(q.conf) : ''}
       <span class="chip">${esc(ASHORT[q.at] || q.at || 'Moduł')}</span>
     </div>
@@ -11647,7 +11649,7 @@ function viewProgress() {
 
 /* ---------- STOPKA ---------- */
 function renderFooter() {
-  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p><p class="muted" style="margin-top:.5rem;font-size:.78rem">Wersja v23 · Materiał edukacyjny; decyzje kliniczne weryfikuj z ChPL i aktualnymi wytycznymi.</p></div>
+  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p><p class="muted" style="margin-top:.5rem;font-size:.78rem">Wersja v26 · Materiał edukacyjny; decyzje kliniczne weryfikuj z ChPL i aktualnymi wytycznymi.</p></div>
   <div><h3>Jak czytać źródła</h3><p>Powtarzalność pytania to sygnał do nauki, nie prognoza egzaminu. Tam, gdzie klucz puli rozmija się z wytycznymi, hub pokazuje „pod zaliczenie” i „aktualnie klinicznie” osobno. Brakujących lokalnych wymogów zakładu nie uzupełniono domysłami.</p><p style="margin-top:.5rem">Szybkie wyszukiwanie: <b>Ctrl K</b> lub <b>/</b>.</p></div></div>`;
 }
 

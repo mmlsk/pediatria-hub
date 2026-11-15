@@ -257,14 +257,15 @@ footer ul{padding-left:1.1rem}footer li{margin:.25rem 0}
 
 /* ---------- dark theme ---------- */
 :root[data-theme="dark"]{
-  --bg:#0C151B; --surface:#14222B; --ink:#EDF3F5; --ink-2:#A5B6BE; --muted:#738894; --line:#223744; --line-2:#1B2C37;
-  --teal:#17A2B0; --teal-d:#61D3DE; --teal-l:rgba(23,162,176,.2);
-  --red:#E05847; --red-l:rgba(224,88,71,.2);
-  --amber:#D98E1C; --amber-l:rgba(217,142,28,.2);
-  --blue:#4D8BE0; --blue-l:rgba(77,139,224,.2);
-  --green:#42B36F; --green-l:rgba(66,179,111,.2);
-  --violet:#9570E0; --violet-l:rgba(149,112,224,.2);
+  color-scheme:dark;
+  --bg:#090C0E; --surface:#11161A; --ink:#F1F5F7; --ink-2:#B3C0C8; --muted:#8A9BA5; --line:#222B32; --line-2:#192026;
+  --teal:#0F828E; --teal-d:#4FD1DD; --teal-l:rgba(18,153,166,.18);
+  --red:#E55B4B; --red-l:rgba(229,91,75,.16);
+  --amber:#E59A24; --amber-l:rgba(229,154,36,.16);
+  --blue:#4E8FE6; --blue-l:rgba(78,143,230,.16);
+  --green:#3BB36E; --green-l:rgba(59,179,110,.16);
+  --violet:#4FA3CC; --violet-l:rgba(79,163,204,.16);
 }
-[data-theme="dark"] .nav{background:rgba(12,21,27,.9)}
+[data-theme="dark"] .nav{background:rgba(9,12,14,.9)}
 [data-theme="dark"] .card,.box{background:var(--surface);border-color:var(--line)}
 [data-theme="dark"] table th{background:var(--surface);color:var(--ink)}
