@@ -86,25 +86,28 @@ let filter='all',list=Q.slice(),st={}; // st[n]={sel,ok}
 const CONF={src:['src','KLUCZ POTWIERDZONY'],inf:['inf','KLUCZ WNIOSKOWANY'],unk:['unk','KLUCZ NIEPEWNY']};
 function match(q,f){return f==='all'||q.t===f||(f==='gap'&&q.gap)||(f==='unk'&&q.c==='unk')}
 function bar(){const a=Object.values(st);$('#score').textContent=`Wynik: ${a.filter(x=>x.ok).length} / ${a.length}`}
+function discHtml(q,done,L){return `<div class="callout ${done.ok?'green':'red'}"><b class="k">${done.ok?'Poprawnie':'Błędnie'} · prawidłowa odpowiedź: ${L[q.k]}</b>${q.why}</div>${q.tip?`<div class="callout blue"><b class="k">Wskazówka testowa</b>${q.tip}</div>`:''}${q.gap?`<div class="cmp"><div class="a"><b class="k">Pod zaliczenie (wg puli/zakładu)</b>${q.gap.pool}</div><div class="b"><b class="k">Aktualnie klinicznie (wg wytycznych)</b>${q.gap.now}</div></div>`:''}`}
 function renderQ(){
+  const L='ABCDEF';
   $('#quiz').innerHTML=list.map(q=>{
-   const L='ABCDEF';const done=st[q.n];const c=CONF[q.c];
+   const done=st[q.n];const c=CONF[q.c];
    return `<article class="q" id="q${q.n}"><header><span class="n">Zad. ${q.n}</span><span class="mod">[9]</span><span class="tbadge">${TOPICS[q.t]}</span><span class="kb ${c[0]}">${c[1]}</span>${q.own?'<span class="tbadge">zadanie autorskie</span>':''}${q.adapt?'<span class="tbadge" title="Treść pytania lub opcji uzupełniona/uproszczona">✎ opcje uzupełnione</span>':''}<span class="src">${q.s}</span></header>
    <div class="stem">${q.stem}</div>
    <div class="opts" role="group">${q.o.map((o,i)=>{
      let cl='opt';if(done){if(i===q.k)cl+=' key ok';else if(i===done.sel)cl+=' bad'}
      return `<button class="${cl}" data-q="${q.n}" data-i="${i}" ${done?'disabled':''}><span class="l">${L[i]}</span><span>${o}</span></button>`}).join('')}</div>
-   <div class="disc" ${done?'':'hidden'}>
-     <div class="callout ${done&&done.ok?'green':'red'}"><b class="k">${done&&done.ok?'Poprawnie':'Błędnie'} · prawidłowa odpowiedź: ${L[q.k]}</b>${q.why}</div>
-     ${q.tip?`<div class="callout blue"><b class="k">Wskazówka testowa</b>${q.tip}</div>`:''}
-     ${q.gap?`<div class="cmp"><div class="a"><b class="k">Pod zaliczenie (wg puli/zakładu)</b>${q.gap.pool}</div><div class="b"><b class="k">Aktualnie klinicznie (wg wytycznych)</b>${q.gap.now}</div></div>`:''}
-   </div></article>`}).join('')||'<p>Brak zadań w tym filtrze.</p>';
+   <div class="disc" ${done?'':'hidden'}>${done?discHtml(q,done,L):''}</div></article>`}).join('')||'<p>Brak zadań w tym filtrze.</p>';
   bar();
 }
 $('#quiz').addEventListener('click',e=>{
   const b=e.target.closest('.opt');if(!b)return;
-  const q=Q.find(x=>x.n==b.dataset.q),i=+b.dataset.i;if(st[q.n])return;
-  st[q.n]={sel:i,ok:i===q.k};renderQ();
+  const q=Q.find(x=>x.n==b.dataset.q),i=+b.dataset.i;if(!q||st[q.n])return;
+  const done=st[q.n]={sel:i,ok:i===q.k},art=b.closest('.q');
+  if(art){
+    $$('.opt',art).forEach(btn=>{btn.disabled=true;const ix=+btn.dataset.i;if(ix===q.k)btn.classList.add('key','ok');else if(ix===i)btn.classList.add('bad')});
+    const d=$('.disc',art);if(d){d.innerHTML=discHtml(q,done,'ABCDEF');d.hidden=false}
+  }
+  bar();
 });
 function setFilter(f){filter=f;list=Q.filter(q=>match(q,f));$$('#qFilters button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f));renderQ()}
 $$('#qFilters button').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));

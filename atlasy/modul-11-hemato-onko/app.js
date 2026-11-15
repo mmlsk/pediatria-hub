@@ -24,7 +24,7 @@
   if('IntersectionObserver' in window){
     var io=new IntersectionObserver(function(es){
       es.forEach(function(e){
-        if(e.isIntersecting){links.forEach(function(a){a.classList.remove('act');});var a=map[e.target.id];if(a){a.classList.add('act');a.scrollIntoView({block:'nearest',inline:'center'});}}
+        if(e.isIntersecting){links.forEach(function(a){a.classList.remove('act');});var a=map[e.target.id];if(a){a.classList.add('act');var nw=a.closest('.wrap');if(nw){nw.scrollLeft=Math.max(0,a.offsetLeft-(nw.clientWidth-a.offsetWidth)/2);}}}
       });
     },{rootMargin:'-30% 0px -60% 0px'});
     qs('section[id]').forEach(function(s){io.observe(s);});

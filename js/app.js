@@ -34,7 +34,9 @@ function safeStorageSet(key, val) {
 /* ---------- helpers ---------- */
 const L = 'ABCDEFGH';
 function rich(h) {
-  const t = document.createElement('template'); t.innerHTML = String(h || '');
+  const s = String(h || '');
+  if (!/[<>&]/.test(s)) return s;
+  const t = document.createElement('template'); t.innerHTML = s;
   const ok = { B: 1, STRONG: 1, I: 1, EM: 1, BR: 1, P: 1, UL: 1, OL: 1, LI: 1, A: 1, SUB: 1, SUP: 1 };
   (function walk(n) {
     [...n.childNodes].forEach(c => {
@@ -95,6 +97,13 @@ const save = () => {
   safeStorageSet(STORAGE_KEY, serialized);
   try { window.name = KEY + serialized; } catch (e) { /* ignoruj */ }
 };
+
+function recordQAns(id, ok) {
+  const a = S.ans[id] || { n: 0, c: 0 };
+  a.n++; if (ok) a.c++; a.last = ok; a.ts = Date.now();
+  S.ans[id] = a;
+  save();
+}
 
 /* ---------- obsługa motywu (Dark Mode) ---------- */
 const THEME_KEY = 'pediatria_hub_theme';
@@ -176,11 +185,17 @@ function getBank(q) {
   return 'zaklad';
 }
 
+function getQNorm(q) {
+  if (!q._n) {
+    q._n = norm([q.stem, (q.opts || []).join(' '), q.topic || '', (q.mods || []).join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
+  }
+  return q._n;
+}
+
 function prepQuestion(q, isCustom = false) {
   q.isCustom = !!isCustom;
   q.bank = q.bank || getBank(q);
   q.pm = q.mods.find(m => modById[m] && modById[m].at === q.at) || q.mods[0] || '1';
-  q._n = norm([q.stem, (q.opts || []).join(' '), q.topic || '', q.mods.join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
   return q;
 }
 
@@ -200,14 +215,34 @@ function loadAllQuestions() {
 
 let Q = loadAllQuestions();
 let qById = Object.fromEntries(Q.map(q => [q.id, q]));
-let ALL = [];
+let ALL = null;
+let _qStats = null;
 let onBmMutate = null;
+
+function getQStats() {
+  if (_qStats) return _qStats;
+  const banks = {};
+  const modsHit = new Set();
+  const confHit = new Set();
+  let gap = 0;
+  for (let i = 0; i < Q.length; i++) {
+    const q = Q[i];
+    banks[q.bank] = (banks[q.bank] || 0) + 1;
+    if (q.gap) gap++;
+    if (q.conf) confHit.add(q.conf);
+    const ms = q.mods || [];
+    for (let j = 0; j < ms.length; j++) modsHit.add(ms[j]);
+  }
+  _qStats = { banks, modsHit, confHit, gap };
+  return _qStats;
+}
 
 function saveCustomQ() {
   safeStorageSet(CUSTOM_Q_KEY, JSON.stringify(CUSTOM_Q));
   Q = loadAllQuestions();
   qById = Object.fromEntries(Q.map(q => [q.id, q]));
-  if (typeof buildSearchIndex === 'function') ALL = buildSearchIndex();
+  _qStats = null;
+  ALL = null;
 }
 
 // Reclaim legacy zaklad IndexedDB cache left over from pre-v21 builds.
@@ -220,7 +255,7 @@ const IDX = Object.fromEntries(MODS.map((m, i) => [m.id, i]));
 const covered = MODS.filter(m => m.at);
 const baseNums = [...new Set(MODS.map(m => parseInt(m.id, 10)))];
 const coveredBase = [...new Set(covered.map(m => parseInt(m.id, 10)))];
-const gapCount = Q.filter(q => q.gap).length;
+const gapCount = getQStats().gap;
 
 const E = {};
 function edgeOf(a, b) {
@@ -480,20 +515,87 @@ function bankChip(b) {
   const bank = BANKS[b] || BANKS.zaklad;
   return `<span class="chip" style="font-weight:700;background:var(--surface);border-color:var(--line)" title="${esc(bank.desc)}">${bank.icon} ${esc(bank.short)}</span>`;
 }
-function qCard(q, open) {
+function qCardActs(q) {
   const bm = !!S.bm[q.id];
+  return `<div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${esc(q.id)}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${esc(q.id)}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>`;
+}
+function qCardBody(q, interactive) {
+  if (interactive) {
+    if (q.type === 'open' || !q.opts || !q.opts.length) {
+      return `<div class="acts"><button type="button" class="btn dark sm" data-qreveal>Pokaż odpowiedź i omówienie ▾</button></div><div class="qc-exp"></div>${qCardActs(q)}`;
+    }
+    const multi = q.keys && q.keys.length > 1;
+    const checkBtn = multi ? '<button type="button" class="btn dark sm" data-qcheck disabled>Sprawdź</button>' : '';
+    return `${multi ? '<p class="srcline">Zadanie wielokrotnego wyboru: zaznacz wszystkie poprawne odpowiedzi.</p>' : ''}<div class="opts">${q.opts.map((o, i) => `<button type="button" class="opt" data-opt="${i}"><span class="l">${L[i]}</span><span>${esc(o)}</span></button>`).join('')}</div><div class="acts">${checkBtn}<button type="button" class="btn sec sm" data-qreveal>Pokaż klucz i omówienie</button></div><div class="qc-exp"></div>${qCardActs(q)}`;
+  }
+  return `${optsStatic(q)}${explain(q)}${qCardActs(q)}`;
+}
+function qCard(q, open, interactive) {
   const a = S.ans[q.id];
   const isHit = q.reps && q.reps >= 2;
   const hasKey = q.keys && q.keys.length > 0;
   return `<details class="qc" data-q="${esc(q.id)}"${open ? ' open' : ''}>
     <summary><div><div class="stem">${escB(q.stem)}</div>
-      <div class="tags">${isHit ? `<span class="chip hit" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip gap" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip glued" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
+      <div class="tags">${isHit ? `<span class="chip hit" title="Powtórzone w ${q.reps} niezależnych źródłach / rocznikach">🔥 Hit bazy (${q.reps}x)</span>` : ''}${bankChip(q.bank)}${modChips(q)}${hasKey ? confChip(q.conf) : '<span class="chip" style="background:var(--amber-l);color:var(--amber);border-color:transparent" title="Brak oficjalnego klucza w puli zakładu (do dyskusji)">Do dyskusji (brak klucza)</span>'}${q.why ? '<span class="chip" style="background:var(--blue-l);color:var(--blue);border-color:transparent" title="Zawiera omówienie merytoryczne">Omówienie</span>' : ''}${q.gap ? '<span class="chip gap" title="Rozbieżność między kluczem zaliczenia a wytycznymi">⚠️ Rozbieżność klucz vs wytyczne</span>' : ''}${q.isGlued ? '<span class="chip glued" title="Pytanie złożone z kilku zagadnień ze skanu OCR">⚠️ Pytanie łączone (OCR)</span>' : ''}${q.type === 'open' ? '<span class="chip" style="background:var(--violet-l);color:var(--violet);font-weight:700">Fiszka / Otwarte</span>' : ''}<span class="chip">${esc(ASHORT[q.at] || 'Moduł')}</span>${a ? `<span class="chip" data-qstatus style="background:${a.last ? 'var(--green-l)' : 'var(--red-l)'};color:${a.last ? 'var(--green)' : 'var(--red)'};border-color:transparent">${a.last ? 'opanowane' : 'do powtórki'}</span>` : ''}</div></div>
       <span class="chev" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 4 4 4-4"/></svg></span></summary>
-    <div class="body">${optsStatic(q)}${explain(q)}
-      <div class="acts"><a class="btn sec sm" href="${atlasHref(q)}">${q.at === 'ogolne' ? 'Filtruj moduł w bazie' : 'Otwórz temat w atlasie'}</a><button class="bm" data-bm="${esc(q.id)}" aria-pressed="${bm}" aria-label="Zakładka" title="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${bm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>${q.isCustom ? `<button class="btn sec sm del-cq" data-del="${esc(q.id)}" style="color:var(--red);margin-left:auto" title="Usuń z bazy własnych pytań">Usuń pytanie</button>` : ''}</div>
-    </div></details>`;
+    <div class="body">${open ? qCardBody(q, !!interactive) : ''}</div></details>`;
+}
+function updateCardStatusChip(det, ok) {
+  const tags = $('summary .tags', det);
+  if (!tags) return;
+  let chip = $('[data-qstatus]', tags);
+  if (!chip) {
+    chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.dataset.qstatus = '';
+    chip.style.borderColor = 'transparent';
+    tags.appendChild(chip);
+  }
+  chip.style.background = ok ? 'var(--green-l)' : 'var(--red-l)';
+  chip.style.color = ok ? 'var(--green)' : 'var(--red)';
+  chip.textContent = ok ? 'opanowane' : 'do powtórki';
+}
+function gradeQcCard(det, q, selSet, record) {
+  const btns = $$('button.opt[data-opt]', det);
+  const hasKey = q.keys && q.keys.length > 0;
+  btns.forEach(btn => {
+    const i = +btn.dataset.opt;
+    btn.disabled = true;
+    btn.classList.remove('sel');
+    if (hasKey) {
+      btn.classList.add(q.keys.includes(i) ? 'ok' : (selSet && selSet.has(i) ? 'bad' : 'dim'));
+    } else if (selSet && selSet.has(i)) {
+      btn.classList.add('sel');
+    } else {
+      btn.classList.add('dim');
+    }
+  });
+  const checkAct = $('[data-qreveal], [data-qcheck]', det);
+  if (checkAct && checkAct.parentElement) checkAct.parentElement.remove();
+  const exp = $('.qc-exp', det);
+  if (exp) {
+    const note = !hasKey && selSet ? '<p class="srcline">Pytanie bez oficjalnego klucza — porównaj wybór z omówieniem poniżej.</p>' : '';
+    const selfRow = (!q.opts || !q.opts.length || q.type === 'open')
+      ? '<div class="acts" style="margin-top:.5rem"><span class="muted" style="font-weight:700">Twoja samoocena:</span><button type="button" class="btn pri sm" data-qself="1" style="background:var(--green);border-color:var(--green);color:#fff">Znam ✓</button><button type="button" class="btn sec sm" data-qself="0" style="border-color:var(--red);color:var(--red)">Do powtórki ✗</button></div>'
+      : '';
+    exp.innerHTML = note + explain(q) + selfRow;
+  }
+  if (record && hasKey && selSet) {
+    const ok = selSet.size === q.keys.length && q.keys.every(k => selSet.has(k));
+    recordQAns(q.id, ok);
+    updateCardStatusChip(det, ok);
+  }
 }
 function delegateBm(root, onMutate) {
+  // Hydrate closed question card bodies only when the user actually expands them.
+  root.addEventListener('toggle', e => {
+    const det = e.target;
+    if (!det || !det.open || !det.classList || !det.classList.contains('qc')) return;
+    const body = $('.body', det);
+    if (!body || body.firstElementChild) return;
+    const q = qById[det.dataset.q];
+    if (q) body.innerHTML = qCardBody(q, !!det.closest('[data-quiz="1"]'));
+  }, true);
   root.addEventListener('click', e => {
     const b = e.target.closest('[data-bm]');
     if (b) {
@@ -512,6 +614,44 @@ function delegateBm(root, onMutate) {
         toast('Pytanie zostało usunięte');
         if (onMutate) onMutate();
       }
+      return;
+    }
+    const qcOpt = e.target.closest('details.qc button.opt[data-opt]');
+    if (qcOpt && !qcOpt.disabled) {
+      const det = qcOpt.closest('details.qc'), q = det && qById[det.dataset.q];
+      if (!q) return;
+      if (q.keys && q.keys.length > 1) {
+        qcOpt.classList.toggle('sel');
+        const chk = $('[data-qcheck]', det);
+        if (chk) chk.disabled = !$('button.opt.sel', det);
+      } else {
+        gradeQcCard(det, q, new Set([+qcOpt.dataset.opt]), true);
+      }
+      return;
+    }
+    const qcCheck = e.target.closest('details.qc [data-qcheck]');
+    if (qcCheck) {
+      const det = qcCheck.closest('details.qc'), q = det && qById[det.dataset.q];
+      if (!q) return;
+      const selSet = new Set($$('button.opt.sel', det).map(x => +x.dataset.opt));
+      gradeQcCard(det, q, selSet, true);
+      return;
+    }
+    const qcReveal = e.target.closest('details.qc [data-qreveal]');
+    if (qcReveal) {
+      const det = qcReveal.closest('details.qc'), q = det && qById[det.dataset.q];
+      if (q) gradeQcCard(det, q, null, false);
+      return;
+    }
+    const qcSelf = e.target.closest('details.qc [data-qself]');
+    if (qcSelf) {
+      const det = qcSelf.closest('details.qc'), q = det && qById[det.dataset.q];
+      if (!q) return;
+      const ok = qcSelf.dataset.qself === '1';
+      recordQAns(q.id, ok);
+      updateCardStatusChip(det, ok);
+      const row = qcSelf.closest('.acts');
+      if (row) row.outerHTML = `<p class="srcline">${ok ? 'Zapisano: opanowane ✓' : 'Zapisano: do powtórki ✗'}</p>`;
     }
   });
 }
@@ -1919,7 +2059,7 @@ function viewKnowledgeGraph(parts, params) {
 
 /* ---------- PARSER IMPORTU PYTAŃ ---------- */
 /* ---------- BAZA PYTAŃ ---------- */
-const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, open: 'all', limit: 30, tab: Q.some(q => q.bank === 'zaklad') ? 'zaklad' : 'browse', addMode: 'single' };
+const F = { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, quiz: false, open: 'all', limit: 30, tab: getQStats().banks.zaklad ? 'zaklad' : 'browse', addMode: 'single' };
 let parsedImportStash = [];
 
 function viewQuestions(parts, params) {
@@ -1931,12 +2071,13 @@ function viewQuestions(parts, params) {
     if (params.tab) F.tab = params.tab;
   }
 
+  const zakladCount = getQStats().banks.zaklad || 0;
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap">
     <div class="eyebrow">Baza pytań i banki zewnętrzne</div><h2>${Q.length} zadań · Pula zakładowa, LEK, PES, MP</h2>
     <p class="lead">Przeglądaj pytania według banków, sprawdzaj klucze i omówienia lub twórz własne zadania testowe i importuj całe zestawy.</p>
 
     <div class="qtabs" id="qTabs">
-      <button class="qtab zaklad-tab${F.tab === 'zaklad' ? ' on' : ''}" data-t="zaklad">🏛️ Pula Zakładowa (${Q.filter(q => q.bank === 'zaklad').length})</button>
+      <button class="qtab zaklad-tab${F.tab === 'zaklad' ? ' on' : ''}" data-t="zaklad">🏛️ Pula Zakładowa (${zakladCount})</button>
       <button class="qtab${F.tab === 'browse' ? ' on' : ''}" data-t="browse">🔍 Wyszukiwarka pytań (${Q.length})</button>
       <button class="qtab${F.tab === 'add' ? ' on' : ''}" data-t="add">➕ Dodaj nowe pytanie / Import</button>
       <button class="qtab${F.tab === 'export' ? ' on' : ''}" data-t="export">📤 Eksport dodanych (${CUSTOM_Q.length})</button>
@@ -1972,8 +2113,7 @@ function renderTabContent() {
 }
 
 function renderZakladTab(container) {
-  const zakladQs = Q.filter(q => q.bank === 'zaklad');
-  const tot = zakladQs.length;
+  const tot = getQStats().banks.zaklad || 0;
   if (!tot) {
     container.innerHTML = `<div class="zd-banner">
       <div class="eyebrow" style="color:var(--amber)">Pulpit Puli Zakładowej</div>
@@ -1991,21 +2131,22 @@ function renderZakladTab(container) {
     };
     return;
   }
-  
-  let att = 0, ok = 0, wrong = 0;
-  zakladQs.forEach(q => {
+
+  let att = 0, ok = 0, wrong = 0, hitsCount = 0, gapCountLocal = 0, openCount = 0;
+  const modCounts = Object.create(null);
+  for (let i = 0; i < Q.length; i++) {
+    const q = Q[i];
+    if (q.bank !== 'zaklad') continue;
     const a = S.ans[q.id];
-    if (a) {
-      att++;
-      if (a.last) ok++;
-      else wrong++;
-    }
-  });
+    if (a) { att++; if (a.last) ok++; else wrong++; }
+    if (q.reps >= 2) hitsCount++;
+    if (q.gap) gapCountLocal++;
+    if (q.type === 'open') openCount++;
+    const ms = q.mods || [];
+    for (let j = 0; j < ms.length; j++) modCounts[ms[j]] = (modCounts[ms[j]] || 0) + 1;
+  }
   const fresh = tot - att;
-  const pctMastered = tot ? Math.round((ok / tot) * 100) : 0;
-  const hitsCount = zakladQs.filter(q => q.reps >= 2).length;
-  const gapCount = zakladQs.filter(q => q.gap).length;
-  const openCount = zakladQs.filter(q => q.type === 'open').length;
+  const pctMastered = Math.round((ok / tot) * 100);
 
   container.innerHTML = `
     <div class="zd-banner">
@@ -2065,7 +2206,7 @@ function renderZakladTab(container) {
       </div>
 
       <div class="zd-mode-card gap" data-mode="gap">
-        <h3>⚠️ Pułapki i Rozbieżności <span class="zd-count">${gapCount} pytań</span></h3>
+        <h3>⚠️ Pułapki i Rozbieżności <span class="zd-count">${gapCountLocal} pytań</span></h3>
         <p>Zadania, w których klucz zakładowy różni się od współczesnych wytycznych. Dwutorowy panel: „Pod zaliczenie” vs „Klinicznie”.</p>
         <button class="btn pri sm" style="background:var(--amber);border-color:var(--amber)">Ćwicz Rozbieżności →</button>
       </div>
@@ -2097,7 +2238,7 @@ function renderZakladTab(container) {
 
     <div class="zd-mods-grid">
       ${MODS.map(m => {
-        const qCount = zakladQs.filter(q => q.mods.includes(m.id)).length;
+        const qCount = modCounts[m.id] || 0;
         if (!qCount) return '';
         const g = gOf(m.id).color;
         return `<a class="zd-mod-pill" href="#/trening?mods=${m.id}&bank=zaklad" title="Rozpocznij trening z modułu ${m.id}: ${esc(m.n)}">
@@ -2119,15 +2260,18 @@ function renderZakladTab(container) {
       return;
     }
     const targetId = 'q' + m[1].padStart(4, '0');
-    const found = Q.find(q => q.id === targetId);
+    const found = qById[targetId];
     if (!found) {
       toast(`Nie znaleziono pytania ${targetId.toUpperCase()} w bazie`);
       return;
     }
     F.tab = 'browse';
     F.q = targetId;
+    F.limit = 30;
     $$('#qTabs .qtab').forEach(x => x.classList.toggle('on', x.dataset.t === 'browse'));
     renderTabContent();
+    const card = $(`#qlist details.qc[data-q="${targetId}"]`);
+    if (card) card.scrollIntoView({ block: 'nearest' });
     toast(`Otwarto pytanie ${targetId.toUpperCase()}`);
   };
 
@@ -2155,36 +2299,42 @@ function renderZakladTab(container) {
 }
 
 function renderBrowseTab(container) {
+  const stats = getQStats();
   container.innerHTML = `
     <div class="tool">
       <input class="field" id="fq" type="search" inputmode="search" enterkeyhint="search" placeholder="Szukaj w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
-      <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="fBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${F.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}</div></div>
+      <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="fBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${F.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${stats.banks[b] || 0})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="fAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${F.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
-      <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => Q.some(q => q.mods.includes(m.id))).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
-      <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="fConf">${Object.keys(CONF).filter(k => Q.some(q => q.conf === k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${F.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
+      <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => stats.modsHit.has(m.id)).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
+      <div class="frow"><span class="flab">Klucz</span><div class="pillrow" id="fConf">${Object.keys(CONF).filter(k => stats.confHit.has(k)).map(k => `<button class="tgl" data-v="${k}" aria-pressed="${F.conf.has(k)}">${CONF[k].n}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Tylko</span><div class="pillrow" id="fFlag">
         <button class="tgl" data-f="hit" aria-pressed="${F.hit}">🔥 hity bazy (≥2)</button>
         <button class="tgl" data-f="hasKey" aria-pressed="${F.hasKey}">z oficjalnym kluczem</button>
         <button class="tgl" data-f="hasWhy" aria-pressed="${F.hasWhy}">z omówieniem</button>
         <button class="tgl" data-f="searchWhy" aria-pressed="${F.searchWhy}" title="Przeszukuj również pełne teksty wyjaśnień i analizy dystraktorów">🔍 szukaj też w omówieniach</button>
-        <button class="tgl gap-tgl" data-f="gap" aria-pressed="${F.gap}">⚠️ klucz ≠ wytyczne (${Q.filter(q => q.gap).length})</button>
+        <button class="tgl gap-tgl" data-f="gap" aria-pressed="${F.gap}">⚠️ klucz ≠ wytyczne (${stats.gap})</button>
         <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
         <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
+        <button class="tgl" id="fQuiz" aria-pressed="${F.quiz}" title="Ukryj zaznaczony klucz i rozwiązuj pytania klikając odpowiedzi bezpośrednio w kartach">📝 Rozwiązuj w kartach</button>
       </div>
         <span style="flex:1"></span><span class="muted" id="fCount" style="font-weight:700"></span><button class="btn pri sm" id="fTrain">⚡ Ćwicz (0)</button><button class="btn sec sm" id="fClr">Wyczyść</button></div>
     </div>
-    <div class="qlist" id="qlist"></div><div style="text-align:center;margin-top:1.2rem" id="more"></div>
+    <div class="qlist" id="qlist" data-quiz="${F.quiz ? '1' : '0'}"></div><div style="text-align:center;margin-top:1.2rem" id="more"></div>
   `;
 
   const list = $('#qlist');
   const trainBtn = $('#fTrain');
+  const moreBox = $('#more');
   let lastFiltered = [];
   let fqTimer = null;
+  let lastTargetQId = null;
   function filtered() {
     const rawQuery = (F.q || '').trim();
     const numMatch = rawQuery.match(/^#?q?(\d{1,4})$/i);
     const targetQId = numMatch ? 'q' + numMatch[1].padStart(4, '0') : null;
+    lastTargetQId = targetQId;
     const toks = norm(F.q).split(/\s+/).filter(Boolean);
+    const ms = F.mods.size ? [...F.mods] : null;
     return Q.filter(q => {
       if (targetQId && q.id === targetQId) return true;
       if (F.hit && (!q.reps || q.reps < 2)) return false;
@@ -2192,40 +2342,65 @@ function renderBrowseTab(container) {
       if (F.hasWhy && !q.why) return false;
       if (F.banks.size && !F.banks.has(q.bank)) return false;
       if (F.at.size && !F.at.has(q.at)) return false;
-      if (F.mods.size) { const ms = [...F.mods]; if (F.all ? !ms.every(m => q.mods.includes(m)) : !ms.some(m => q.mods.includes(m))) return false; }
+      if (ms && (F.all ? !ms.every(m => q.mods.includes(m)) : !ms.some(m => q.mods.includes(m)))) return false;
       if (F.conf.size && !F.conf.has(q.conf)) return false;
       if (F.gap && !q.gap) return false; if (F.bm && !S.bm[q.id]) return false;
       if (F.wrong && !(S.ans[q.id] && !S.ans[q.id].last)) return false;
       if (!toks.length) return true;
-      if (toks.every(t => q._n.includes(t))) return true;
+      const qn = getQNorm(q);
+      if (toks.every(t => qn.includes(t))) return true;
       if (F.searchWhy && (q.why || q.zal || q.akt)) {
         if (!q._whyN) q._whyN = norm([q.why || '', q.zal || '', q.akt || ''].join(' '));
-        return toks.every(t => q._n.includes(t) || q._whyN.includes(t));
+        return toks.every(t => qn.includes(t) || q._whyN.includes(t));
       }
       return false;
     });
   }
-  function draw() {
-    const r = filtered();
+  function renderMore(r) {
+    moreBox.innerHTML = r.length > F.limit ? `<button class="btn sec" id="moreB">Pokaż kolejne ${Math.min(30, r.length - F.limit)} (zostało ${r.length - F.limit})</button>` : '';
+    const mb = $('#moreB');
+    if (mb) mb.onclick = () => { const prev = F.limit; F.limit += 30; draw(prev); };
+  }
+  function draw(appendFrom = 0) {
+    const r = appendFrom > 0 ? lastFiltered : filtered();
     lastFiltered = r;
+    if (appendFrom > 0) {
+      const chunk = r.slice(appendFrom, F.limit);
+      if (chunk.length) list.insertAdjacentHTML('beforeend', chunk.map(q => qCard(q, false, F.quiz)).join(''));
+      renderMore(r);
+      return;
+    }
     $('#fCount').textContent = r.length + ' z ' + Q.length;
     if (trainBtn) {
       trainBtn.textContent = `⚡ Ćwicz (${r.length})`;
       trainBtn.disabled = !r.length;
     }
-    list.innerHTML = r.slice(0, F.limit).map(q => qCard(q)).join('') || '<div class="card" style="text-align:center;padding:2rem"><h3>Brak wyników</h3><p class="muted" style="margin:.3rem auto">Poluzuj filtry lub zmień frazę.</p></div>';
-    $('#more').innerHTML = r.length > F.limit ? `<button class="btn sec" id="moreB">Pokaż kolejne ${Math.min(30, r.length - F.limit)} (zostało ${r.length - F.limit})</button>` : '';
-    const mb = $('#moreB'); if (mb) mb.onclick = () => { F.limit += 30; draw(); };
+    const slice = r.slice(0, F.limit);
+    list.innerHTML = slice.map(q => qCard(q, !!(lastTargetQId && q.id === lastTargetQId), F.quiz)).join('') || '<div class="card" style="text-align:center;padding:2rem"><h3>Brak wyników</h3><p class="muted" style="margin:.3rem auto">Poluzuj filtry lub zmień frazę.</p></div>';
+    renderMore(r);
   }
   const tgl = (sel, set) => $(sel).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); b.setAttribute('aria-pressed', set.has(v)); F.limit = 30; draw(); });
   tgl('#fBank', F.banks); tgl('#fAt', F.at); tgl('#fMod', F.mods); tgl('#fConf', F.conf);
-  $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); draw(); });
-  $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 30; draw(); });
+  $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); F.limit = 30; draw(); });
+  $('#fFlag').addEventListener('click', e => {
+    const b = e.target.closest('[data-f]');
+    if (!b) return;
+    F[b.dataset.f] = !F[b.dataset.f];
+    b.setAttribute('aria-pressed', F[b.dataset.f]);
+    F.limit = 30;
+    draw();
+  });
+  $('#fQuiz').addEventListener('click', e => {
+    F.quiz = !F.quiz;
+    e.currentTarget.setAttribute('aria-pressed', F.quiz);
+    list.dataset.quiz = F.quiz ? '1' : '0';
+    draw();
+  });
   $('#fq').addEventListener('input', e => {
     F.q = e.target.value;
     F.limit = 30;
     clearTimeout(fqTimer);
-    fqTimer = setTimeout(draw, 140);
+    fqTimer = setTimeout(() => draw(), 140);
   });
   if (trainBtn) {
     trainBtn.addEventListener('click', () => {
@@ -2235,8 +2410,12 @@ function renderBrowseTab(container) {
       location.hash = '#/trening';
     });
   }
-  $('#fClr').addEventListener('click', () => { clearTimeout(fqTimer); Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, limit: 30 }); renderBrowseTab(container); });
-  onBmMutate = () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; };
+  $('#fClr').addEventListener('click', () => { clearTimeout(fqTimer); Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, quiz: false, limit: 30 }); renderBrowseTab(container); });
+  onBmMutate = () => {
+    draw();
+    $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`;
+    $('#qTabs button[data-t="browse"]').textContent = `🔍 Wyszukiwarka pytań (${Q.length})`;
+  };
   draw();
 }
 
@@ -11467,8 +11646,7 @@ function renderSession() {
   const nextBtn = (ok) => { $('#nextRow').innerHTML = `<a class="btn sec sm" href="${atlasHref(q)}" target="_self">Temat w atlasie</a><button class="bm" data-bm="${q.id}" aria-pressed="${!!S.bm[q.id]}" aria-label="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${S.bm[q.id] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button><span style="flex:1"></span><button class="btn pri" id="next">${s.i + 1 < s.list.length ? 'Dalej →' : 'Zobacz wynik →'}</button>`; $('#next').focus({ preventScroll: true }); $('#next').onclick = () => { s.i++; s.locked = false; s.sel = new Set(); renderSession(); window.scrollTo(0, 0); }; };
   $('#quit').onclick = () => { s.i = s.list.length; renderSession(); };
   function record(ok) {
-    s.log.push({ id: q.id, ok, sel: [...s.sel] }); const a = S.ans[q.id] || { n: 0, c: 0 };
-    a.n++; if (ok) a.c++; a.last = ok; a.ts = Date.now(); S.ans[q.id] = a; save();
+    s.log.push({ id: q.id, ok, sel: [...s.sel] }); recordQAns(q.id, ok);
     s.locked = true;
   }
   if (isFlash && q.type !== 'open' && q.opts && q.opts.length) {
@@ -11679,7 +11857,7 @@ function buildSearchIndex() {
     ...(SEMANTIC_GAPS || []).map(g => ({ k: 'Luka wiedzy', t: g.title, h: `#/graf?gap=${g.id}`, n: norm(`${g.title} ${g.clinicalReason} ${g.examTrap}`) })),
     ...MODS.map(m => ({ k: 'Moduł', t: `[${m.id}] ${m.n}`, h: m.at ? `#/atlas/${m.at}/${m.a}` : `#/polaczenia?mod=${m.id}`, n: norm(`${m.id} ${m.n} ${m.d}`) })),
     ...ATLASES.flatMap(a => a.secs.map(s => ({ k: 'Sekcja', t: `${ASHORT[a.id]} › ${s[1]}`, h: `#/atlas/${a.id}/${s[0]}`, n: norm(`${ASHORT[a.id]} ${s[1]}`) }))),
-    ...Q.map(q => ({ k: 'Zadanie', t: q.stem.length > 120 ? q.stem.slice(0, 118) + '…' : q.stem, h: `#/pytania?q=${encodeURIComponent(q.stem.slice(0, 40))}`, n: q._n }))
+    ...Q.map(q => ({ k: 'Zadanie', t: q.stem.length > 120 ? q.stem.slice(0, 118) + '…' : q.stem, h: `#/pytania?q=${encodeURIComponent(q.stem.slice(0, 40))}`, n: getQNorm(q) }))
   ];
 }
 function palRender() {
@@ -11688,7 +11866,7 @@ function palRender() {
   palCur = 0;
   palList.innerHTML = palItems.length ? palItems.map((i, ix) => `<li><a href="${i.h}" class="${ix === 0 ? 'cur' : ''}" data-ix="${ix}"><span class="k">${i.k}</span><span class="t">${esc(i.t)}</span><span aria-hidden="true">↵</span></a></li>`).join('') : '<li class="empty">Brak wyników</li>';
 }
-function palOpen() { if (!pal.open) pal.showModal(); palIn.value = ''; palRender(); palIn.focus(); }
+function palOpen() { if (!ALL) ALL = buildSearchIndex(); if (!pal.open) pal.showModal(); palIn.value = ''; palRender(); palIn.focus(); }
 $('#openPal').onclick = palOpen;
 const palClose = $('#palClose');
 if (palClose) palClose.onclick = () => pal.close();
@@ -11777,7 +11955,6 @@ function initTheme() {
   applyTheme(currentTheme, false);
 }
 
-ALL = buildSearchIndex();
 delegateBm(main, () => { if (onBmMutate) onBmMutate(); });
 initNavMenus();
 initTheme();

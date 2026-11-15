@@ -356,16 +356,31 @@ $('#xchips').innerHTML=[['HUS','[1] [3] [12] [15]'],['IgAV','[1] [4] [12]'],['WA
    ${revealed?`<div class="disc">${discHtml(q)}</div>`:''}</article>`}).join(''):'<p class="small">Brak zadań dla wybranych filtrów.</p>';
   $('#score').textContent=mode==='study'?'Tryb nauki: klucze widoczne':`Tryb ćwiczeń: ${good} / ${ans}`;
  }
+ function revealCard(n){
+  const q=Q[n-1],art=$('#q'+n),st=state[n];if(!q||!art)return;
+  const kc=keyCls(q),kt=keyTxt(q);
+  $$('.opt',art).forEach(b=>{
+    b.disabled=true;const i=+b.dataset.i;
+    if(i===q.k){b.classList.add(kc);b.insertAdjacentHTML('beforeend',`<span class="tick">${kt}</span>`)}
+    else if(st===i)b.classList.add('wrong');
+    if(st===i)b.classList.add('pick');
+  });
+  const acts=$('.acts',art);if(acts)acts.remove();
+  if(st>=0)art.insertAdjacentHTML('beforeend',`<p class="res ${st===q.k?'ok':'no'}">${st===q.k?'✓ Zgodnie z kluczem':'✗ Klucz: '+L[q.k]}${q.conf!=='src'?' (klucz niepotwierdzony w plikach)':''}</p>`);
+  art.insertAdjacentHTML('beforeend',`<div class="disc">${discHtml(q)}</div>`);
+  $('#score').textContent=mode==='study'?'Tryb nauki: klucze widoczne':`Tryb ćwiczeń: ${good} / ${ans}`;
+ }
  $('#quiz').addEventListener('click',e=>{
   const b=e.target.closest('.opt');
-  if(b&&mode==='practice'){const n=+b.dataset.q,i=+b.dataset.i;if(state[n]!==undefined)return;state[n]=i;ans++;if(Q[n-1].k===i)good++;render();$('#q'+n)&&$('#q'+n).scrollIntoView({block:'nearest'});return}
+  if(b&&mode==='practice'){const n=+b.dataset.q,i=+b.dataset.i;if(state[n]!==undefined)return;state[n]=i;ans++;if(Q[n-1].k===i)good++;revealCard(n);return}
   const s=e.target.closest('[data-show]');
-  if(s){const n=+s.dataset.show;state[n]=-1;render()}
+  if(s){const n=+s.dataset.show;if(state[n]!==undefined)return;state[n]=-1;revealCard(n)}
  });
  const setMode=m=>{mode=m;$('#mStudy').setAttribute('aria-pressed',m==='study');$('#mPractice').setAttribute('aria-pressed',m==='practice');if(m==='practice'){state={};ans=0;good=0}render()};
  $('#mStudy').onclick=()=>setMode('study');$('#mPractice').onclick=()=>setMode('practice');
  $$('#qFilters button').forEach(b=>b.onclick=()=>{$$('#qFilters button').forEach(x=>x.setAttribute('aria-pressed',x===b));flt=b.dataset.f;render()});
- $('#qs').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();render()});
+ let qsTimer=null;
+ $('#qs').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();clearTimeout(qsTimer);qsTimer=setTimeout(render,120)});
  render();
 })();
 
@@ -411,5 +426,6 @@ $('#srcList').innerHTML=[
 
 /* ---------- nawigacja: aktywny link ---------- */
 const links=$$('.nav a'),secs=links.map(a=>$(a.getAttribute('href'))).filter(Boolean);
-addEventListener('scroll',()=>{let cur=null;secs.forEach(s=>{if(s.getBoundingClientRect().top<120)cur=s.id});links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))},{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>io.observe(s));
 })();
