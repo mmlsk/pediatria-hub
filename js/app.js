@@ -147,6 +147,7 @@ function cycleTheme() {
 function syncIframeTheme(eff) {
   const rf = $('#rf');
   if (rf && rf.contentDocument && rf.contentDocument.documentElement) {
+    rf.contentDocument.documentElement.classList.add('hub-embedded');
     if (eff === 'dark') rf.contentDocument.documentElement.dataset.theme = 'dark';
     else delete rf.contentDocument.documentElement.dataset.theme;
   }
@@ -416,8 +417,8 @@ function renderGraph(host, o = {}) {
 
   $$('.node', svg).forEach(nd => {
     const id = nd.dataset.m;
-    nd.addEventListener('pointerenter', () => litNode(id));
-    nd.addEventListener('pointerleave', restore);
+    nd.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') litNode(id); });
+    nd.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') restore(); });
     nd.addEventListener('focus', () => litNode(id));
     nd.addEventListener('blur', restore);
     const act = () => o.onNode && o.onNode(id);
@@ -563,6 +564,7 @@ function route() {
   // czytnik: ten sam atlas → tylko kotwica
   if (name === 'atlas' && current.name === 'atlas' && current.id === parts[1] && $('#rf')) { setAnchor(parts[1], parts[2]); return; }
   document.body.classList.toggle('reader', name === 'atlas');
+  if (name !== 'atlas') document.body.classList.remove('reader-focus');
   $$('#menu a[data-r]').forEach(a => { const r = a.dataset.r; a.classList.toggle('on', r === name || (r === 'atlasy' && name === 'atlas')); });
   $$('#menu .nav-dd').forEach(dd => {
     const btn = $('.nav-dd-btn', dd);
@@ -678,7 +680,20 @@ function viewGallery() {
 function setAnchor(id, a) {
   const at = atById[id]; if (!at) return; const f = $('#rf');
   const url = 'atlasy/' + at.dir + '/index.html' + (a ? '#' + a : '');
-  if (f.getAttribute('src') !== url) f.setAttribute('src', url);
+  // Przewiń bez przeładowania dokumentu, jeśli ten sam atlas jest już załadowany
+  if (f.dataset.atlasId === id && f.contentDocument && f.contentDocument.readyState !== 'loading') {
+    const target = a ? f.contentDocument.getElementById(a) : null;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (!a && f.contentWindow) {
+      f.contentWindow.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (f.getAttribute('src') !== url) {
+      f.setAttribute('src', url);
+    }
+  } else {
+    f.dataset.atlasId = id;
+    if (f.getAttribute('src') !== url) f.setAttribute('src', url);
+  }
   $('#secSel').value = a || '';
   S.visited[id] = Date.now(); S.last = { at: id, a: a || null }; save();
   setTimeout(() => syncIframeTheme(getEffectiveTheme()), 60);
@@ -690,15 +705,33 @@ function viewReader(parts) {
     <a class="btn sec sm" href="#/atlasy" aria-label="Wróć do listy atlasów">← Atlasy</a>
     <nav class="rtabs" aria-label="Przełącznik atlasów">${ATLASES.map(x => `<a class="rtab${x.id === id ? ' on' : ''}" href="#/atlas/${x.id}"><b>${x.tag}</b> ${esc(ASHORT[x.id])}</a>`).join('')}</nav>
     <label class="sr" for="secSel">Przejdź do sekcji</label>
-    <select id="secSel" class="tgl" style="max-width:190px"><option value="">Sekcje…</option>${at.secs.map(s => `<option value="${s[0]}">${esc(s[1])}</option>`).join('')}</select>
+    <select id="secSel" class="tgl rbar-sec-sel"><option value="">Sekcje…</option>${at.secs.map(s => `<option value="${s[0]}">${esc(s[1])}</option>`).join('')}</select>
     <a class="btn pri sm" href="#/trening?at=${id}">Trening z atlasu</a>
+    <button type="button" class="btn sec sm rbar-focus-btn" id="rbarFocus" aria-pressed="${document.body.classList.contains('reader-focus')}" title="Tryb skupienia (ukryj górny i dolny pasek)" aria-label="Tryb skupienia">⛶</button>
     <a class="btn sec sm" target="_blank" rel="noopener" href="atlasy/${at.dir}/index.html" title="Otwórz atlas w osobnej karcie" aria-label="Otwórz atlas w osobnej karcie">↗</a>
   </div></div>
   <iframe id="rf" class="rframe" title="Atlas: ${esc(at.t)}" src="" loading="eager"></iframe>`;
   $('#secSel').addEventListener('change', e => { location.hash = '#/atlas/' + id + (e.target.value ? '/' + e.target.value : ''); });
+  const rbarFocus = $('#rbarFocus');
+  if (rbarFocus) {
+    rbarFocus.onclick = () => {
+      const on = document.body.classList.toggle('reader-focus');
+      rbarFocus.setAttribute('aria-pressed', String(on));
+    };
+  }
   const rf = $('#rf');
   if (rf) {
-    rf.addEventListener('load', () => syncIframeTheme(getEffectiveTheme()));
+    rf.addEventListener('load', () => {
+      syncIframeTheme(getEffectiveTheme());
+      try {
+        rf.contentWindow.addEventListener('hashchange', () => {
+          const sel = $('#secSel');
+          if (!sel) return;
+          const h = (rf.contentWindow.location.hash || '').slice(1);
+          if ([...sel.options].some(o => o.value === h)) sel.value = h;
+        });
+      } catch (e) {}
+    });
   }
   setAnchor(id, a);
   $('.rtab.on').scrollIntoView({ inline: 'center', block: 'nearest' });
@@ -923,7 +956,7 @@ function viewConnections(parts, params) {
       <div style="margin-top:2.4rem">
         <h3>Kluczowe mosty wiedzy między atlasami</h3>
         <p class="lead" style="margin-bottom:1rem">Pojęcia i jednostki chorobowe wymagające łączenia wiedzy z różnych atlasów kursu.</p>
-        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))" id="atlasBridgeGrid">
+        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))" id="atlasBridgeGrid">
           ${(SEMANTIC_GAPS || []).map(g => `
             <div class="card" style="padding:1rem;cursor:pointer" data-mod="${g.from}">
               <div class="pillrow" style="margin-bottom:.4rem">
@@ -1147,7 +1180,7 @@ function viewConnections(parts, params) {
           </div>
         </div>
 
-        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(310px,1fr))" id="trapsGrid">
+        <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))" id="trapsGrid">
           <!-- Generowane z TRAPS -->
         </div>
       </div>
@@ -1155,7 +1188,7 @@ function viewConnections(parts, params) {
       <div style="margin-top:2.4rem">
         <h2>Macierz współwystępowania & opanowania</h2>
         <p class="lead">Wspólne zadania między modułami oraz Twój wynik. Kliknij komórkę, aby wybrać parę i rozpocząć trening.</p>
-        <div class="card" style="overflow:auto"><div id="matrix"></div></div>
+        <div class="card"><div class="matrix-wrap"><div id="matrix"></div></div></div>
       </div>`;
 
     const panel = $('#panel');
@@ -1503,7 +1536,7 @@ function viewKnowledgeGraph(parts, params) {
     <div class="eyebrow">Analiza pułapek klinicznych</div>
     <h2>💡 8 Kluczowych luk semantycznych (Mosty myślowe)</h2>
     <p class="lead">Kliknij dowolną kartę, aby podświetlić most wiedzy na grafie i otworzyć dedykowaną analizę patomechanizmu oraz pułapki egzaminacyjnej.</p>
-    <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))" id="kgGapsGrid">
+    <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))" id="kgGapsGrid">
       ${(SEMANTIC_GAPS || []).map((g, idx) => `
         <div class="kg-gap-card-box" data-gap="${g.id}">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
@@ -1652,8 +1685,8 @@ function viewKnowledgeGraph(parts, params) {
     // Hover na węzłach
     $$('.kg-node', svg).forEach(nd => {
       const nid = nd.dataset.nid;
-      nd.addEventListener('pointerenter', () => highlightNode(nid));
-      nd.addEventListener('pointerleave', () => { if (!pinnedEntity) clearHighlight(); else restorePinned(); });
+      nd.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') highlightNode(nid); });
+      nd.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') return; if (!pinnedEntity) clearHighlight(); else restorePinned(); });
       nd.addEventListener('click', () => selKgNode(nid));
       nd.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selKgNode(nid); } });
     });
@@ -1661,7 +1694,8 @@ function viewKnowledgeGraph(parts, params) {
     // Kliknięcie w linię przerywaną (lukę)
     $$('[data-hitgap]', svg).forEach(hit => {
       hit.addEventListener('click', () => selKgGap(hit.dataset.hitgap));
-      hit.addEventListener('pointerenter', () => {
+      hit.addEventListener('pointerenter', e => {
+        if (e.pointerType !== 'mouse') return;
         const gid = hit.dataset.hitgap;
         clearHighlight();
         svg.classList.add('hl');
@@ -1672,7 +1706,7 @@ function viewKnowledgeGraph(parts, params) {
           $$(`.kg-node[data-nid="${from}"], .kg-node[data-nid="${to}"]`, svg).forEach(x => x.classList.add('on'));
         }
       });
-      hit.addEventListener('pointerleave', () => { if (!pinnedEntity) clearHighlight(); else restorePinned(); });
+      hit.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') return; if (!pinnedEntity) clearHighlight(); else restorePinned(); });
     });
   }
 
@@ -2013,7 +2047,7 @@ function renderZakladTab(container) {
     <!-- Szybki skok po numerze pytania Q... -->
     <div class="zd-jump-bar">
       <span style="font-weight:800;font-size:.9rem;white-space:nowrap">🎯 Szybki skok:</span>
-      <input type="text" class="zd-jump-input" id="zdJumpInput" placeholder="Wpisz nr pytania (np. 142, Q0500, #42)…" aria-label="Skocz do pytania">
+      <input type="text" inputmode="search" enterkeyhint="search" class="zd-jump-input" id="zdJumpInput" placeholder="Wpisz nr pytania (np. 142, Q0500, #42)…" aria-label="Skocz do pytania">
       <button class="btn sec sm" id="zdJumpBtn" style="font-weight:700">Otwórz pytanie →</button>
     </div>
 
@@ -2121,7 +2155,7 @@ function renderZakladTab(container) {
 function renderBrowseTab(container) {
   container.innerHTML = `
     <div class="tool">
-      <input class="field" id="fq" type="search" placeholder="Szukaj w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
+      <input class="field" id="fq" type="search" inputmode="search" enterkeyhint="search" placeholder="Szukaj w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
       <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="fBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${F.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${Q.filter(q => q.bank === b).length})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="fAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${F.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => Q.some(q => q.mods.includes(m.id))).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
@@ -2135,12 +2169,15 @@ function renderBrowseTab(container) {
         <button class="tgl" data-f="wrong" aria-pressed="${F.wrong}">moje błędne</button>
         <button class="tgl" data-f="bm" aria-pressed="${F.bm}">zakładki</button>
       </div>
-        <span style="flex:1"></span><span class="muted" id="fCount" style="font-weight:700"></span><button class="btn sec sm" id="fClr">Wyczyść</button></div>
+        <span style="flex:1"></span><span class="muted" id="fCount" style="font-weight:700"></span><button class="btn pri sm" id="fTrain">⚡ Ćwicz (0)</button><button class="btn sec sm" id="fClr">Wyczyść</button></div>
     </div>
     <div class="qlist" id="qlist"></div><div style="text-align:center;margin-top:1.2rem" id="more"></div>
   `;
 
   const list = $('#qlist');
+  const trainBtn = $('#fTrain');
+  let lastFiltered = [];
+  let fqTimer = null;
   function filtered() {
     const rawQuery = (F.q || '').trim();
     const numMatch = rawQuery.match(/^#?q?(\d{1,4})$/i);
@@ -2167,7 +2204,13 @@ function renderBrowseTab(container) {
     });
   }
   function draw() {
-    const r = filtered(); $('#fCount').textContent = r.length + ' z ' + Q.length;
+    const r = filtered();
+    lastFiltered = r;
+    $('#fCount').textContent = r.length + ' z ' + Q.length;
+    if (trainBtn) {
+      trainBtn.textContent = `⚡ Ćwicz (${r.length})`;
+      trainBtn.disabled = !r.length;
+    }
     list.innerHTML = r.slice(0, F.limit).map(q => qCard(q)).join('') || '<div class="card" style="text-align:center;padding:2rem"><h3>Brak wyników</h3><p class="muted" style="margin:.3rem auto">Poluzuj filtry lub zmień frazę.</p></div>';
     $('#more').innerHTML = r.length > F.limit ? `<button class="btn sec" id="moreB">Pokaż kolejne ${Math.min(30, r.length - F.limit)} (zostało ${r.length - F.limit})</button>` : '';
     const mb = $('#moreB'); if (mb) mb.onclick = () => { F.limit += 30; draw(); };
@@ -2176,8 +2219,21 @@ function renderBrowseTab(container) {
   tgl('#fBank', F.banks); tgl('#fAt', F.at); tgl('#fMod', F.mods); tgl('#fConf', F.conf);
   $('#fAll').addEventListener('click', e => { F.all = !F.all; e.currentTarget.setAttribute('aria-pressed', F.all); draw(); });
   $('#fFlag').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; F[b.dataset.f] = !F[b.dataset.f]; b.setAttribute('aria-pressed', F[b.dataset.f]); F.limit = 30; draw(); });
-  $('#fq').addEventListener('input', e => { F.q = e.target.value; F.limit = 30; draw(); });
-  $('#fClr').addEventListener('click', () => { Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, limit: 30 }); renderBrowseTab(container); });
+  $('#fq').addEventListener('input', e => {
+    F.q = e.target.value;
+    F.limit = 30;
+    clearTimeout(fqTimer);
+    fqTimer = setTimeout(draw, 140);
+  });
+  if (trainBtn) {
+    trainBtn.addEventListener('click', () => {
+      if (!lastFiltered.length) return;
+      C.mode = 'learn';
+      pendingRetryIds = lastFiltered.map(q => q.id);
+      location.hash = '#/trening';
+    });
+  }
+  $('#fClr').addEventListener('click', () => { clearTimeout(fqTimer); Object.assign(F, { q: '', at: new Set(), mods: new Set(), banks: new Set(), all: false, conf: new Set(), gap: false, bm: false, wrong: false, hit: false, hasKey: false, hasWhy: false, searchWhy: false, limit: 30 }); renderBrowseTab(container); });
   onBmMutate = () => { draw(); $('#qTabs button[data-t="export"]').textContent = `📤 Eksport dodanych (${CUSTOM_Q.length})`; };
   draw();
 }
@@ -3354,13 +3410,16 @@ function updateExamTimerUI() {
   el.classList.toggle('danger', rem <= 60);
 }
 
+let examGridExpanded = false;
+
 function renderActiveExam() {
   const es = EXAM_SESSION;
   if (!es || es.finished) return renderExamSetup();
   startExamTimer();
   const q = es.list[es.i];
   const total = es.list.length;
-  const answeredCount = Object.keys(es.userAnswers).filter(k => es.userAnswers[k] && es.userAnswers[k].size).length;
+  const countAnswered = () => Object.keys(es.userAnswers).filter(k => es.userAnswers[k] && es.userAnswers[k].size).length;
+  const answeredCount = countAnswered();
   const isFlagged = es.flagged.has(q.id);
   const currentSel = es.userAnswers[q.id] || new Set();
   const multi = q.keys.length > 1;
@@ -3375,7 +3434,7 @@ function renderActiveExam() {
       </div>
       <div style="display:flex;align-items:center;gap:.6rem">
         <button class="btn-flag ${isFlagged ? 'active' : ''}" id="btnExamFlag">
-          <span>🚩</span><span>${isFlagged ? 'Oznaczone' : 'Oznacz flagą'}</span>
+          <span>🚩</span><span id="btnExamFlagTxt">${isFlagged ? 'Oznaczone' : 'Oznacz flagą'}</span>
         </button>
         <button class="btn sec sm" id="btnExamQuit" style="color:var(--red)">Zakończ egzamin</button>
       </div>
@@ -3384,16 +3443,19 @@ function renderActiveExam() {
 
   <section class="blk" style="border:0;padding-top:0"><div class="wrap qz">
     <!-- Pasek postępu odpowiedzi -->
-    <div class="qprog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${answeredCount}">
-      <i style="width:${pct(answeredCount, total)}%"></i>
+    <div class="qprog" id="examProg" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${answeredCount}">
+      <i id="examProgFill" style="width:${pct(answeredCount, total)}%"></i>
     </div>
-    <div class="srcline" style="display:flex;justify-content:space-between;margin-bottom:.8rem">
-      <span>Odpowiedziano: <b>${answeredCount}</b> z ${total}</span>
-      <span>Oznaczone do weryfikacji: <b>${es.flagged.size}</b></span>
+    <div class="exam-pill-head">
+      <div class="srcline" style="display:flex;gap:.9rem;flex-wrap:wrap">
+        <span>Odpowiedziano: <b id="examAnsCnt">${answeredCount}</b> z ${total}</span>
+        <span>Oznaczone do weryfikacji: <b id="examFlagCnt">${es.flagged.size}</b></span>
+      </div>
+      <button type="button" class="btn sec sm exam-grid-toggle" id="btnExamGridExpand" aria-expanded="${examGridExpanded}">${examGridExpanded ? 'Zwiń ▴' : 'Siatka (' + total + ') ▾'}</button>
     </div>
 
     <!-- Siatka pytań 1..N -->
-    <div class="exam-pill-grid" id="examGrid">
+    <div class="exam-pill-grid${examGridExpanded ? ' expanded' : ''}" id="examGrid">
       ${es.list.map((item, idx) => {
         const hasAns = es.userAnswers[item.id] && es.userAnswers[item.id].size;
         const fl = es.flagged.has(item.id);
@@ -3422,9 +3484,9 @@ function renderActiveExam() {
         }).join('')}
       </div>
 
-      <div class="acts" style="margin-top:1.5rem;justify-content:space-between">
+      <div class="acts exam-nav-acts" style="margin-top:1.5rem;justify-content:space-between">
         <button class="btn sec" id="btnPrevQ" ${es.i === 0 ? 'disabled' : ''}>← Poprzednie</button>
-        <span class="muted" style="font-size:.84rem;font-weight:700">Skróty: [←] [→] | [F] Flaga</span>
+        <span class="muted exam-kbd-hint" style="font-size:.84rem;font-weight:700">Skróty: [←] [→] | [F] Flaga</span>
         <button class="btn pri" id="btnNextQ">${es.i + 1 < total ? 'Następne →' : 'Zakończ i podsumuj →'}</button>
       </div>
     </div>
@@ -3432,15 +3494,34 @@ function renderActiveExam() {
 
   updateExamTimerUI();
 
+  const examGrid = $('#examGrid');
+  const activePill = examGrid ? $('.exam-q-pill.active', examGrid) : null;
+  if (examGrid && activePill && !examGridExpanded) {
+    examGrid.scrollLeft = Math.max(0, activePill.offsetLeft - (examGrid.clientWidth - activePill.offsetWidth) / 2);
+  }
+
+  const gridExpandBtn = $('#btnExamGridExpand');
+  if (gridExpandBtn && examGrid) {
+    gridExpandBtn.onclick = () => {
+      examGridExpanded = !examGridExpanded;
+      examGrid.classList.toggle('expanded', examGridExpanded);
+      gridExpandBtn.setAttribute('aria-expanded', String(examGridExpanded));
+      gridExpandBtn.textContent = examGridExpanded ? 'Zwiń ▴' : `Siatka (${total}) ▾`;
+      if (!examGridExpanded && activePill) {
+        examGrid.scrollLeft = Math.max(0, activePill.offsetLeft - (examGrid.clientWidth - activePill.offsetWidth) / 2);
+      }
+    };
+  }
+
   // Nawigacja siatką
-  $('#examGrid').onclick = e => {
+  examGrid.onclick = e => {
     const pill = e.target.closest('[data-idx]');
     if (!pill) return;
     es.i = +pill.dataset.idx;
     renderActiveExam();
   };
 
-  // Zaznaczanie opcji odpowiedzi
+  // Zaznaczanie opcji odpowiedzi (aktualizacja bez pełnego przeładowania widoku)
   $('#examOpts').onclick = e => {
     const optBtn = e.target.closest('[data-i]');
     if (!optBtn) return;
@@ -3454,13 +3535,25 @@ function renderActiveExam() {
       userSet.clear();
       userSet.add(idx);
     }
-    renderActiveExam();
+    $$('#examOpts .opt').forEach(b => b.classList.toggle('sel', userSet.has(+b.dataset.i)));
+    if (activePill) activePill.classList.toggle('answered', userSet.size > 0);
+    const cnt = countAnswered();
+    const ansEl = $('#examAnsCnt'); if (ansEl) ansEl.textContent = cnt;
+    const progEl = $('#examProg'); if (progEl) progEl.setAttribute('aria-valuenow', cnt);
+    const fillEl = $('#examProgFill'); if (fillEl) fillEl.style.width = pct(cnt, total) + '%';
   };
 
-  // Flaga
+  // Flaga (aktualizacja w miejscu)
   $('#btnExamFlag').onclick = () => {
-    es.flagged.has(q.id) ? es.flagged.delete(q.id) : es.flagged.add(q.id);
-    renderActiveExam();
+    const nowFlagged = !es.flagged.has(q.id);
+    if (nowFlagged) es.flagged.add(q.id); else es.flagged.delete(q.id);
+    const btn = $('#btnExamFlag');
+    if (btn) btn.classList.toggle('active', nowFlagged);
+    const txt = $('#btnExamFlagTxt');
+    if (txt) txt.textContent = nowFlagged ? 'Oznaczone' : 'Oznacz flagą';
+    if (activePill) activePill.classList.toggle('flagged', nowFlagged);
+    const flCnt = $('#examFlagCnt');
+    if (flCnt) flCnt.textContent = es.flagged.size;
   };
 
   // Poprzednie / Następne
@@ -4901,7 +4994,7 @@ function renderEmergencyDrugTray(caseItem) {
     </div>
 
     <!-- Siatka leków -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:.7rem;margin-bottom:.8rem">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:.7rem;margin-bottom:.8rem">
       ${cardData.drugs.map(drug => `
         <div style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.75rem .9rem;display:flex;flex-direction:column;justify-content:space-between">
           <div>
@@ -5057,7 +5150,7 @@ function renderPatientCaseList() {
           <h3 style="margin:0;font-size:1.2rem">Stany Nagłe i Resuscytacja (SOR)</h3>
           <span class="chip" style="background:rgba(194,59,42,0.1);color:var(--red);font-weight:700;border:0">${sorFiltered.length}</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.1rem">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:1.1rem">
           ${sorFiltered.map(c => {
             const saved = (S.patientCases || {})[c.id];
             const hasScore = saved && saved.bestScore !== undefined;
@@ -5089,7 +5182,7 @@ function renderPatientCaseList() {
           <h3 style="margin:0;font-size:1.2rem">Stacje Egzaminacyjne OSCE i Status Praesens</h3>
           <span class="chip" style="background:var(--teal-l);color:var(--teal-d);font-weight:700;border:0">${osceFiltered.length}</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.1rem">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:1.1rem">
           ${osceFiltered.map(station => {
             const saved = (S.osceCases || {})[station.id];
             const isPassed = saved && saved.score >= 60;
@@ -7511,7 +7604,7 @@ function viewCalculator(parts, params) {
           </div>
 
           <!-- Szacowanie z wieku -->
-          <div class="calc-field-group" style="border-left:1px solid var(--line-2);padding-left:1.2rem">
+          <div class="calc-field-group calc-field-divider">
             <span class="muted" style="font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Szacowanie wagi z wieku (APLS)</span>
             <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
               <input type="number" id="calcAgeVal" min="0" max="18" value="${CALC_STATE.ageVal}" style="width:70px;padding:.4rem .6rem;border:1.5px solid var(--line);border-radius:8px;font-weight:800;background:var(--bg);color:var(--ink)">
@@ -7827,7 +7920,7 @@ function viewCalculator(parts, params) {
         </div>
 
         <h4 style="margin:1rem 0 .5rem;font-size:.95rem">Dwufazowy plan nawadniania dożylnego (przy braku wstrząsu):</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="calc-two-col">
           <div class="card" style="background:var(--teal-xl);border-color:var(--teal)">
             <b>Faza I (pierwsze 8 godzin)</b>
             <div style="font-size:1.3rem;font-weight:800;color:var(--teal);margin:.3rem 0">${phase1Rate} ml / godzinę</div>
@@ -7870,7 +7963,7 @@ function viewCalculator(parts, params) {
     const ibuCzopki = [60, 125, 250];
     const bestIbuCzopek = ibuCzopki.reduce((prev, curr) => Math.abs(curr - ibuSingleMg) < Math.abs(prev - ibuSingleMg) ? curr : prev);
 
-    return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem">
+    return `<div class="calc-two-col">
       <!-- Paracetamol -->
       <div class="card" style="border-top:4px solid var(--teal)">
         <div class="drug-header">
@@ -7894,19 +7987,19 @@ function viewCalculator(parts, params) {
 
         <h4 style="font-size:.9rem;margin-bottom:.5rem">Przeliczenie na syropy i zawiesiny:</h4>
         <div style="display:grid;gap:.4rem;font-size:.85rem;margin-bottom:1rem">
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Syrop standard (120 mg / 5 ml = 24 mg/ml)</b>
             <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr120Ml} ml</div>
           </div>
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Syrop forte (200 mg / 5 ml = 40 mg/ml)</b>
             <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr200Ml} ml</div>
           </div>
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Syrop koncentrat (250 mg / 5 ml = 50 mg/ml)</b>
             <div style="font-weight:800;color:var(--teal);text-align:right">${parSyr250Ml} ml</div>
           </div>
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Rekomendowany czopek doodbytniczy:</b>
             <div style="font-weight:800;color:var(--ink);text-align:right">${bestParCzopek} mg</div>
           </div>
@@ -7938,15 +8031,15 @@ function viewCalculator(parts, params) {
 
         <h4 style="font-size:.9rem;margin-bottom:.5rem">Przeliczenie na syropy i zawiesiny:</h4>
         <div style="display:grid;gap:.4rem;font-size:.85rem;margin-bottom:1rem">
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Syrop standard (100 mg / 5 ml = 20 mg/ml)</b>
             <div style="font-weight:800;color:var(--amber);text-align:right">${ibuSyr100Ml} ml</div>
           </div>
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Syrop forte (200 mg / 5 ml = 40 mg/ml)</b>
             <div style="font-weight:800;color:var(--amber);text-align:right">${ibuSyr200Ml} ml</div>
           </div>
-          <div class="prow" style="padding:.5rem .7rem">
+          <div class="calc-syrup-row">
             <b>Rekomendowany czopek doodbytniczy:</b>
             <div style="font-weight:800;color:var(--ink);text-align:right">${bestIbuCzopek} mg</div>
           </div>
@@ -9264,7 +9357,7 @@ function viewVaccines(parts, params) {
       <p class="lead">Interaktywny kalendarz szczepień w Polsce: pełna oś czasu od 1. doby do 19. r.ż., podział na szczepionki żywe i inaktywowane, zasady odstępów oraz symulator nadrabiania opóźnień (catch-up).</p>
 
       <!-- Złote zasady PSO i pułapki -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.6rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;margin-bottom:1.6rem">
         <div class="card" style="border-left:4px solid var(--amber)">
           <div style="font-weight:800;color:var(--amber);margin-bottom:.3rem">⚡ Zasada 4 tygodni (szczepionki żywe)</div>
           <p class="srcline">Dwie szczepionki żywe (np. BCG, MMR, Ospa, Rota) należy podać <b>tego samego dnia</b> w różne miejsca ALBO z zachowaniem <b>odstępu min. 4 tygodni</b>. Między szczepionkami zabitymi lub między żywą a zabitą odstęp jest dowolny.</p>
@@ -9702,7 +9795,7 @@ function viewDiagnostics(parts, params) {
       <h3 style="font-size:1.25rem;margin-bottom:.4rem">Badanie Ogólne i Osad Moczu w Nefrologii Dziecięcej</h3>
       <p class="muted" style="margin-bottom:1.2rem">Różnicowanie kłębuszkowych i cewkowych zapaleń nerek na podstawie wałeczków i białkomoczu.</p>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.6rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;margin-bottom:1.6rem">
         <div class="card" style="border-left:4px solid var(--red)">
           <b style="color:var(--red);font-size:1.05rem">Wałeczki erytrocytarne & Krwinkomocz dysmorficzny</b>
           <p class="srcline" style="margin:.4rem 0">Patognomoniczne dla <b>kłębuszkowego zapalenia nerek (KZN)</b>, np. ostrego poinfekcyjnego (APSGN) lub nefropatii IgA.</p>
@@ -9722,15 +9815,15 @@ function viewDiagnostics(parts, params) {
 
       <h4 style="margin:1.4rem 0 .5rem">Kryteria Bakteriomoczu Znamiennego w ZUM u Dzieci:</h4>
       <div style="display:grid;gap:.5rem;font-size:.88rem">
-        <div class="prow" style="background:var(--bg)">
+        <div class="calc-syrup-row" style="background:var(--bg)">
           <b>Środkowy strumień moczu (ze zbiórki)</b>
           <div style="font-weight:800;color:var(--teal)">≥ 10^5 CFU / ml (jednego uropatogenu)</div>
         </div>
-        <div class="prow" style="background:var(--bg)">
+        <div class="calc-syrup-row" style="background:var(--bg)">
           <b>Mocz pobrany przez cewnik pęcherzowy</b>
           <div style="font-weight:800;color:var(--teal)">≥ 10^4 CFU / ml</div>
         </div>
-        <div class="prow" style="background:var(--bg)">
+        <div class="calc-syrup-row" style="background:var(--bg)">
           <b>Nakłucie nadłonowe pęcherza (złoty standard)</b>
           <div style="font-weight:800;color:var(--green)">Każda liczba bakterii (nawet 1 CFU/ml!)</div>
         </div>
@@ -9745,7 +9838,7 @@ function viewDiagnostics(parts, params) {
       <h3 style="font-size:1.25rem;margin-bottom:.4rem">Morfologia Krwi i Algorytm Różnicowania Niedokrwistości</h3>
       <p class="muted" style="margin-bottom:1.2rem">Klasyfikacja niedokrwistości na podstawie wskaźnika MCV, retikulocytów i RDW.</p>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.4rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;margin-bottom:1.4rem">
         <div class="card" style="border-top:4px solid var(--amber)">
           <b>1. Anemia mikrocytarna (niskie MCV)</b>
           <div style="font-size:.84rem;margin-top:.4rem">
@@ -11346,14 +11439,14 @@ function renderSession() {
         </div>`;
       }
     } else {
-      body = done ? `${explain(q)}<div class="acts" id="nextRow"></div>` : `<div class="acts" style="margin-top:1rem"><button class="btn dark" id="reveal">Pokaż odpowiedź i omówienie ▾</button></div>`;
+      body = done ? `${explain(q)}<div class="acts trening-next-sticky" id="nextRow"></div>` : `<div class="acts" style="margin-top:1rem"><button class="btn dark" id="reveal">Pokaż odpowiedź i omówienie ▾</button></div>`;
     }
   } else {
     const multi = q.keys.length > 1;
     body = `${multi ? '<p class="srcline" style="margin-bottom:.5rem">Zadanie wielokrotnego wyboru: zaznacz wszystkie poprawne odpowiedzi.</p>' : ''}<div class="opts" id="opts">${q.opts.map((o, i) => {
       let cls = ''; if (done) { if (learn) cls = q.keys.includes(i) ? 'ok' : (s.sel.has(i) ? 'bad' : 'dim'); else cls = s.sel.has(i) ? 'sel' : ''; } else if (s.sel.has(i)) cls = 'sel';
       return `<button class="opt ${cls}" data-i="${i}" ${done ? 'disabled' : ''}><span class="l">${L[i]}</span><span>${esc(o)}</span></button>`;
-    }).join('')}</div>${!done && multi ? '<div class="acts" style="margin-top:.7rem"><button class="btn dark" id="check" ' + (s.sel.size ? '' : 'disabled') + '>Sprawdź</button></div>' : ''}${done && learn ? explain(q) : ''}${done && !learn ? '<p class="srcline">Odpowiedź zapisana. Omówienie zobaczysz po zakończeniu sesji.</p>' : ''}<div class="acts" id="nextRow"></div>`;
+    }).join('')}</div>${!done && multi ? '<div class="acts" style="margin-top:.7rem"><button class="btn dark" id="check" ' + (s.sel.size ? '' : 'disabled') + '>Sprawdź</button></div>' : ''}${done && learn ? explain(q) : ''}${done && !learn ? '<p class="srcline">Odpowiedź zapisana. Omówienie zobaczysz po zakończeniu sesji.</p>' : ''}<div class="acts${done ? ' trening-next-sticky' : ''}" id="nextRow"></div>`;
   }
   const modeLabel = s.mode === 'learn' ? 'tryb nauki' : (s.mode === 'flash' ? '🃏 tryb fiszek' : 'tryb egzaminu');
   main.innerHTML = `<section class="blk" style="border:0"><div class="wrap qz">
@@ -11595,6 +11688,8 @@ function palRender() {
 }
 function palOpen() { if (!pal.open) pal.showModal(); palIn.value = ''; palRender(); palIn.focus(); }
 $('#openPal').onclick = palOpen;
+const palClose = $('#palClose');
+if (palClose) palClose.onclick = () => pal.close();
 palIn.addEventListener('input', palRender);
 palIn.addEventListener('keydown', e => {
   const as = $$('a', palList); if (!as.length) return;
