@@ -11554,7 +11554,7 @@ function viewProgress() {
 
 /* ---------- STOPKA ---------- */
 function renderFooter() {
-  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p><p class="muted" style="margin-top:.5rem;font-size:.78rem">Wersja v22 · Materiał edukacyjny; decyzje kliniczne weryfikuj z ChPL i aktualnymi wytycznymi.</p></div>
+  $('#ft').innerHTML = `<div class="wrap"><div><h3>Pediatria · V rok</h3><p>Hub łączy ${ATLASES.length} atlasów z Projektu „Pediatria – zaliczenie 5. rok”. Zadania pochodzą z pul zakładowych, rekonstrukcji i uzupełnień autorskich, a każde niesie znacznik pewności klucza.</p><p class="muted" style="margin-top:.5rem;font-size:.78rem">Wersja v23 · Materiał edukacyjny; decyzje kliniczne weryfikuj z ChPL i aktualnymi wytycznymi.</p></div>
   <div><h3>Jak czytać źródła</h3><p>Powtarzalność pytania to sygnał do nauki, nie prognoza egzaminu. Tam, gdzie klucz puli rozmija się z wytycznymi, hub pokazuje „pod zaliczenie” i „aktualnie klinicznie” osobno. Brakujących lokalnych wymogów zakładu nie uzupełniono domysłami.</p><p style="margin-top:.5rem">Szybkie wyszukiwanie: <b>Ctrl K</b> lub <b>/</b>.</p></div></div>`;
 }
 
