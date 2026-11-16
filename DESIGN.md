@@ -173,6 +173,16 @@ Paleta łączy neutralne tła o kontrolowanym kontraście z kodowaniem kliniczny
 - **Ink Hierarchy** (`--ink`: `#13232C`, `--ink-2`: `#44545D`, `--muted`: `#596870` | ciemny: `#F1F5F7`, `#B3C0C8`, `#8A9BA5`): Podstawowy tekst, teksty pomocnicze/podtytuły oraz metadane zachowujące kontrast `>= 4.5:1`.
 - **Hairline Borders** (`--line`: `#DCE2E0`, `--line-2`: `#E9EDEB` | ciemny: `#222B32`, `#192026`): 1-pikselowe ramki oddzielające powierzchnie w miejsce ciężkich cieni.
 
+### Extended Dark Palettes (6 dodatkowych motywów)
+Wszystkie 6 palet dziedziczą wspólne tokeny semantyczne (`:root[data-theme]`) i nadpisują powierzchnie, hierarchię tekstu oraz akcent `--teal` (z ciemnym tekstem `--on-accent` dla kontrastu `>= 6.8:1`):
+
+- **Deep Navy & Slate (`data-theme="navy"`):** `--bg: #111522`, `--surface: #1E263B`, `--surface-2: #28334E`, `--ink: #DCE3EF`, `--ink-2: #A8B8D0`, `--muted: #889BB8`, `--line: #303D59`, `--teal: #98A9C4`, `--teal-d: #B4C4DC`, `--on-accent: #111522`.
+- **Forest Moss & Sage (`data-theme="moss"`):** `--bg: #0F1A15`, `--surface: #1C2F27`, `--surface-2: #263F34`, `--ink: #E6EBE6`, `--ink-2: #A6C3AC`, `--muted: #84A98C`, `--line: #2E4C3E`, `--teal: #84A98C`, `--teal-d: #A8CBB0`, `--on-accent: #0F1A15`.
+- **Earthy Espresso & Sand (`data-theme="espresso"`):** `--bg: #211B1A`, `--surface: #382A28`, `--surface-2: #4A3734`, `--ink: #E8D8CE`, `--ink-2: #C9ABA0`, `--muted: #B08E82`, `--line: #60433D`, `--teal: #C1A094`, `--teal-d: #DFC4BA`, `--on-accent: #211B1A`.
+- **Burnt Ochre & Charcoal (`data-theme="ochre"`):** `--bg: #1A1715`, `--surface: #2E2520`, `--surface-2: #3E3129`, `--ink: #F7F0EA`, `--ink-2: #DFC2A6`, `--muted: #C29D7B`, `--line: #553E31`, `--teal: #D19A66`, `--teal-d: #E6B585`, `--on-accent: #1A1715`.
+- **Shadow Purple & Lavender (`data-theme="purple"`):** `--bg: #17151C`, `--surface: #292531`, `--surface-2: #363041`, `--ink: #E2DDE7`, `--ink-2: #BFB7C9`, `--muted: #A096AB`, `--line: #45404F`, `--teal: #AAA2B3`, `--teal-d: #C8C0D1`, `--on-accent: #17151C`.
+- **Ocean Teal & Coral (`data-theme="ocean"`):** `--bg: #0A1924`, `--surface: #152E3C`, `--surface-2: #1E3D4E`, `--ink: #E8F2F6`, `--ink-2: #9CC0CC`, `--muted: #83A9B6`, `--line: #294A5A`, `--teal: #FF9E80`, `--teal-d: #FF9E80`, `--on-accent: #0A1924`.
+
 ### Named Rules
 **The Clinical Red Discipline Rule.** Kolor `--red` (`#B93424` / `#E55B4B`) jest zarezerwowany wyłącznie dla stanów zagrożenia życia (czerwone flagi, anafilaksja, sepsa, wzmożone ICP), krytycznych błędów klinicznych oraz negatywnej weryfikacji odpowiedzi — nigdy jako ozdobnik przycisków nawigacji czy statystyk.
 

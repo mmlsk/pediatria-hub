@@ -124,12 +124,12 @@ window.addEventListener('storage', ev => {
 /* ---------- obsługa motywu (Dark Mode + 6 palet) ---------- */
 const THEME_KEY = 'pediatria_hub_theme';
 const THEME_PALETTES = [
-  { id: 'navy', icon: '🌌', short: 'Navy', name: 'Deep Navy & Slate', desc: 'Głęboki granat i chłodny łupek', bg: '#111522', colors: ['#111522', '#1E263B', '#303D59', '#536684', '#98A9C4', '#DCE3EF'] },
-  { id: 'moss', icon: '🌲', short: 'Moss', name: 'Forest Moss & Sage', desc: 'Głęboki, naturalny i kojący', bg: '#0F1A15', colors: ['#0F1A15', '#1C2F27', '#2E4C3E', '#4E6E5D', '#84A98C', '#E6EBE6'] },
-  { id: 'espresso', icon: '☕', short: 'Espresso', name: 'Earthy Espresso & Sand', desc: 'Ciepłe espresso i piasek', bg: '#211B1A', colors: ['#211B1A', '#382A28', '#60433D', '#916B60', '#C1A094', '#E8D8CE'] },
-  { id: 'ochre', icon: '🏜️', short: 'Ochre', name: 'Burnt Ochre & Charcoal', desc: 'Ciepły, industrialny i rustykalny', bg: '#1A1715', colors: ['#1A1715', '#2E2520', '#553E31', '#8C5D3A', '#D19A66', '#F7F0EA'] },
-  { id: 'purple', icon: '🔮', short: 'Lavender', name: 'Shadow Purple & Lavender', desc: 'Głęboki fiolet i lawenda', bg: '#17151C', colors: ['#17151C', '#292531', '#45404F', '#716879', '#AAA2B3', '#E2DDE7'] },
-  { id: 'ocean', icon: '🌊', short: 'Ocean', name: 'Ocean Teal & Coral', desc: 'Chłodne tony oceaniczne z akcentem koralowym', bg: '#0A1924', colors: ['#0A1924', '#152E3C', '#294A5A', '#4C7282', '#94B9C5', '#FF9E80'] }
+  { id: 'navy', icon: '🌌', short: 'Navy', name: 'Deep Navy & Slate', desc: 'Głęboki granat i chłodny łupek', bg: '#111522', surface: '#1E263B', ink: '#DCE3EF', ink2: '#A8B8D0', accent: '#98A9C4', colors: ['#111522', '#1E263B', '#303D59', '#536684', '#98A9C4', '#DCE3EF'] },
+  { id: 'moss', icon: '🌲', short: 'Moss', name: 'Forest Moss & Sage', desc: 'Głęboki, naturalny i kojący', bg: '#0F1A15', surface: '#1C2F27', ink: '#E6EBE6', ink2: '#A6C3AC', accent: '#84A98C', colors: ['#0F1A15', '#1C2F27', '#2E4C3E', '#4E6E5D', '#84A98C', '#E6EBE6'] },
+  { id: 'espresso', icon: '☕', short: 'Espresso', name: 'Earthy Espresso & Sand', desc: 'Ciepłe espresso i piasek', bg: '#211B1A', surface: '#382A28', ink: '#E8D8CE', ink2: '#C9ABA0', accent: '#C1A094', colors: ['#211B1A', '#382A28', '#60433D', '#916B60', '#C1A094', '#E8D8CE'] },
+  { id: 'ochre', icon: '🏜️', short: 'Ochre', name: 'Burnt Ochre & Charcoal', desc: 'Ciepły, industrialny i rustykalny', bg: '#1A1715', surface: '#2E2520', ink: '#F7F0EA', ink2: '#DFC2A6', accent: '#D19A66', colors: ['#1A1715', '#2E2520', '#553E31', '#8C5D3A', '#D19A66', '#F7F0EA'] },
+  { id: 'purple', icon: '🔮', short: 'Lavender', name: 'Shadow Purple & Lavender', desc: 'Głęboki fiolet i lawenda', bg: '#17151C', surface: '#292531', ink: '#E2DDE7', ink2: '#BFB7C9', accent: '#AAA2B3', colors: ['#17151C', '#292531', '#45404F', '#716879', '#AAA2B3', '#E2DDE7'] },
+  { id: 'ocean', icon: '🌊', short: 'Ocean', name: 'Ocean Teal & Coral', desc: 'Chłodne tony oceaniczne z akcentem koralowym', bg: '#0A1924', surface: '#152E3C', ink: '#E8F2F6', ink2: '#9CC0CC', accent: '#FF9E80', colors: ['#0A1924', '#152E3C', '#294A5A', '#4C7282', '#94B9C5', '#FF9E80'] }
 ];
 const THEME_BY_ID = Object.fromEntries(THEME_PALETTES.map(p => [p.id, p]));
 const THEME_ORDER = ['auto', 'light', 'dark', ...THEME_PALETTES.map(p => p.id)];
@@ -4813,7 +4813,19 @@ function viewProgress() {
       </div>
       <div class="theme-grid">
         ${THEME_PALETTES.map(p => `<button type="button" class="theme-card" data-theme-choice="${p.id}" aria-pressed="${currentTheme === p.id}">
-          <div class="theme-card-top"><span>${p.icon} ${esc(p.name)}</span></div>
+          <div class="theme-preview" style="background:${p.bg}" aria-hidden="true">
+            <div class="theme-preview-card" style="background:${p.surface}">
+              <div class="theme-preview-lines">
+                <i style="width:68%;background:${p.ink}"></i>
+                <i style="width:44%;background:${p.ink2};opacity:.78"></i>
+              </div>
+              <span class="theme-preview-pill" style="background:${p.accent}"></span>
+            </div>
+          </div>
+          <div class="theme-card-top">
+            <span>${esc(p.name)}</span>
+            <span class="theme-check" aria-hidden="true"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.2 6.2 4.8 8.8 9.8 3.4"/></svg></span>
+          </div>
           <div class="theme-dots" aria-hidden="true">${p.colors.map(c => `<span style="background:${c}"></span>`).join('')}</div>
           <div class="theme-card-sub">${esc(p.desc)}</div>
         </button>`).join('')}
@@ -5072,7 +5084,41 @@ function initPWA() {
 
 function initTheme() {
   const btn = $('#btnTheme');
-  if (btn) btn.onclick = cycleTheme;
+  if (btn && btn.parentElement) {
+    const wrap = document.createElement('div');
+    wrap.className = 'theme-wrap';
+    btn.parentElement.insertBefore(wrap, btn);
+    wrap.appendChild(btn);
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-haspopup', 'true');
+    const pop = document.createElement('div');
+    pop.className = 'theme-pop';
+    pop.hidden = true;
+    pop.setAttribute('role', 'menu');
+    pop.innerHTML = `
+      <button type="button" class="theme-pop-item" data-theme-choice="auto" aria-pressed="${currentTheme === 'auto'}"><span>🖥️ Auto (systemowy)</span></button>
+      <button type="button" class="theme-pop-item" data-theme-choice="light" aria-pressed="${currentTheme === 'light'}"><span>☀️ Jasny</span></button>
+      <button type="button" class="theme-pop-item" data-theme-choice="dark" aria-pressed="${currentTheme === 'dark'}"><span>🌙 Ciemny (Obsidian)</span></button>
+      <div class="theme-pop-sep"></div>
+      ${THEME_PALETTES.map(p => `<button type="button" class="theme-pop-item" data-theme-choice="${p.id}" aria-pressed="${currentTheme === p.id}">
+        <span>${esc(p.name)}</span>
+        <span class="theme-pop-swatches" aria-hidden="true"><i style="background:${p.bg}"></i><i style="background:${p.surface}"></i><i style="background:${p.accent}"></i></span>
+      </button>`).join('')}
+    `;
+    wrap.appendChild(pop);
+    const setOpen = open => {
+      pop.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.onclick = e => { e.stopPropagation(); setOpen(pop.hidden); };
+    pop.addEventListener('click', e => {
+      const b = e.target.closest('[data-theme-choice]');
+      if (!b) return;
+      applyTheme(b.dataset.themeChoice);
+    });
+    document.addEventListener('click', e => { if (!pop.hidden && !wrap.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) { setOpen(false); btn.focus(); } });
+  }
   applyTheme(currentTheme, false);
 }
 
