@@ -5,7 +5,7 @@ import logic from '../js/logic.js';
 const {
   esc, norm, b64EncodeUtf8, b64DecodeUtf8,
   estimateWeightFromAge, getAgeFormulaHint, calcHollidaySegar,
-  parseQuestionsInput, parseMarkdown, scoreExam
+  parseQuestionsInput, diagnoseQuestionsInput, parseBackupCode, parseMarkdown, scoreExam
 } = logic;
 
 test('UTF-8 base64 round-trip preserves Polish diacritics and emoji', () => {
@@ -100,4 +100,28 @@ test('scoreExam handles multi-key answers, unanswered items, and 60% pass mark',
   assert.equal(res.pct, 60);
   assert.equal(res.passed, true);
   assert.deepEqual(res.wrongQIds, ['q4', 'q5']);
+});
+
+test('diagnoseQuestionsInput reports empty input, invalid JSON, missing fields, and missing options', () => {
+  assert.match(diagnoseQuestionsInput('   '), /Wklej/i);
+  assert.match(diagnoseQuestionsInput('[{"stem": "x"'), /składnia JSON/i);
+  assert.match(diagnoseQuestionsInput('[{"opts": ["A", "B"]}]'), /stem|question/);
+  assert.match(diagnoseQuestionsInput('1. Brak opcji tutaj'), /co najmniej 2 wariantów/i);
+  assert.match(diagnoseQuestionsInput('A. Opcja 1\nB. Opcja 2'), /brakuje treści pytania/i);
+});
+
+test('parseBackupCode distinguishes empty, bad base64, bad JSON, wrong schema, and restores valid backup', () => {
+  const defaults = { visited: {}, last: null, done: {}, ans: {}, bm: {}, examHistory: [], patientCases: {}, osceCases: {} };
+  assert.match(parseBackupCode('', defaults).error, /Wklej kod/i);
+  assert.match(parseBackupCode('!!!nie-base64!!!', defaults).error, /Base64/i);
+  assert.match(parseBackupCode(b64EncodeUtf8('{nie-json'), defaults).error, /JSON/i);
+  assert.match(parseBackupCode(b64EncodeUtf8('{"foo":1}'), defaults).error, /Pediatria Hub/i);
+
+  const valid = b64EncodeUtf8(JSON.stringify({ visited: { brzuch: 1 }, last: 'brzuch', examHistory: [{ pct: 80 }] }));
+  const res = parseBackupCode(`  ${valid.slice(0, 12)}\n${valid.slice(12)}  `, defaults);
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.state.visited, { brzuch: 1 });
+  assert.equal(res.state.last, 'brzuch');
+  assert.equal(res.state.examHistory.length, 1);
+  assert.deepEqual(res.state.done, {});
 });

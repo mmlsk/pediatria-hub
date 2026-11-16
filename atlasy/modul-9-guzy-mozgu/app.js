@@ -49,7 +49,7 @@ const TUM=[
  {c:'a',e:'👁️',t:'Glejak nerwu wzrokowego / NF1',u:['2% guzów mózgu wg wykładu','związek z NF1 (plamy café-au-lait)','ubytki widzenia, wytrzeszcz'],p:'Skojarz: NF1 → glejak nerwu II.'},
  {c:'g',e:'🌿',t:'Stwardnienie guzowate i SEGA',u:['napady, angiofibroma, plamy odbarwione','SEGA przy otworze Monro daje wodogłowie','guz łagodny, leczenie operacyjne lub celowane'],p:'Pytanie D #11 (klucz potwierdzony).'}
 ];
-$('#tumorCards').innerHTML=TUM.map(x=>`<div class="tcard ${x.c}"><h4><span class="em">${x.e}</span> ${x.t}</h4><ul>${x.u.map(u=>`<li>${u}</li>`).join('')}</ul><p class="small" style="margin-top:.5rem"><b>Perełka:</b> ${x.p}</p></div>`).join('');
+$('#tumorCards').innerHTML=TUM.map(x=>`<div class="tcard ${x.c}"><h3><span class="em">${x.e}</span> ${x.t}</h3><ul>${x.u.map(u=>`<li>${u}</li>`).join('')}</ul><p class="small" style="margin-top:.5rem"><b>Perełka:</b> ${x.p}</p></div>`).join('');
 
 /* cross-module graph */
 (function(){
@@ -66,7 +66,7 @@ $('#tumorCards').innerHTML=TUM.map(x=>`<div class="tcard ${x.c}"><h4><span class
  const pos=N.map((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length;return [cx+rx*Math.cos(a)*0.98,cy+R*Math.sin(a)*1.08]});
  pos.forEach(p=>h+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="#9AA7AD" stroke-width="2"/>`);
  h+=`<circle cx="${cx}" cy="${cy}" r="52" fill="#0C7A85"/><text x="${cx}" y="${cy-2}" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">[9]</text><text x="${cx}" y="${cy+20}" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Guzy mózgu</text>`;
- const col=['#2B63AE','#C23B2A','#B8730F','#2F8450','#6E4CB0','#0C7A85','#B8730F'];
+ const col=['#2B63AE','#C23B2A','#B8730F','#2F8450','#245B7A','#0C7A85','#B8730F'];
  N.forEach((n,i)=>{const [x,y]=pos[i],w=186,hh=60;
   h+=`<rect x="${x-w/2}" y="${y-hh/2}" width="${w}" height="${hh}" rx="12" fill="#fff" stroke="${col[i]}" stroke-width="2.2"/>
   <text x="${x}" y="${y-8}" text-anchor="middle" font-size="13.5" font-weight="800" fill="${col[i]}">${(n[0]+' '+n[1]).trim()}</text>

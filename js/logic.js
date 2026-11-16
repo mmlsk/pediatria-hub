@@ -221,6 +221,68 @@
     return questions;
   }
 
+  function diagnoseQuestionsInput(input) {
+    const trimmed = String(input || '').trim();
+    if (!trimmed) return 'Wklej najpierw treść pytań lub tablicę JSON w polu tekstowym powyżej.';
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      let parsed;
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch (e) {
+        return `Niepoprawna składnia JSON (${e.message}). Sprawdź brakujące przecinki, cudzysłowy lub nawiasy zamykające.`;
+      }
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+      const objs = arr.filter(x => x && typeof x === 'object');
+      if (!objs.length) return 'JSON nie zawiera obiektów pytań (oczekiwano np. [{ "stem": "...", "opts": ["...", "..."], "keys": [0] }]).';
+      if (objs.some(x => !String(x.stem || x.question || '').trim())) {
+        return 'W co najmniej jednym obiekcie JSON brakuje treści pytania (pole "stem" lub "question").';
+      }
+      const tooFewOpts = objs.some(x => {
+        const rawOpts = x.opts || x.answers || x.options;
+        const cleanOpts = Array.isArray(rawOpts) ? rawOpts.map(o => String(o == null ? '' : o).trim()).filter(Boolean) : [];
+        return rawOpts !== undefined && cleanOpts.length < 2;
+      });
+      if (tooFewOpts) return 'W pytaniu JSON podano mniej niż 2 niepuste warianty w polu "opts" / "options".';
+      return 'Rozpoznany JSON nie spełnia wymagań importu (sprawdź pola "stem" oraz co najmniej 2 warianty "opts").';
+    }
+    const optLines = trimmed.split('\n').filter(l => /^[\(\[]?([A-H])[\)\.\:]\s*\S+/i.test(l.trim()));
+    if (optLines.length < 2) {
+      return 'Nie znaleziono co najmniej 2 wariantów odpowiedzi (np. "A. ...", "B. ...") pod treścią pytania.';
+    }
+    return 'Znaleziono warianty odpowiedzi (A./B.), ale brakuje treści pytania przed pierwszym wariantem (np. "1. Treść pytania...").';
+  }
+
+  function parseBackupCode(raw, baseDefaults = {}) {
+    const cleaned = String(raw || '').replace(/\s+/g, '');
+    if (!cleaned) return { ok: false, error: 'Wklej kod kopii zapasowej w polu powyżej przed wczytaniem.' };
+    let decoded;
+    try {
+      decoded = b64DecodeUtf8(cleaned);
+    } catch (e) {
+      return { ok: false, error: 'Niepoprawny format Base64 — upewnij się, że wklejono cały kod bez urwanych znaków.' };
+    }
+    let data;
+    try {
+      data = JSON.parse(decoded);
+    } catch (e) {
+      return { ok: false, error: 'Kod Base64 nie zawiera prawidłowych danych JSON kopii zapasowej.' };
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      return { ok: false, error: 'Kopia zapasowa musi zawierać obiekt JSON ze stanem postępu.' };
+    }
+    const objKeys = ['visited', 'done', 'ans', 'bm', 'patientCases', 'osceCases'];
+    const allKnown = [...objKeys, 'last', 'examHistory'];
+    if (!allKnown.some(k => Object.prototype.hasOwnProperty.call(data, k))) {
+      return { ok: false, error: 'Zdekodowany JSON nie pochodzi z Pediatria Hub (brak rozpoznanych pól postępu).' };
+    }
+    const safeObj = (val, fallback) => (val && typeof val === 'object' && !Array.isArray(val)) ? val : (fallback || {});
+    const state = Object.assign({}, baseDefaults, data);
+    objKeys.forEach(k => { state[k] = safeObj(data[k], baseDefaults[k]); });
+    state.examHistory = Array.isArray(data.examHistory) ? data.examHistory : [];
+    state.last = typeof data.last === 'string' ? data.last : null;
+    return { ok: true, state };
+  }
+
   function parseMarkdown(src) {
     if (!src) return '';
     const codeBlocks = [];
@@ -311,7 +373,7 @@
   const api = {
     esc, escB, norm, pct, b64EncodeUtf8, b64DecodeUtf8,
     estimateWeightFromAge, getAgeFormulaHint, calcHollidaySegar,
-    parseQuestionsInput, parseMarkdown, scoreExam
+    parseQuestionsInput, diagnoseQuestionsInput, parseBackupCode, parseMarkdown, scoreExam
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

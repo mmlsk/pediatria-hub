@@ -11,10 +11,10 @@
 .fig svg text{font-family:'Satoshi',system-ui,sans-serif}
 .agegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
 .agecol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.agecol h4{padding:.55rem .8rem;color:var(--ink-inv);font-family:var(--font-display);font-size:1rem}
+.agecol h3,.agecol h4{padding:.55rem .8rem;color:var(--ink-inv);font-family:var(--font-display)}
 .agecol ul{padding:.7rem .9rem .9rem 1.8rem;font-size:.9rem}
 .agecol li{margin:.25rem 0}
-.agecol.a1 h4{background:var(--violet)}.agecol.a2 h4{background:var(--blue)}.agecol.a3 h4{background:var(--red)}.agecol.a4 h4{background:var(--amber)}
+.agecol.a1 h3,.agecol.a1 h4{background:var(--violet)}.agecol.a2 h3,.agecol.a2 h4{background:var(--blue)}.agecol.a3 h3,.agecol.a3 h4{background:var(--red)}.agecol.a4 h3,.agecol.a4 h4{background:var(--amber)}
 .herolist{display:grid;grid-template-columns:1fr 1fr;gap:.3rem .9rem;font-size:.84rem;margin-top:.6rem;color:var(--ink-2)}.herolist b{color:var(--ink)}
 @media (max-width:560px){.herolist{grid-template-columns:1fr}}
 .pw{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.4rem}

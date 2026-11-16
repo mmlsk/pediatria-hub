@@ -15,14 +15,13 @@
 .kb.neg{background:var(--red);color:var(--ink-inv)}
 .mod.m12{background:var(--red)}.mod.m13a{background:var(--blue)}.mod.m13b{background:var(--violet)}
 .q .opt .l{flex:0 0 auto}
-/* kolory odpowiedzi: zielony = poprawna (potwierdzona), czerwony = poprawna w pytaniu „wskaż fałsz”, bursztynowy = klucz niepotwierdzony */
+/* kolory odpowiedzi: zielony = poprawna (również z [FAŁSZ] w pytaniu „wskaż fałsz”), bursztynowy = klucz niepotwierdzony, czerwony = błędna próba */
 .opt.key-g{border-color:var(--green);background:var(--green-l)}
-.opt.key-r{border-color:var(--red);background:var(--red-l)}
 .opt.key-a{border-color:var(--amber);background:var(--amber-l);border-style:dashed}
-.opt.key-r.key-a{border-style:dashed}
+.opt.key-g.key-a{border-style:dashed}
 .opt.pick{box-shadow:0 0 0 3px rgba(19,35,44,.25)}
 [data-theme="dark"] .opt.pick{box-shadow:0 0 0 3px rgba(241,245,247,.25)}
-.opt.wrong{text-decoration:none;border-color:var(--ink-2);background:var(--surface-2)}
+.opt.wrong{text-decoration:none;border-color:var(--red);background:var(--red-l)}
 .opt .tick{margin-left:auto;font-size:.75rem;font-weight:800;white-space:nowrap}
 .q .res{margin:0 1.1rem .8rem;font-weight:700;font-size:.9rem}
 .q .res.ok{color:var(--green)}.q .res.no{color:var(--red)}

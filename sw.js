@@ -1,5 +1,5 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v36';
+const CACHE_NAME = 'pediatria-hub-v39';
 
 const PRECACHE_ASSETS = [
   './',
@@ -8,6 +8,7 @@ const PRECACHE_ASSETS = [
   './css/hub.css',
   './atlasy/atlas-base.css',
   './atlasy/atlas-mobile.css',
+  './atlasy/atlas-hub-sync.js',
   './js/meta.js',
   './js/questions.js',
   './js/questions_zaklad.js',

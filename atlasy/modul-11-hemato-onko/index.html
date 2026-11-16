@@ -11,13 +11,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <title>[11] Nowotwory układu krwiotwórczego i chłonnego – objawy, badanie, diagnostyka</title>
 <meta name="description" content="Atlas do nauki pediatrii: objawy, badanie przedmiotowe i plan diagnostyczny w białaczkach i chłoniakach u dzieci, ze schematami i zadaniami testowymi z omówieniami.">
 <link rel="preconnect" href="https://api.fontshare.com">
-<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
-<body>
+<body class="practice">
 <nav class="nav" aria-label="Nawigacja po sekcjach"><div class="wrap">
+<a class="hub-back" href="../../index.html">← Hub</a>
 <b>[11] Hemato-onko</b>
 <a href="#mapa">Mapa</a><a href="#objawy">Objawy</a><a href="#nagle">Stany nagłe</a><a href="#badanie">Badanie</a><a href="#diagnostyka">Diagnostyka</a><a href="#wiek">Wiek</a><a href="#zadania">Zadania</a><a href="#rozbieznosci">Pula vs wytyczne</a><a href="#perly">Perły</a><a href="#zrodla">Źródła</a>
 </div></nav>
@@ -33,8 +34,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <div class="chip"><b>30</b><span>zadań testowych z omówieniem</span></div>
 </div>
 <div class="legend" aria-label="Legenda kolorów">
-<span style="background:var(--green-bg)">zielone: prawda / poprawna odpowiedź</span>
-<span style="background:var(--red-bg)">czerwone: poprawna odpowiedź w pytaniu "wskaż fałszywe / nie"</span>
+<span style="background:var(--green-bg)">zielone: prawda / poprawna odpowiedź (w tym [FAŁSZ] dla pytań „wskaż fałszywe / nie”)</span>
 <span style="background:var(--warn-bg)">bursztynowe: klucz niepewny lub zależny od źródła</span>
 <span class="note">[różowy nawias: krótka notatka]</span>
 </div>
@@ -188,11 +188,12 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 
 <section id="zadania"><div class="wrap">
 <h2 data-n="07 · ZADANIA TESTOWE Z OMÓWIENIEM">Pula zadań dla modułu [11]</h2>
-<p class="intro">Treści pochodzą z plików puli w Projekcie. Gdy klucz nie jest zaznaczony w pliku, napisano to wprost, a odpowiedź uzasadniono merytorycznie. Zielone podświetlenie oznacza poprawną odpowiedź, czerwone poprawną odpowiedź w pytaniach "wskaż fałszywe / nie", bursztynowe klucz niepewny.</p>
+<p class="intro">Treści pochodzą z plików puli w Projekcie. Gdy klucz nie jest zaznaczony w pliku, napisano to wprost, a odpowiedź uzasadniono merytorycznie. Zielone podświetlenie oznacza poprawną odpowiedź (z etykietą [FAŁSZ — poprawna odpowiedź] dla pytań „wskaż fałsz / nie”), bursztynowe klucz niepewny, a czerwone błędną próbę w trybie ćwiczeń.</p>
 <div class="toolbar">
-<button class="btn" id="toggle-practice" type="button" aria-pressed="false">Tryb ćwiczeń: wyłączony</button>
+<button class="btn" id="toggle-practice" type="button" aria-pressed="true">Tryb ćwiczeń: włączony</button>
 <button class="btn" id="reveal-all" type="button">Pokaż wszystkie</button>
 <button class="btn" id="hide-all" type="button">Ukryj wszystkie</button>
+<span class="tbadge" id="score" role="status"></span>
 </div>
 <div class="key-wrap key" id="quiz">
 <h3 class="block-title">A. Objawy i rozpoznanie kliniczne</h3><article class="q" id="z1">
@@ -479,5 +480,6 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 </div></section>
 </main>
 <footer><div class="wrap">Moduł [11] · Pediatria, 5. rok · materiał edukacyjny oparty na puli zakładu i wytycznych; weryfikuj dawki i lokalne protokoły przed zastosowaniem.</div></footer>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body></html>

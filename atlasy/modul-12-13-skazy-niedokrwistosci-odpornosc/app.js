@@ -1,6 +1,6 @@
 (function(){
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const C={red:'#C23B2A',redl:'#FBE6E2',blue:'#2B63AE',bluel:'#E1ECF9',green:'#2F8450',greenl:'#E1F3E7',violet:'#6E4CB0',violetl:'#ECE6F8',amber:'#B8730F',amberl:'#FCEFD6',teal:'#0C7A85',teall:'#DDF1F2',ink:'#13232C',mut:'#6B7A82',rose:'#B4325A',rosel:'#FBE7EE',line:'#DCE2E0'};
+const C={red:'#C23B2A',redl:'#FBE6E2',blue:'#2B63AE',bluel:'#E1ECF9',green:'#2F8450',greenl:'#E1F3E7',violet:'#245B7A',violetl:'#E1EFF5',amber:'#B8730F',amberl:'#FCEFD6',teal:'#0C7A85',teall:'#DDF1F2',ink:'#13232C',mut:'#6B7A82',rose:'#B4325A',rosel:'#FBE7EE',line:'#DCE2E0'};
 const A=(u,t)=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
 
 /* ---------- helpery SVG ---------- */
@@ -320,10 +320,10 @@ $('#xchips').innerHTML=[['HUS','[1] [3] [12] [15]'],['IgAV','[1] [4] [12]'],['WA
 /* ---------- Quiz ---------- */
 (function(){
  const L=['a','b','c','d','e'],CB={src:'POTWIERDZONY',inf:'WNIOSKOWANY',unk:'BRAK KLUCZA',did:'DYDAKTYCZNE'};
- let mode='study',flt='all',query='',state={},ans=0,good=0;
+ let mode='practice',flt='all',query='',state={},ans=0,good=0;
  const modCls=m=>m.includes('[12]')?'m12':m.includes('13a')?'m13a':'m13b';
- function keyCls(q){return (q.neg?'key-r':(q.conf==='src'?'key-g':'key-a'))+((q.neg&&q.conf!=='src')?' key-a':'')}
- function keyTxt(q){return q.neg?'szukana odpowiedź (fałsz / wyjątek)':q.conf==='src'?'klucz potwierdzony':'klucz niepotwierdzony'}
+ function keyCls(q){return (q.conf==='src'||q.neg?'key-g':'key-a')+((q.neg&&q.conf!=='src')?' key-a':'')}
+ function keyTxt(q){return q.neg?'[FAŁSZ — poprawna odpowiedź]':q.conf==='src'?'klucz potwierdzony':'klucz niepotwierdzony'}
  function match(q){
   if(flt==='m12'&&!q.m.includes('[12]'))return false;
   if(flt==='m13a'&&!q.m.includes('13a'))return false;
@@ -425,7 +425,7 @@ $('#srcList').innerHTML=[
 ].map(x=>`<li>${x[0]}: <a href="${x[1]}" target="_blank" rel="noopener noreferrer">${x[1]}</a></li>`).join('');
 
 /* ---------- nawigacja: aktywny link ---------- */
-const links=$$('.nav a'),secs=links.map(a=>$(a.getAttribute('href'))).filter(Boolean);
+const links=$$('.nav a[href^="#"]'),secs=links.map(a=>$(a.getAttribute('href'))).filter(Boolean);
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-40% 0px -55% 0px'});
 secs.forEach(s=>io.observe(s));
 })();

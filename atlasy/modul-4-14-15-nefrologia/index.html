@@ -10,13 +10,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>[4][14][15] Nefrologia dziecięca – KZN, AKI i PChN, ZUM</title>
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <a class="hub-back" href="../../index.html">← Hub</a>
   <div class="brand"><b>[4][14][15]</b> <span>Nefrologia</span></div>
   <ul id="navlist">
     <li><a href="#przeglad">Przegląd</a></li>
@@ -104,6 +105,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 </div>
 </header>
 
+<main>
 <!-- ================= [4] KZN ================= -->
 <section id="kzn"><div class="wrap">
   <div class="sec-head"><span class="bigm m4">[4]</span><div><div class="eyebrow">Kłębuszkowe zapalenia nerek</div><h2>Pacjent z uszkodzeniem nerek</h2></div></div>
@@ -444,8 +446,10 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </div>
   <p class="footnote" style="margin-top:1rem">Dawek leków nie podaję poza tymi, które zawiera wykład zakładu lub cytowana wytyczna. Dawkowanie ustala aktualna charakterystyka produktu i protokół ośrodka.</p>
 </div></section>
+</main>
 
 <script src="data.js"></script>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

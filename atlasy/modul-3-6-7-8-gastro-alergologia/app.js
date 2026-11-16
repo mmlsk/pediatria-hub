@@ -34,7 +34,7 @@ TOP.forEach(([n,v])=>{bars.insertAdjacentHTML('beforeend',`<div class="bar"><spa
       const x=x0+4+k*16;
       if(st.h>0) out+=`<rect x="${x}" y="${base-st.h}" width="10" height="${st.h}" rx="5" fill="#F0B79C" stroke="#B5533C" stroke-width="1"/>`;
       out+=`<rect x="${x+11}" y="${base}" width="4" height="${st.d}" rx="2" fill="#C9705A"/>`;
-      if(st.iel){ const ys=st.h>0?[base-st.h+6,base-st.h/2]:[base-3]; ys.forEach(y=>{out+=`<circle cx="${x+5}" cy="${y}" r="2.6" fill="#6E4CB0"/>`}); }
+      if(st.iel){ const ys=st.h>0?[base-st.h+6,base-st.h/2]:[base-3]; ys.forEach(y=>{out+=`<circle cx="${x+5}" cy="${y}" r="2.6" fill="#245B7A"/>`}); }
     }
     out+=`<text x="${x0+42}" y="186" text-anchor="middle" font-family="Satoshi,sans-serif" font-weight="800" font-size="12" fill="#13232C">${st.t}</text>`;
     out+=`<text x="${x0+42}" y="202" text-anchor="middle" font-family="Satoshi,sans-serif" font-size="10" fill="#44545D">${st.s}</text>`;
@@ -88,6 +88,7 @@ function tail(q){
 function mcq(q,n){
   const L='ABCDE';
   const el=document.createElement('article'); el.className='q';
+  const qi=QS.indexOf(q); if(qi>=0) el.dataset.hubId='gastro-q'+(qi+1);
   el.innerHTML=head(q,n)+`<div class="stem">${q.stem}${q.multi?' <span class="small">(możliwych kilka odpowiedzi)</span>':''}</div><ul class="opts">${q.o.map((o,i)=>`<li><button class="opt" data-i="${i}"><span class="l">${L[i]}</span><span>${o}</span></button></li>`).join('')}</ul>${q.multi?'<button class="check">Sprawdź</button>':''}<div class="sectitle" hidden>Omówienie</div>${tail(q)}`;
   const btns=$$('.opt',el), disc=$('.disc',el), st=$('.sectitle',el);
   function finish(correct){

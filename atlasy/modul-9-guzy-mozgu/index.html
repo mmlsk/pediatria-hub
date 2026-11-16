@@ -10,13 +10,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>[9] Guzy mózgu u dzieci – atlas do zaliczenia z pediatrii</title>
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <a class="hub-back" href="../../index.html">← Hub</a>
   <div class="brand"><b>[9]</b> <span>Guzy mózgu</span></div>
   <ul id="navlist">
     <li><a href="#wystepowanie">Występowanie</a></li>
@@ -64,10 +65,10 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <!-- IV ventricle -->
       <path d="M292 232 L304 222 L304 250 L292 246Z" fill="#fff" stroke="#C23B2A" stroke-width="2"/>
       <!-- spinal cord -->
-      <path d="M312 300 L346 300 L342 420 L316 420Z" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2.5"/>
-      <path d="M329 305 L329 415" stroke="#A790D8" stroke-width="2" stroke-dasharray="4 4"/>
+      <path d="M312 300 L346 300 L342 420 L316 420Z" fill="#E1EFF5" stroke="#245B7A" stroke-width="2.5"/>
+      <path d="M329 305 L329 415" stroke="#4FA3CC" stroke-width="2" stroke-dasharray="4 4"/>
       <!-- pineal -->
-      <circle cx="320" cy="196" r="9" fill="#6E4CB0"/>
+      <circle cx="320" cy="196" r="9" fill="#245B7A"/>
       <!-- markers -->
       <g font-size="13" font-weight="800" fill="#fff" text-anchor="middle">
         <circle cx="270" cy="120" r="12" fill="#2B63AE"/><text x="270" y="125">1</text>
@@ -75,7 +76,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <circle cx="398" cy="208" r="12" fill="#B8730F"/><text x="398" y="213">2</text>
         <circle cx="236" cy="236" r="12" fill="#C23B2A"/><text x="236" y="241">3</text>
         <circle cx="329" cy="258" r="12" fill="#C23B2A"/><text x="329" y="263">4</text>
-        <circle cx="329" cy="360" r="12" fill="#6E4CB0"/><text x="329" y="365">5</text>
+        <circle cx="329" cy="360" r="12" fill="#245B7A"/><text x="329" y="365">5</text>
       </g>
       </svg>
     <div class="herolist">
@@ -83,8 +84,8 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <div><b style="color:#8F5808">2 Okolica siodłowa 16%</b> czaszkogardlak 9, gruczolak 3</div>
       <div><b style="color:#C23B2A">3 Móżdżek 45%</b> rdzeniak 25, astrocytoma 18</div>
       <div><b style="color:#C23B2A">4 Pień mózgu 15%</b> astrocytoma, wyściółczak, GBM</div>
-      <div><b style="color:#6E4CB0">5 Rdzeń kręgowy 12%</b> Th 60%, L/S 30%</div>
-      <div><b style="color:#6E4CB0">Szyszynka</b> germinoma, pineoblastoma</div>
+      <div><b style="color:#245B7A">5 Rdzeń kręgowy 12%</b> Th 60%, L/S 30%</div>
+      <div><b style="color:#245B7A">Szyszynka</b> germinoma, pineoblastoma</div>
     </div>
     <figcaption>Schemat poglądowy, wartości wg wykładu. Czerwony = podnamiotowo, niebieski = nadnamiotowo, bursztynowy = okolica siodłowa, fiolet = szyszynka i rdzeń. IV komora: wyściółczak (60% w tylnym dole).</figcaption>
   </figure>
@@ -110,7 +111,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <div class="bars" id="barsLoc"></div>
     </div>
     <div class="card">
-      <h4>Typy histologiczne wg wykładu (% guzów mózgu)</h4>
+      <h3>Typy histologiczne wg wykładu (% guzów mózgu)</h3>
       <p class="small" style="margin-bottom:.6rem">Suma wymienionych typów to ok. 90%. Rdzeniak i astrocytoma móżdżku dominują w tylnym dole.</p>
       <div class="bars" id="barsHist"></div>
     </div>
@@ -238,7 +239,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <li><b>Rdzeniak / wyściółczak wysokiego stopnia:</b> trepanobiopsja szpiku, scyntygrafia kości, TK jamy brzusznej</li>
         <li>TK i angio-MR: unaczynienie i operacyjność; biopsja stereotaktyczna lub endoskopowa; fenestracja endoskopowa zamiast zastawki</li>
       </ul></div>
-    <div class="card"><h4>🩺 Aktualnie klinicznie</h4>
+    <div class="card"><h3>🩺 Aktualnie klinicznie</h3>
       <ul class="tight small">
         <li>MRI mózgu i <b>całego rdzenia</b>, najlepiej przed operacją, aby krew pooperacyjna nie imitowała przerzutów</li>
         <li>MRI pooperacyjne w 24–72 h, aby wiarygodnie ocenić resztkę</li>
@@ -264,7 +265,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <text x="250" y="86" text-anchor="middle" font-size="12.5" fill="#44545D">komory i zbiorniki PMR</text>
         <rect x="236" y="150" width="30" height="62" rx="8" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
         <text x="282" y="186" font-size="12.5" fill="#C23B2A" font-weight="700">IV komora: rdzeniak, wyściółczak</text>
-        <rect x="238" y="212" width="26" height="170" rx="8" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2"/>
+        <rect x="238" y="212" width="26" height="170" rx="8" fill="#E1EFF5" stroke="#245B7A" stroke-width="2"/>
         <g stroke="#C23B2A" stroke-width="2.2" fill="none" marker-end="url(#ar3)"><path d="M251 212 L251 292"/><path d="M251 292 L251 360"/></g>
         <g fill="#C23B2A"><circle cx="251" cy="330" r="6"/><circle cx="251" cy="352" r="6"/><circle cx="251" cy="372" r="6"/></g>
         <text x="282" y="300" font-size="12.5" fill="#44545D">przerzuty „kroplowe” w kanale kręgowym</text>
@@ -276,7 +277,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <div class="stack">
       <div class="card"><h3>Rozsiew po PMR (RTH całego OUN, MRI rdzenia, cytologia)</h3>
         <p><span class="pill r">rdzeniak / PNET</span><span class="pill r">wyściółczak anaplastyczny (także kości)</span><span class="pill r">pineoblastoma</span><span class="pill a">guzy zarodkowe (uzupełnienie)</span></p></div>
-      <div class="card"><h4>Zwykle bez rozsiewu</h4>
+      <div class="card"><h3>Zwykle bez rozsiewu</h3>
         <p><span class="pill g">astrocytoma pilocytarny</span><span class="pill g">astrocytoma móżdżku (niski stopień)</span><span class="pill g">czaszkogardlak</span><span class="pill g">oponiak</span></p>
         <p class="small">Pewny klucz puli: astrocytoma pilocyticum nie daje przerzutów po PMR.</p></div>
       <div class="callout"><b class="k">Pod zaliczenie</b>Wykład: rdzeniak i PNET rozsiewają się po przestrzeniach płynowych, nie da się ich całkowicie wyciąć (wzrost naciekający). Wyściółczak anaplastyczny daje przerzuty do kości.</div>
@@ -302,14 +303,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <svg viewBox="0 0 580 400" id="spSvg" role="img" aria-label="Przekrój poprzeczny kanału kręgowego z trzema przedziałami guzów">
         <ellipse cx="190" cy="190" rx="150" ry="140" fill="#F5E9DB" stroke="#B8730F" stroke-width="2"/>
         <ellipse cx="190" cy="190" rx="112" ry="104" fill="#fff" stroke="#6B7A82" stroke-width="2.5"/>
-        <ellipse cx="190" cy="188" rx="58" ry="52" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2.5"/>
+        <ellipse cx="190" cy="188" rx="58" ry="52" fill="#E1EFF5" stroke="#245B7A" stroke-width="2.5"/>
         <path d="M190 150 L190 226 M152 188 L228 188" stroke="#C9BCE8" stroke-width="1.5"/>
-        <circle cx="190" cy="188" r="17" fill="#6E4CB0"/>
+        <circle cx="190" cy="188" r="17" fill="#245B7A"/>
         <circle cx="262" cy="138" r="17" fill="#2B63AE"/>
         <circle cx="190" cy="324" r="17" fill="#C23B2A"/>
         <g stroke="#9AA7AD" stroke-width="1.3" fill="none"><path d="M207 188 L340 70"/><path d="M276 138 L340 140"/><path d="M207 324 L340 300"/></g>
         <g font-size="12.5" fill="#13232C">
-          <text x="345" y="56" font-weight="800" fill="#6E4CB0" font-size="14">Śródrdzeniowe</text>
+          <text x="345" y="56" font-weight="800" fill="#245B7A" font-size="14">Śródrdzeniowe</text>
           <text x="345" y="74">astrocytoma, wyściółczak,</text><text x="345" y="90">oligodendroglioma</text>
           <text x="345" y="106" fill="#44545D">naciekają; mogą nie boleć</text>
           <text x="345" y="134" font-weight="800" fill="#2B63AE" font-size="14">Zewnątrzrdzeniowe</text>
@@ -361,8 +362,8 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <rect x="250" y="148" width="205" height="150" rx="12" fill="#FBE6E2" stroke="#C23B2A" stroke-width="2"/>
         <text x="266" y="172" font-weight="800" fill="#C23B2A" font-size="14">Rdzeniak ≥ 3 lat</text>
         <text x="266" y="194">• resekcja + MRI pooperacyjne</text><text x="266" y="212">• RTH całego OUN + boost</text><text x="266" y="230">• CTH uzupełniająca</text><text x="266" y="248">• ryzyko standardowe vs wysokie</text><text x="266" y="266">  (resztka ≤ 1,5 cm², M0)</text><text x="266" y="284">• 5-letnie przeżycie 50–70%</text>
-        <rect x="480" y="148" width="205" height="150" rx="12" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="2"/>
-        <text x="496" y="172" font-weight="800" fill="#6E4CB0" font-size="14">Dziecko &lt; 3 lat</text>
+        <rect x="480" y="148" width="205" height="150" rx="12" fill="#E1EFF5" stroke="#245B7A" stroke-width="2"/>
+        <text x="496" y="172" font-weight="800" fill="#245B7A" font-size="14">Dziecko &lt; 3 lat</text>
         <text x="496" y="194">• resekcja + CTH</text><text x="496" y="212">• RTH całego OUN pomijana</text><text x="496" y="230">  lub odraczana (neurotoks.)</text><text x="496" y="248">• CTH wysokodawkowa</text><text x="496" y="266">  z autoprzeszczepem</text><text x="496" y="284">  (wybrane protokoły)</text>
         <rect x="710" y="148" width="170" height="150" rx="12" fill="#FCEFD6" stroke="#B8730F" stroke-width="2"/>
         <text x="726" y="172" font-weight="800" fill="#8F5808" font-size="14">Inne</text>
@@ -384,13 +385,13 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="grid2" style="margin-top:1.4rem">
     <div class="card"><h3>Zakres resekcji wg wykładu</h3>
       <div class="tw" style="margin-top:.5rem"><table id="resTable"></table></div></div>
-    <div class="card"><h4>Wyniki leczenia wg wykładu</h4><p class="small" style="margin-bottom:.6rem">Różne punkty końcowe (przeżycie całkowite, EFS), więc nie porównuj słupków bezpośrednio.</p><div class="bars" id="barsOut"></div></div>
+    <div class="card"><h3>Wyniki leczenia wg wykładu</h3><p class="small" style="margin-bottom:.6rem">Różne punkty końcowe (przeżycie całkowite, EFS), więc nie porównuj słupków bezpośrednio.</p><div class="bars" id="barsOut"></div></div>
   </div>
 
   <div class="grid3" style="margin-top:1.2rem">
-    <div class="tcard"><h4>🗡️ Neurochirurgia</h4><ul><li>Histologia najmniej urazowo, maksymalna bezpieczna resekcja, odbarczenie PMR</li><li>Biopsja stereotaktyczna lub endoskopowa, gdy resekcja niemożliwa</li><li>Fenestracja endoskopowa może zastąpić zastawkę</li></ul></div>
-    <div class="tcard r"><h4>☢️ Radioterapia</h4><ul><li>Większość chorych, bo operacja zwykle nieradykalna</li><li>Zwykle miejscowo (loża guza); całe OUN tylko przy rozsiewie po PMR</li><li>Stereotaktyczna, hiperfrakcjonowana (2 razy dziennie), brachyterapia</li></ul></div>
-    <div class="tcard b"><h4>💉 Chemioterapia</h4><ul><li>Uzupełnia operację; wynik zależy od budowy i kinetyki guza, indeksu mitotycznego, dystrybucji leku, przepływu PMR i podania dokanałowego</li><li>Terapie celowane: dabrafenib + trametynib (LGG z BRAF V600E, od 1 r.ż.), tovorafenib (nawrót, fuzja BRAF), dordaviprone (DMG H3 K27M po wcześniejszym leczeniu)</li></ul></div>
+    <div class="tcard"><h3>🗡️ Neurochirurgia</h3><ul><li>Histologia najmniej urazowo, maksymalna bezpieczna resekcja, odbarczenie PMR</li><li>Biopsja stereotaktyczna lub endoskopowa, gdy resekcja niemożliwa</li><li>Fenestracja endoskopowa może zastąpić zastawkę</li></ul></div>
+    <div class="tcard r"><h3>☢️ Radioterapia</h3><ul><li>Większość chorych, bo operacja zwykle nieradykalna</li><li>Zwykle miejscowo (loża guza); całe OUN tylko przy rozsiewie po PMR</li><li>Stereotaktyczna, hiperfrakcjonowana (2 razy dziennie), brachyterapia</li></ul></div>
+    <div class="tcard b"><h3>💉 Chemioterapia</h3><ul><li>Uzupełnia operację; wynik zależy od budowy i kinetyki guza, indeksu mitotycznego, dystrybucji leku, przepływu PMR i podania dokanałowego</li><li>Terapie celowane: dabrafenib + trametynib (LGG z BRAF V600E, od 1 r.ż.), tovorafenib (nawrót, fuzja BRAF), dordaviprone (DMG H3 K27M po wcześniejszym leczeniu)</li></ul></div>
   </div>
 </div></section>
 
@@ -468,6 +469,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <p class="small" style="margin-top:1rem">Wyszukiwanie w premium.mp.pl (podręcznik Pediatria) nie zwróciło dedykowanego rozdziału o guzach mózgu, więc aktualizacje opierają się na wytycznych międzynarodowych. Weryfikuj lokalne protokoły (np. PTOHD, krajowe programy leczenia) przed zastosowaniem klinicznym.</p>
 </div></footer>
 <script src="data.js"></script>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

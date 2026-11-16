@@ -356,7 +356,7 @@ function viewDiagnostics(parts, params) {
         <text x="${Math.max(75, hx)}" y="${hy > 150 ? hy - hr - 12 : hy + hr + 22}" fill="#fff" font-size="9.5" font-weight="700" text-anchor="middle">🎯 ${esc(hotspot.name.slice(0, 22))}</text>
       </g>` : '';
 
-    const hitZone = `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="transparent" class="imaging-hit-circle" data-hotspot-hit="1" style="cursor:crosshair" />`;
+    const hitZone = `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="transparent" class="imaging-hit-circle" data-hotspot-hit="1" tabindex="0" role="button" aria-label="${esc('Zlokalizuj patologię: ' + hotspot.name)}" style="cursor:crosshair" />`;
 
     let body = '';
 
@@ -530,7 +530,7 @@ function viewDiagnostics(parts, params) {
       `;
     }
 
-    return `<svg id="imagingSvgCanvas" data-case-id="${caseItem.id}" viewBox="0 0 320 220" class="imaging-canvas-svg">${body}${highlightSvg}${hitZone}</svg>`;
+    return `<svg id="imagingSvgCanvas" data-case-id="${caseItem.id}" viewBox="0 0 320 220" class="imaging-canvas-svg" role="group" aria-label="${esc(caseItem.title + ' — kliknij obraz lub naciśnij Enter na obszarze patologii')}">${body}${highlightSvg}${hitZone}</svg>`;
   };
 
   /* 5. Interactive Imaging & EKG Trainer */
@@ -1552,9 +1552,19 @@ function viewDiagnostics(parts, params) {
 
       const svgCanvas = $('#imagingSvgCanvas');
       if (svgCanvas) {
-        svgCanvas.onclick = e => {
+        const markHotspotHit = activeCase => {
+          if (!IMAGING_PROGRESS[activeCase.id]) IMAGING_PROGRESS[activeCase.id] = {};
+          IMAGING_PROGRESS[activeCase.id].hotspot = true;
+          saveImagingProgress();
+          IMAGING_LAST_FEEDBACK = { type: 'hit', text: `Zlokalizowano patologię: ${activeCase.hotspot.name}. Krok 2 (Decyzja kliniczna) został odblokowany!` };
+          render();
+        };
+        const getActiveCase = () => {
           const cases = IMAGING_TRAINER_CASES || [];
-          const activeCase = cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+          return cases.find(c => c.id === ACTIVE_IMAGING_CASE_ID) || cases[0];
+        };
+        svgCanvas.onclick = e => {
+          const activeCase = getActiveCase();
           if (!activeCase) return;
 
           const rect = svgCanvas.getBoundingClientRect();
@@ -1566,15 +1576,18 @@ function viewDiagnostics(parts, params) {
           const dist = Math.sqrt((clickX - tx) ** 2 + (clickY - ty) ** 2);
 
           if (dist <= tr + 15 || e.target.closest('[data-hotspot-hit]')) {
-            if (!IMAGING_PROGRESS[activeCase.id]) IMAGING_PROGRESS[activeCase.id] = {};
-            IMAGING_PROGRESS[activeCase.id].hotspot = true;
-            saveImagingProgress();
-            IMAGING_LAST_FEEDBACK = { type: 'hit', text: `Zlokalizowano patologię: ${activeCase.hotspot.name}. Krok 2 (Decyzja kliniczna) został odblokowany!` };
-            render();
+            markHotspotHit(activeCase);
           } else {
             IMAGING_LAST_FEEDBACK = { type: 'miss', text: activeCase.hotspot.hint };
             render();
           }
+        };
+        svgCanvas.onkeydown = e => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          if (!e.target.closest('[data-hotspot-hit]')) return;
+          e.preventDefault();
+          const activeCase = getActiveCase();
+          if (activeCase) markHotspotHit(activeCase);
         };
       }
 

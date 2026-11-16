@@ -2,7 +2,7 @@
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const NS='http://www.w3.org/2000/svg';
 const A=(u,t)=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
-const C={red:'#C23B2A',blue:'#2B63AE',green:'#2F8450',violet:'#6E4CB0',amber:'#B8730F',teal:'#0C7A85',ink:'#13232C'};
+const C={red:'#C23B2A',blue:'#2B63AE',green:'#2F8450',violet:'#245B7A',amber:'#B8730F',teal:'#0C7A85',ink:'#13232C'};
 
 /* ---------- Hero SVG: schemat narząd -> guz ---------- */
 (function(){
@@ -621,7 +621,7 @@ $('#gapTable').innerHTML=`<tr><th>Temat</th><th>Pod zaliczenie (wg puli/zakładu
 
 /* ---------- Graf międzymodułowy ---------- */
 (function(){
- const N=[['HUS: guz + krwiomocz','[3][12][15]','#2B63AE'],['Wgłobienie, ból brzucha','[1]','#2F8450'],['Guz rdzenia, guz siodłowy','[9]','#6E4CB0'],['Chłoniak, migdałek','[11]','#C23B2A'],['Guz śródpiersia','[11]','#C23B2A'],['LCH, wytrzeszcz','[11]','#C23B2A'],['Nawracające ZUM, krwiomocz','[14]','#2B63AE'],['Wiskott-Aldrich → NHL','[13]','#B8730F'],['Ból kostny vs ALL','[11]','#C23B2A'],['Zespół lizy guza','[5][11]','#2F8450']];
+ const N=[['HUS: guz + krwiomocz','[3][12][15]','#2B63AE'],['Wgłobienie, ból brzucha','[1]','#2F8450'],['Guz rdzenia, guz siodłowy','[9]','#245B7A'],['Chłoniak, migdałek','[11]','#C23B2A'],['Guz śródpiersia','[11]','#C23B2A'],['LCH, wytrzeszcz','[11]','#C23B2A'],['Nawracające ZUM, krwiomocz','[14]','#2B63AE'],['Wiskott-Aldrich → NHL','[13]','#B8730F'],['Ból kostny vs ALL','[11]','#C23B2A'],['Zespół lizy guza','[5][11]','#2F8450']];
  let s='';const cx=340,cy=240,rx=255,ry=190;
  N.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length,x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#B5C0C3" stroke-width="2"/>`;});
  N.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length,x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);

@@ -15,7 +15,7 @@ bars('barsFreq',FREQ,'');
 
 /* ===== PAT ===== */
 const PAT={
- a:{c:'#6E4CB0',t:'🧒 Wygląd (Appearance)',d:'Odzwierciedla perfuzję i oksygenację mózgu, stan metaboliczny i neurologiczny. Nieprawidłowy wygląd to wczesny, niespecyficzny sygnał ciężkiego stanu: niedotlenienie, hipoperfuzja, hipoglikemia, zatrucie, neuroinfekcja.',
+ a:{c:'#245B7A',t:'🧒 Wygląd (Appearance)',d:'Odzwierciedla perfuzję i oksygenację mózgu, stan metaboliczny i neurologiczny. Nieprawidłowy wygląd to wczesny, niespecyficzny sygnał ciężkiego stanu: niedotlenienie, hipoperfuzja, hipoglikemia, zatrucie, neuroinfekcja.',
    b:'Bez dotykania dziecka: czy patrzy na rodzica, reaguje, daje się ukoić, płacze głośno?'},
  b:{c:'#2B63AE',t:'🫁 Praca oddychania (Work of breathing)',d:'Ocenia wysiłek oddechowy, nie samą liczbę oddechów. Szukaj: nietypowej pozycji (trójnoga), stridoru, świstów słyszalnych bez stetoskopu, stękania, rozszerzania skrzydełek nosa, retrakcji. Z seminarium zakładu: stękanie, rozszerzanie skrzydełek nosa i „cicha klatka” są objawami alarmowymi.',
    b:'Dodatkowo liczba oddechów wg wieku: <1 r.ż. 30–40; 2–5 lat 20–30; 5–12 lat 15–20; >12 lat 12–16 na minutę.'},
@@ -142,7 +142,7 @@ $('#shockTypes').innerHTML=[
  ['r','🦠','Dystrybucyjny','sepsa, anafilaksja, neurogenny','Sepsa: płyny + antybiotyk. Anafilaksja: adrenalina i.m.'],
  ['v','💔','Kardiogenny','kardiomiopatia, zapalenie mięśnia sercowego, wady','Hepatomegalia, rzężenia; płyny ostrożnie.'],
  ['a','🫁','Obturacyjny','odma prężna, tamponada, zatorowość','Odbarczenie lub leczenie przyczyny.']
-].map(x=>`<div class="tcard ${x[0]}"><h4><span class="em">${x[1]}</span> ${x[2]}</h4><p class="small"><b>Przyczyny:</b> ${x[3]}</p><p class="small" style="margin-top:.4rem"><b>Postępowanie:</b> ${x[4]}</p></div>`).join('');
+].map(x=>`<div class="tcard ${x[0]}"><h3><span class="em">${x[1]}</span> ${x[2]}</h3><p class="small"><b>Przyczyny:</b> ${x[3]}</p><p class="small" style="margin-top:.4rem"><b>Postępowanie:</b> ${x[4]}</p></div>`).join('');
 $('#dehyTable').innerHTML=`<thead><tr><th>Ubytek masy</th><th>Stopień</th><th>Objawy (standard kliniczny, [3])</th><th>Postępowanie</th></tr></thead><tbody>
 <tr><td><b>&lt;5%</b></td><td><span class="sev g">lekkie</span></td><td>pragnienie, prawidłowe parametry życiowe</td><td>ORS</td></tr>
 <tr><td><b>5–10%</b></td><td><span class="sev a">umiarkowane</span></td><td>suche błony śluzowe, zapadnięte ciemiączko, tachykardia, skąpomocz</td><td>ORS lub nawodnienie i.v.</td></tr>
@@ -152,7 +152,7 @@ $('#dehyTable').innerHTML=`<thead><tr><th>Ubytek masy</th><th>Stopień</th><th>O
  [[10,150,'#2F8450','<5%','😐 lekkie'],[160,170,'#B8730F','5–10%','😟 umiarkowane'],[330,180,'#C23B2A','>10%','😵 ciężkie']].forEach(([x,w,c,t,l])=>{
   h+=`<rect x="${x}" y="40" width="${w}" height="46" rx="10" fill="${c}"/><text x="${x+w/2}" y="69" font-size="20" font-weight="800" fill="#fff" text-anchor="middle">${t}</text><text x="${x+w/2}" y="108" font-size="12" font-weight="700" fill="${c}" text-anchor="middle">${l}</text>`});
  h+=`<text x="10" y="150" font-size="13" font-weight="800" fill="#13232C">Zapotrzebowanie dobowe (wykład zakładu)</text>`;
- [['1–10 kg','100 ml/kg','#2B63AE'],['10–20 kg','50 ml/kg','#6E4CB0'],['>20 kg','20 ml/kg','#0C7A85']].forEach(([a,b,c],i)=>{const x=10+i*170;
+ [['1–10 kg','100 ml/kg','#2B63AE'],['10–20 kg','50 ml/kg','#245B7A'],['>20 kg','20 ml/kg','#0C7A85']].forEach(([a,b,c],i)=>{const x=10+i*170;
   h+=`<rect x="${x}" y="162" width="160" height="44" rx="10" fill="${c}" opacity=".12" stroke="${c}" stroke-width="2"/><text x="${x+80}" y="180" font-size="12" font-weight="700" text-anchor="middle" fill="${c}">${a}</text><text x="${x+80}" y="198" font-size="14" font-weight="800" text-anchor="middle" fill="#13232C">${b}</text>`});
  $('#dehySvg').innerHTML=h;
 })();
@@ -217,7 +217,7 @@ flow('anaFlow',[
   ['0–5 min','#2B63AE','ABC, tlen',['glikemia przy łóżku','dostęp i.v./i.o.','czas napadu']],
   ['≥5 min','#C23B2A','1. benzodiazepina',['midazolam','i.m. / i.n. / bukalnie','lub lorazepam i.v.']],
   ['~10 min','#B8730F','2. dawka',['powtórz benzodiazepinę','maks. 2 dawki łącznie','']],
-  ['~20 min','#6E4CB0','II rząd',['lewetyracetam','fenytoina','lub waproinian']],
+  ['~20 min','#245B7A','II rząd',['lewetyracetam','fenytoina','lub waproinian']],
   ['>40 min','#13232C','III rząd, OIT',['tiopental','lub wlew','midazolamu']]];
  let h='';const w=146,g=12;
  h+=`<line x1="20" y1="40" x2="780" y2="40" stroke="#9AA7AD" stroke-width="3"/>`;
@@ -256,10 +256,10 @@ $('#toxTable').innerHTML=`<thead><tr><th>Środek / toksydrom</th><th>Wskazówki 
  const X=h=>40+h/24*700;
  let s=`<line x1="40" y1="110" x2="740" y2="110" stroke="#9AA7AD" stroke-width="4"/>`;
  [[0,'0 h'],[1,'1 h'],[2,'2 h'],[4,'4 h'],[8,'8 h'],[24,'24 h']].forEach(([h,l])=>s+=`<circle cx="${X(h)}" cy="110" r="7" fill="#13232C"/><text x="${X(h)}" y="136" font-size="12" font-weight="800" text-anchor="middle" fill="#13232C">${l}</text>`);
- s+=`<rect x="${X(0)}" y="84" width="${X(1)-X(0)}" height="12" rx="5" fill="#2B63AE"/><rect x="${X(1)}" y="84" width="${X(2)-X(1)}" height="12" rx="5" fill="#6E4CB0"/><rect x="${X(4)}" y="84" width="${X(24)-X(4)}" height="12" rx="5" fill="#C23B2A" opacity=".35"/>`;
+ s+=`<rect x="${X(0)}" y="84" width="${X(1)-X(0)}" height="12" rx="5" fill="#2B63AE"/><rect x="${X(1)}" y="84" width="${X(2)-X(1)}" height="12" rx="5" fill="#245B7A"/><rect x="${X(4)}" y="84" width="${X(24)-X(4)}" height="12" rx="5" fill="#C23B2A" opacity=".35"/>`;
  const box=(x,y,w,t,sub,c)=>`<rect x="${x}" y="${y}" width="${w}" height="72" rx="12" fill="#fff" stroke="${c}" stroke-width="2.5"/><text x="${x+w/2}" y="${y+24}" font-size="13" font-weight="800" text-anchor="middle" fill="${c}">${t}</text>`+sub.map((u,i)=>`<text x="${x+w/2}" y="${y+44+i*16}" font-size="11.5" text-anchor="middle" fill="#44545D">${u}</text>`).join('');
  s+=box(10,6,200,'Płukanie żołądka',['tylko w 1. godzinie','(klucz A17)'],'#2B63AE');
- s+=box(225,6,215,'Węgiel aktywny do 2 h',['dawka >200 mg/kg','lub >10 g'],'#6E4CB0');
+ s+=box(225,6,215,'Węgiel aktywny do 2 h',['dawka >200 mg/kg','lub >10 g'],'#245B7A');
  s+=box(455,6,310,'N-acetylocysteina (NAC)',['200 mg/kg w 4 h, potem 100 mg/kg w 16 h','schemat australijski'],'#2F8450');
  s+=box(10,150,240,'Zgłoszenie po 8 h lub brak wyniku',['zacznij NAC bez czekania na wynik'],'#B8730F');
  s+=box(300,150,280,'Stężenie paracetamolu ≥4 h',['nomogram Rumack–Matthew','oraz AlAT, INR'],'#C23B2A');
@@ -280,7 +280,7 @@ flow('pblsFlow',[
 (function(){
  const s=$('#crossSvg'),cx=340,cy=250;
  const N=[['[1]','Ból brzucha','wgłobienie, DKA, zatrucie'],['[2]','Zakażenia','sepsa, meningokoki'],['[3]','Biegunki','odwodnienie, hiponatremia'],['[4]','Zesp. nerczycowy','zakrzepica, zatorowość'],['[9]','Guzy mózgu','ICP, wgłobienie'],['[11]','Hemato-onko','asparaginaza, TLS'],['[12]+[15]','HUS','AKI, małopłytkowość']];
- const col=['#B8730F','#C23B2A','#2F8450','#2B63AE','#6E4CB0','#0C7A85','#B8730F'];
+ const col=['#B8730F','#C23B2A','#2F8450','#2B63AE','#245B7A','#0C7A85','#B8730F'];
  let h='';const pos=N.map((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length;return [cx+245*Math.cos(a),cy+195*Math.sin(a)]});
  pos.forEach(p=>h+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="#9AA7AD" stroke-width="2"/>`);
  h+=`<circle cx="${cx}" cy="${cy}" r="56" fill="#C23B2A"/><text x="${cx}" y="${cy}" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">[5]</text><text x="${cx}" y="${cy+20}" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Stany nagłe</text>`;

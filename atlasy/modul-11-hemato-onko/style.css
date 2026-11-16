@@ -9,20 +9,20 @@ a{text-decoration-thickness:1px;text-underline-offset:.18em}
 /* ===== moduł 11 (Hemato-onko) – akcent i komponenty własne ===== */
 .nav .wrap{gap:.25rem;overflow-x:auto;scrollbar-width:none}
 .nav .wrap::-webkit-scrollbar{display:none}
-.nav b{font-family:var(--font-display);font-weight:800;color:var(--red);margin-right:.5rem;white-space:nowrap}
-.nav a:hover,.nav a.act{background:var(--red-l);color:var(--red)}
+.nav b{font-family:var(--font-display);font-weight:800;color:var(--teal-d);margin-right:.5rem;white-space:nowrap}
+.nav a:hover,.nav a.act{background:var(--teal-l);color:var(--teal-d)}
 
-.hero{background:radial-gradient(900px 400px at 85% 0%,rgba(168,45,30,.12) 0,transparent 60%),var(--bg)}
-.tag{background:var(--red)}
+.hero{background:radial-gradient(900px 400px at 85% 0%,rgba(12,122,133,.10) 0,transparent 60%),var(--bg)}
+.tag{background:var(--teal)}
 .hero .chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:1.3rem;gap:.65rem}
 @media(max-width:720px){.hero .chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .hero .chip{border-radius:12px;padding:.65rem 1rem;box-shadow:var(--shadow);font-weight:500}
-.hero .chip b{display:block;font-family:var(--font-display);font-size:1.55rem;color:var(--red);line-height:1.1}
+.hero .chip b{display:block;font-family:var(--font-display);font-size:1.55rem;color:var(--teal-d);line-height:1.1}
 .hero .chip span{font-size:.83rem;color:var(--ink-2)}
 .legend{display:flex;flex-wrap:wrap;gap:.55rem;font-size:.86rem;margin-top:1.2rem}
 .legend span{padding:.22rem .65rem;border-radius:8px;color:var(--ink)}
 
-section>.wrap>h2::before{content:attr(data-n);font-family:var(--font-body);font-size:.8rem;font-weight:700;color:var(--red);display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem}
+section>.wrap>h2::before{content:attr(data-n);font-family:var(--font-body);font-size:.8rem;font-weight:700;color:var(--teal-d);display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem}
 .intro{color:var(--ink-2);max-width:72ch;margin-bottom:1.2rem}
 
 .card{margin:16px 0}
@@ -88,11 +88,14 @@ button.btn:hover,button.btn[aria-pressed=true]{background:var(--ink);border-colo
 ol.opts{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
 ol.opts li{padding:7px 12px;border-radius:8px;border:1px solid transparent;background:var(--surface-2)}
 ol.opts li b{margin-right:8px;color:var(--ink-2)}
-.key ol.opts li.ok{background:var(--green-l);border-color:var(--green);font-weight:600}
-.key ol.opts li.no{background:var(--red-l);border-color:var(--red);font-weight:600}
+.key ol.opts li.ok,.key ol.opts li.no{background:var(--green-l);border-color:var(--green);font-weight:600}
 .key ol.opts li.half{background:var(--amber-l);border-color:var(--amber);font-weight:600}
 .key ol.opts li:is(.ok,.no,.half) b,.practice .q.revealed ol.opts li:is(.ok,.no,.half) b{color:var(--ink)}
+.key ol.opts li.no::after,.practice .q.revealed ol.opts li.no::after{content:" [FAŁSZ — poprawna odpowiedź]";font-size:.75rem;font-weight:800;color:var(--green);margin-left:.45rem}
 .practice .q:not(.revealed) ol.opts li:is(.ok,.no,.half){background:var(--surface-2);border-color:transparent;font-weight:400}
+body.practice .q:not(.revealed) ol.opts li{cursor:pointer;transition:border-color .14s,background-color .14s}
+body.practice .q:not(.revealed) ol.opts li:hover{border-color:var(--teal)}
+.q.revealed ol.opts li.picked-bad{background:var(--red-l);border-color:var(--red);font-weight:600}
 .practice .q:not(.revealed) .ans{display:none}
 .q .tog{margin:6px 0}
 body:not(.practice) .q .tog{display:none}
@@ -104,17 +107,17 @@ ol.opts li.dim{opacity:.8}
 .vs div{border-radius:10px;padding:10px 12px;font-size:.93rem}
 .vs .pod{background:var(--blue-l);border:1px solid var(--blue-b)}.vs .akt{background:var(--green-l);border:1px solid var(--green-b)}
 .vs b{display:block;font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-.block-title{margin-top:34px;padding-bottom:6px;border-bottom:2px solid var(--red);display:inline-block}
+.block-title{margin-top:34px;padding-bottom:6px;border-bottom:2px solid var(--teal);display:inline-block}
 .src-list li{margin:.5em 0;word-break:break-word}
 .gap{background:var(--amber-l);border:1px solid rgba(143,88,8,.35);border-radius:var(--r);padding:16px 20px;margin:18px 0}
 .mini{font-size:.82rem;color:var(--ink-2)}
 .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:.93rem}
-.kv b{color:var(--red)}
+.kv b{color:var(--teal-d)}
 @media(max-width:520px){.kv{grid-template-columns:1fr}}
 @media print{.nav,.toolbar{display:none}}
 
 /* ===== dark theme nadpisania modułu 11 ===== */
-[data-theme="dark"] .hero{background:radial-gradient(880px 440px at 88% -8%,rgba(229,91,75,.14) 0,transparent 62%),var(--bg)}
+[data-theme="dark"] .hero{background:radial-gradient(880px 440px at 88% -8%,rgba(15,130,142,.16) 0,transparent 62%),var(--bg)}
 [data-theme="dark"] .red{border-color:rgba(229,91,75,.45)}
 [data-theme="dark"] .amber{border-color:rgba(229,154,36,.4)}
 [data-theme="dark"] .blue{border-color:rgba(78,143,230,.45)}

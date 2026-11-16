@@ -2,9 +2,9 @@
 /* ===== dodatki: atlas gastro [6][3][7][8] ===== */
 .hero .grid{grid-template-columns:1.1fr .9fr}
 .modcards{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.4rem}
-.mc{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--teal);border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--shadow);transition:transform .15s}
+.mc{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--shadow),inset 0 3px 0 0 var(--mc,var(--teal));transition:transform .15s}
 .mc:hover{transform:translateY(-2px)}
-.mc.m6{border-top-color:var(--amber)}.mc.m3{border-top-color:var(--blue)}.mc.m7{border-top-color:var(--red)}.mc.m8{border-top-color:var(--green)}
+.mc.m6{--mc:var(--amber)}.mc.m3{--mc:var(--blue)}.mc.m7{--mc:var(--red)}.mc.m8{--mc:var(--green)}
 .mc b.n{font-family:var(--font-display);font-size:1.7rem;display:block;line-height:1}
 .mc h3{margin:.25rem 0 .3rem;font-size:1.05rem}
 .mc p{font-size:.88rem;color:var(--ink-2)}

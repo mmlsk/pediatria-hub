@@ -10,13 +10,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>[5] Stany nagłe u dzieci – atlas do zaliczenia z pediatrii</title>
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <a class="hub-back" href="../../index.html">← Hub</a>
   <div class="brand"><b>[5]</b> <span>Stany nagłe</span></div>
   <ul id="navlist">
     <li><a href="#pat">PAT</a></li>
@@ -56,7 +57,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <figure class="fig" aria-label="Schemat: trójkąt PAT i ABCDE">
     <svg viewBox="0 0 420 400" role="img" aria-label="Trójkąt oceny pediatrycznej: wygląd, praca oddychania, krążenie skóry, prowadzące do ABCDE">
       <polygon points="210,48 62,290 358,290" fill="#FBE6E2" stroke="#C23B2A" stroke-width="3" stroke-linejoin="round"/>
-      <circle cx="210" cy="48" r="38" fill="#fff" stroke="#6E4CB0" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="22">🧒</text><text x="210" y="64" text-anchor="middle" font-size="10.5" font-weight="800" fill="#6E4CB0">WYGLĄD</text>
+      <circle cx="210" cy="48" r="38" fill="#fff" stroke="#245B7A" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="22">🧒</text><text x="210" y="64" text-anchor="middle" font-size="10.5" font-weight="800" fill="#245B7A">WYGLĄD</text>
       <circle cx="62" cy="290" r="38" fill="#fff" stroke="#2B63AE" stroke-width="3"/><text x="62" y="288" text-anchor="middle" font-size="22">🫁</text><text x="62" y="306" text-anchor="middle" font-size="10" font-weight="800" fill="#2B63AE">ODDECH</text>
       <circle cx="358" cy="290" r="38" fill="#fff" stroke="#C23B2A" stroke-width="3"/><text x="358" y="288" text-anchor="middle" font-size="22">🫀</text><text x="358" y="306" text-anchor="middle" font-size="10" font-weight="800" fill="#C23B2A">SKÓRA</text>
       <text x="210" y="165" text-anchor="middle" font-size="30" font-weight="800" fill="#13232C" font-family="Cabinet Grotesk">PAT</text>
@@ -68,7 +69,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <rect x="46" y="362" width="46" height="32" rx="8" fill="#2B63AE"/><text x="69" y="384" fill="#fff">A</text>
         <rect x="102" y="362" width="46" height="32" rx="8" fill="#2B63AE"/><text x="125" y="384" fill="#fff">B</text>
         <rect x="158" y="362" width="46" height="32" rx="8" fill="#C23B2A"/><text x="181" y="384" fill="#fff">C</text>
-        <rect x="214" y="362" width="46" height="32" rx="8" fill="#6E4CB0"/><text x="237" y="384" fill="#fff">D</text>
+        <rect x="214" y="362" width="46" height="32" rx="8" fill="#245B7A"/><text x="237" y="384" fill="#fff">D</text>
         <rect x="270" y="362" width="46" height="32" rx="8" fill="#B8730F"/><text x="293" y="384" fill="#fff">E</text>
       </g>
     </svg>
@@ -89,6 +90,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </div>
 </div></header>
 
+<main>
 <!-- ============ A ============ -->
 <section id="pat"><div class="wrap">
   <div class="eyebrow">Część A · Szybka ocena chorego</div>
@@ -98,7 +100,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <figure class="fig">
       <svg class="tri" viewBox="0 0 420 360" id="triSvg" role="group" aria-label="Interaktywny trójkąt PAT">
         <polygon points="210,48 60,290 360,290" fill="#F5F6F2" stroke="#9AA7AD" stroke-width="3" stroke-linejoin="round"/>
-        <g class="v on" data-k="a" tabindex="0" role="button" aria-label="Wygląd"><circle cx="210" cy="48" r="42" fill="#ECE6F8" stroke="#6E4CB0" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="24">🧒</text><text x="210" y="66" text-anchor="middle" font-size="11" font-weight="800" fill="#6E4CB0">WYGLĄD</text></g>
+        <g class="v on" data-k="a" tabindex="0" role="button" aria-label="Wygląd"><circle cx="210" cy="48" r="42" fill="#E1EFF5" stroke="#245B7A" stroke-width="3"/><text x="210" y="46" text-anchor="middle" font-size="24">🧒</text><text x="210" y="66" text-anchor="middle" font-size="11" font-weight="800" fill="#245B7A">WYGLĄD</text></g>
         <g class="v" data-k="b" tabindex="0" role="button" aria-label="Praca oddychania"><circle cx="60" cy="290" r="42" fill="#E1ECF9" stroke="#2B63AE" stroke-width="3"/><text x="60" y="288" text-anchor="middle" font-size="24">🫁</text><text x="60" y="308" text-anchor="middle" font-size="10.5" font-weight="800" fill="#2B63AE">ODDYCHANIE</text></g>
         <g class="v" data-k="c" tabindex="0" role="button" aria-label="Krążenie skóry"><circle cx="360" cy="290" r="42" fill="#FBE6E2" stroke="#C23B2A" stroke-width="3"/><text x="360" y="288" text-anchor="middle" font-size="24">🫀</text><text x="360" y="308" text-anchor="middle" font-size="10.5" font-weight="800" fill="#C23B2A">KRĄŻENIE</text></g>
         <text x="210" y="190" text-anchor="middle" font-size="26" font-weight="800" fill="#13232C" font-family="Cabinet Grotesk">PAT</text>
@@ -191,9 +193,9 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </div>
 
   <div class="grid2" style="margin-top:1.4rem">
-    <div class="card"><h4>🩸 Przypadek 1 · 4-latek z anginą paciorkowcową</h4>
+    <div class="card"><h3>🩸 Przypadek 1 · 4-latek z anginą paciorkowcową</h3>
       <ul class="tight small"><li>RR 80/40 (MAP 53), HR 140/min, CRT 3 s</li><li>WBC 28 tys., CRP 140, mleczany 25 mg/dl (≈2,8 mmol/l)</li><li>Fibrynogen 95 mg/dl, PLT 95 tys.: DIC</li><li>Phoenix: koagulacja 2 pkt → sepsa. MAP powyżej progu → 0 pkt krążenia</li><li>Leczenie wg seminarium: penicylina 100 000 j.m./kg/dobę przez 10 dni, wsparcie krążenia</li></ul></div>
-    <div class="card"><h4>🕐 Antybiotyk i płyny</h4>
+    <div class="card"><h3>🕐 Antybiotyk i płyny</h3>
       <ul class="tight small"><li>Śmiertelność zależy od czasu do podania antybiotyku (omówienie F 2020 #38)</li><li>Bolusy 0,9% NaCl 10–20 ml/kg z reewaluacją po każdym (seminarium zakładu)</li><li>Posiewy przed antybiotykiem, ale bez zwlekania</li><li>Cel: CRT &lt;2 s, diureza ≥1 ml/kg/h, poprawa świadomości</li></ul></div>
   </div>
 </div></section>
@@ -206,7 +208,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="grid2">
     <div class="card"><h3>Algorytm</h3><div class="flow" id="anaFlow" style="margin-top:.7rem"></div></div>
     <div class="stack">
-      <div class="card"><h4>🍦 Przypadek 2 · 6-latek z astmą i alergią pokarmową</h4>
+      <div class="card"><h3>🍦 Przypadek 2 · 6-latek z astmą i alergią pokarmową</h3>
         <p class="small">Anafilaksja po lodach. Wg seminarium zakładu: adrenalina i.m. 1 mg/ml w dawce 0,01 mg/kg (0,1 ml na 10 kg), maks. 0,5 mg, udo przednio-boczne, powtarzanie co 5–10 min. Dodatkowo: klemastyna 0,05 mg/kg (maks. 2 mg), hydrokortyzon 5 mg/kg (maks. 300 mg) lub deksametazon, bolus 10–20 ml/kg, salbutamol 0,1–0,15 mg/kg przy skurczu oskrzeli. Obserwacja 4–24 h; zaopatrzenie w autowstrzykiwacz (0,15 / 0,3 / 0,5 mg).</p></div>
       <div class="callout amber"><b class="k">Progi ciśnienia skurczowego w anafilaksji</b>&lt;70 mmHg (1 mies.–1 rok), &lt;70 + 2×wiek (1–10 lat), &lt;90 mmHg (11–17 lat) wg seminarium zakładu.</div>
       <div class="callout green"><b class="k">Dawki autowstrzykiwaczy</b>0,15 mg dla ok. 7,5–25(30) kg, 0,3 mg dla &gt;25–30 kg (EAACI 2021). ERC 2025 First Aid: 0,15 mg (1–5 lat), 0,3 mg (6–12 lat), 0,5 mg (&gt;12 lat).</div>
@@ -257,7 +259,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="grid2">
     <div class="card"><h3>Sekwencja PBLS wg ERC 2025</h3><div class="flow" id="pblsFlow" style="margin-top:.7rem"></div></div>
     <div class="stack">
-      <div class="card"><h4>Odwracalne przyczyny: 4H i 4T</h4>
+      <div class="card"><h3>Odwracalne przyczyny: 4H i 4T</h3>
         <div class="fourh" style="margin-top:.6rem"><ul><li><b>H</b> Hipoksja</li><li><b>H</b> Hipowolemia</li><li><b>H</b> Hipo-/hiperkaliemia, zaburzenia metaboliczne</li><li><b>H</b> Hipo-/hipertermia</li></ul>
         <ul><li><b>T</b> Odma prężna</li><li><b>T</b> Tamponada serca</li><li><b>T</b> Toksyny</li><li><b>T</b> Zakrzepica / zatorowość</li></ul></div></div>
       <div class="callout blue"><b class="k">Leki i defibrylacja (ERC 2025)</b>Adrenalina 10 µg/kg i.v./i.o. (maks. 1 mg) co 3–5 min. Rytm defibrylacyjny: adrenalina i amiodaron 5 mg/kg (maks. 300 mg) po 3. wyładowaniu; druga dawka adrenaliny i amiodaronu 150 mg po 5. wyładowaniu.</div>
@@ -271,11 +273,11 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="eyebrow">Część J · Neurochirurgia w stanach nagłych</div>
   <h2>Wzrost ciśnienia śródczaszkowego (ICP)</h2>
   <div class="grid3">
-    <div class="card" style="border-top:5px solid var(--red)"><h3>Triada Cushinga</h3><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0"><span class="sev r">↑ ciśnienie tętnicze</span><span class="sev a">↓ tętno</span><span class="sev b">nieregularny oddech</span></div><p class="small">Późny objaw zagrażającego wgłobienia.</p></div>
-    <div class="card" style="border-top:5px solid var(--blue)">
+    <div class="card" style="box-shadow:var(--shadow),inset 0 3px 0 0 var(--red)"><h3>Triada Cushinga</h3><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0"><span class="sev r">↑ ciśnienie tętnicze</span><span class="sev a">↓ tętno</span><span class="sev b">nieregularny oddech</span></div><p class="small">Późny objaw zagrażającego wgłobienia.</p></div>
+    <div class="card" style="box-shadow:var(--shadow),inset 0 3px 0 0 var(--blue)">
       <svg viewBox="0 0 220 110" aria-label="Łóżko z głową uniesioną do 30 stopni"><line x1="10" y1="90" x2="210" y2="90" stroke="#9AA7AD" stroke-width="3"/><line x1="70" y1="90" x2="160" y2="52" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><line x1="70" y1="90" x2="10" y2="90" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><circle cx="170" cy="46" r="14" fill="#E1ECF9" stroke="#2B63AE" stroke-width="3"/><path d="M95 90 A25 25 0 0 1 93 78" stroke="#C23B2A" stroke-width="3" fill="none"/><text x="108" y="82" font-size="13" font-weight="800" fill="#C23B2A">30°</text></svg>
-      <h4>Postępowanie</h4><p class="small">Głowa uniesiona do 30°, linia środkowa, tlen, unikanie hipotensji. Mannitol 0,25–0,5 g/kg (wykład zakładu). LP przeciwwskazana.</p></div>
-    <div class="card" style="border-top:5px solid var(--amber)"><h4>Pamiętaj</h4><p class="small">Guz tylnego dołu [9] dziecka z porannymi wymiotami i bólem głowy to częsty scenariusz ICP. Najpierw obrazowanie, potem ewentualna LP.</p></div>
+      <h3>Postępowanie</h3><p class="small">Głowa uniesiona do 30°, linia środkowa, tlen, unikanie hipotensji. Mannitol 0,25–0,5 g/kg (wykład zakładu). LP przeciwwskazana.</p></div>
+    <div class="card" style="box-shadow:var(--shadow),inset 0 3px 0 0 var(--amber)"><h3>Pamiętaj</h3><p class="small">Guz tylnego dołu [9] dziecka z porannymi wymiotami i bólem głowy to częsty scenariusz ICP. Najpierw obrazowanie, potem ewentualna LP.</p></div>
   </div>
 </div></section>
 
@@ -317,6 +319,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <div class="callout amber"><b class="k">⚠️ Pułapki</b><ul class="tight"><li>Adrenalina s.c. w kluczu vs i.m.</li><li>30:2 vs 15:2 vs 3:1</li><li>Hipotensja to objaw późny</li><li>Nie badać gardła przy epiglottitis</li><li>LP przy wzroście ICP</li></ul></div>
   </div>
 </div></section>
+</main>
 
 <footer id="zrodla"><div class="wrap">
   <div class="eyebrow">Źródła</div>
@@ -325,6 +328,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <p class="small" style="margin-top:1rem">Pod zaliczenie obowiązuje klucz puli i wykładu zakładu. Tam, gdzie klucz jest przestarzały, podano drugą kolumnę „aktualnie klinicznie”. Dawek nie wyznaczano z pamięci: każda ma źródło (seminarium zakładu, wykład lub wytyczna z listy). Licznik 28 zadań (8,1% z 346) to moje ręczne zestawienie, nie oficjalny blueprint. Weryfikuj lokalne protokoły (np. NAC, leki przeciwdrgawkowe) przed zastosowaniem klinicznym.</p>
 </div></footer>
 <script src="data.js"></script>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

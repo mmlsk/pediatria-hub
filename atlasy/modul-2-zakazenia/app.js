@@ -20,7 +20,7 @@ $('#kGap').textContent=Q.filter(q=>q.gap).length;
 /* ===== hero: wiek ===== */
 (function(){
   const rows=[
-    ['0–28 dni','Noworodek','GBS, E. coli, Listeria, HSV','#6E4CB0'],
+    ['0–28 dni','Noworodek','GBS, E. coli, Listeria, HSV','#245B7A'],
     ['1–3 mies.','Młody niemowlak','E. coli (ZUM), RSV, enterowirusy','#2B63AE'],
     ['3 mies.–5 lat','Niemowlę i przedszkolak','pneumokok, meningokok, Hib, RSV','#C23B2A'],
     ['5–12 lat','Wiek szkolny','GAS, M. pneumoniae, EBV, pneumokok','#B8730F'],
@@ -39,7 +39,7 @@ $('#ageGrid').innerHTML=[
  ['a2','👶 Niemowlę (1–12 mies.)',['Oskrzeliki (RSV): najczęstsze zakażenie dolnych dróg <2 r.ż.','ZUM: gorączka bez ogniska [14]','Ropnie płuc i odma: S. aureus','Rumień nagły (HHV-6): 3 dni gorączki, potem wysypka','Rotawirusy: biegunka [3]; szczepienie obowiązkowe']],
  ['a3','🧒 Przedszkolak (1–5 lat)',['Wirusowe URTI; OZUŚ','Krup (dni) i zapalenie nagłośni Hib (godziny)','Pneumokokowe zapalenie płuc; ZOMR','Rumień zakaźny, odra, ospa, płonica','Choroba Kawasaki']],
  ['a4','🎒 Szkolne i nastolatek',['Angina GAS (5–15 lat); mononukleoza','Atypowe zapalenie płuc: M. pneumoniae, C. pneumoniae','Krztusiec u zaszczepionych: długotrwały kaszel','Meningokoki: IChM; profilaktyka kontaktów','Gorączka reumatyczna 2–4 tyg. po GAS']]
-].map(c=>`<div class="agecol ${c[0]}"><h4>${c[1]}</h4><ul>${c[2].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+].map(c=>`<div class="agecol ${c[0]}"><h3>${c[1]}</h3><ul>${c[2].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
 
 /* ===== gorączka wg wieku ===== */
 (function(){
@@ -119,15 +119,15 @@ flow('rashFlow',[
   [['red','<b>Nie zanikają, źle wygląda</b><small>posocznica meningokokowa: antybiotyk natychmiast</small>'],['amber','<b>Nie zanikają, dobrze wygląda</b><small>HSP, ITP [12]</small>']],
   [['green','<b>Plamisto-grudkowa</b><small>odra (Koplik), różyczka, rumień nagły, rumień zakaźny, EBV po amoksycylinie</small>'],['violet','<b>Inne</b><small>drobnogrudkowa „papier ścierny”: płonica; pęcherzyki w rzutach: ospa; gorączka ≥5 dni + wargi i dłonie: Kawasaki</small>']]]}]);
 (function(){
-  const R=[['Odra',0,7,3,8,'#C23B2A'],['Różyczka',0,2,1,4,'#2B63AE'],['Rumień nagły',0,3,3,5,'#6E4CB0'],['Płonica',0,3,1,5,'#B8730F'],['Rumień zakaźny',0,1,3,9,'#0C7A85'],['Ospa wietrzna',0,4,0,6,'#2F8450']];
+  const R=[['Odra',0,7,3,8,'#C23B2A'],['Różyczka',0,2,1,4,'#2B63AE'],['Rumień nagły',0,3,3,5,'#245B7A'],['Płonica',0,3,1,5,'#B8730F'],['Rumień zakaźny',0,1,3,9,'#0C7A85'],['Ospa wietrzna',0,4,0,6,'#2F8450']];
   const X0=130,U=55;let h='';
   for(let d=0;d<=10;d++){const x=X0+d*U/1.1;h+=`<line x1="${x}" y1="40" x2="${x}" y2="300" stroke="#E2E8E6"/><text x="${x}" y="320" font-size="10" text-anchor="middle" fill="#6B7A82">${d}</text>`}
   h+='<text x="10" y="24" font-size="13" font-weight="800" fill="#13232C">Dzień choroby (orientacyjnie)</text>';
   R.forEach((r,i)=>{const y=52+i*42,sc=U/1.1;
     h+=`<text x="${X0-8}" y="${y+22}" text-anchor="end" font-size="12.5" font-weight="700" fill="${r[5]}">${r[0]}</text>
     <rect x="${X0+r[1]*sc}" y="${y}" width="${(r[2]-r[1])*sc}" height="14" rx="6" fill="#C23B2A" opacity=".85"/>
-    <rect x="${X0+r[3]*sc}" y="${y+18}" width="${(r[4]-r[3])*sc}" height="14" rx="6" fill="#6E4CB0" opacity=".85"/>`});
-  h+='<rect x="140" y="332" width="12" height="8" fill="#C23B2A"/><text x="156" y="340" font-size="10.5" fill="#44545D">gorączka</text><rect x="230" y="332" width="12" height="8" fill="#6E4CB0"/><text x="246" y="340" font-size="10.5" fill="#44545D">wysypka</text>';
+    <rect x="${X0+r[3]*sc}" y="${y+18}" width="${(r[4]-r[3])*sc}" height="14" rx="6" fill="#245B7A" opacity=".85"/>`});
+  h+='<rect x="140" y="332" width="12" height="8" fill="#C23B2A"/><text x="156" y="340" font-size="10.5" fill="#44545D">gorączka</text><rect x="230" y="332" width="12" height="8" fill="#245B7A"/><text x="246" y="340" font-size="10.5" fill="#44545D">wysypka</text>';
   $('#rashSvg').innerHTML=h;
 })();
 const RASH=[
@@ -173,7 +173,7 @@ flow('menFlow',[
   h+=box(10,8,250,'Bolusy płynów',['10–20 ml/kg, reewaluacja po każdym','do 40–60 ml/kg w 1. godzinie (z OIOM)'],'#2B63AE');
   h+=box(275,8,200,'Wstrząs septyczny',['antybiotyk ≤1 h','jak najszybciej'],'#C23B2A');
   h+=box(490,8,200,'Sepsa bez wstrząsu',['szybka ocena','antybiotyk najlepiej ≤3 h'],'#B8730F');
-  h+=box(10,162,320,'Posiew krwi przed antybiotykiem',['tylko jeśli nie opóźnia leczenia'],'#6E4CB0');
+  h+=box(10,162,320,'Posiew krwi przed antybiotykiem',['tylko jeśli nie opóźnia leczenia'],'#245B7A');
   h+=box(350,162,340,'LP i obrazowanie',['nie opóźniają antybiotyku','po ustabilizowaniu dziecka'],'#0C7A85');
   h+='<text x="10" y="252" font-size="11" fill="#6B7A82">Źródło: SSC dzieci 2026 (SCCM); płyny zbilansowane preferowane nad 0,9% NaCl.</text>';
   $('#sepSvg').innerHTML=h;
@@ -238,7 +238,7 @@ $('#srcList').innerHTML=SOURCES.map(s=>/^(https?:|\.\.\/)/.test(s[1])?`<li><a hr
 (function(){
   const s=$('#crossSvg'),cx=340,cy=250;
   const N=[['[1]','Ból brzucha','wgłobienie, wyrostek, ZUM'],['[3]','Biegunki','rota, HUS, odwodnienie'],['[4]','KZN','OKZN po GAS'],['[5]','Stany nagłe','PAT, krup, nagłośnia, wstrząs'],['[11]','Hemato-onko','migdałek, PCP, neutropenia'],['[12]','Skazy','wybroczyny, HSP, ITP'],['[13b]','Odporność','PNO, szczepienia'],['[14]','ZUM','gorączka bez ogniska']];
-  const col=['#B8730F','#2F8450','#2B63AE','#C23B2A','#6E4CB0','#0C7A85','#B8730F','#2B63AE'];
+  const col=['#B8730F','#2F8450','#2B63AE','#C23B2A','#245B7A','#0C7A85','#B8730F','#2B63AE'];
   let h='';const pos=N.map((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length;return [cx+245*Math.cos(a),cy+195*Math.sin(a)]});
   pos.forEach(p=>h+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="#9AA7AD" stroke-width="2"/>`);
   h+=`<circle cx="${cx}" cy="${cy}" r="56" fill="#0C7A85"/><text x="${cx}" y="${cy}" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">[2]</text><text x="${cx}" y="${cy+20}" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Zakażenia</text>`;

@@ -10,13 +10,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>[1] Pacjent z bólem brzucha – atlas pediatryczny</title>
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <a class="hub-back" href="../../index.html">← Hub</a>
   <div class="brand"><b>[1]</b> <span>Ból brzucha</span></div>
   <ul id="navlist">
     <li><a href="#badanie">Badanie</a></li>
@@ -323,6 +324,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </ul>
   <p class="small" style="margin-top:.8rem">Materiał dydaktyczny. Schematy są uproszczone; dawek i progów nie traktuj jako zastępujących lokalny protokół.</p>
 </div></footer>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

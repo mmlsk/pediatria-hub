@@ -10,13 +10,14 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>[12] [13a] [13b] Skazy krwotoczne, niedokrwistości, zaburzenia odporności u dzieci</title>
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous"></noscript>
 <link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
+  <a class="hub-back" href="../../index.html">← Hub</a>
   <div class="brand"><b>[12][13]</b> <span>Skazy · Anemie · PID</span></div>
   <ul>
     <li><a href="#s12">[12] Skazy</a></li>
@@ -236,7 +237,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </div>
   <div class="sticky-tools">
     <div class="qbar">
-      <div class="tgl" role="group" aria-label="Tryb"><button id="mStudy" aria-pressed="true">Tryb nauki</button><button id="mPractice" aria-pressed="false">Tryb ćwiczeń</button></div>
+      <div class="tgl" role="group" aria-label="Tryb"><button id="mStudy" aria-pressed="false">Tryb nauki</button><button id="mPractice" aria-pressed="true">Tryb ćwiczeń</button></div>
       <input class="qsearch" id="qs" type="search" placeholder="Szukaj w zadaniach" aria-label="Szukaj w zadaniach">
     </div>
     <div class="filters" id="qFilters" style="margin-bottom:.2rem">
@@ -250,7 +251,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <button aria-pressed="false" data-f="x">Międzymodułowe</button>
     </div>
   </div>
-  <div class="keylg"><span class="g">zielony: poprawna odpowiedź (klucz potwierdzony)</span><span class="r">czerwony: odpowiedź w pytaniu „wskaż fałsz/wyjątek”</span><span class="a">bursztynowy, przerywany: klucz niepotwierdzony w plikach</span></div>
+  <div class="keylg"><span class="g">zielony: poprawna odpowiedź (w tym [FAŁSZ] dla „wskaż fałsz/wyjątek”)</span><span class="a">bursztynowy, przerywany: klucz niepotwierdzony w plikach</span><span class="r">czerwony: błędna próba w trybie ćwiczeń</span></div>
   <div id="quiz"></div>
   <div class="score" id="score" role="status">Tryb nauki: klucze widoczne</div>
 </div></section>
@@ -278,6 +279,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <ul id="srcList"></ul>
 </div></footer>
 <script src="tasks.js"></script>
+<script src="../atlas-hub-sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

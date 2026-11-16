@@ -284,7 +284,7 @@ $('#intSvg').innerHTML=`
   ['Przerost mięśniówki','odźwiernika',20,20,'#FCEFD6','#B8730F'],
   ['Niedrożność wypływu','wymioty niebarwione żółcią',230,20,'#FBE6E2','#C23B2A'],
   ['Utrata HCl z wymiotami','↓Cl⁻  ↓H⁺  ↑HCO₃⁻',230,95,'#E1ECF9','#2B63AE'],
-  ['Hipowolemia → ↑aldosteron','zwrot Na⁺, strata K⁺ i H⁺',20,95,'#ECE6F8','#6E4CB0'],
+  ['Hipowolemia → ↑aldosteron','zwrot Na⁺, strata K⁺ i H⁺',20,95,'#E1EFF5','#245B7A'],
   ['Zasadowica metaboliczna','hipochloremiczna, hipokaliemiczna',125,170,'#E1F3E7','#2F8450']
  ];
  let s='<defs><marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#44545D"/></marker></defs>';
@@ -431,7 +431,7 @@ $('#gapTable').innerHTML=`<tr><th>Temat</th><th>Pod zaliczenie (wg puli/zakładu
 
 /* ---------- Cross-module graph ---------- */
 (function(){
- const N=[['HUS','[3][12][15]','#2B63AE'],['IgAV','[12][4]','#6E4CB0'],['ZUM','[14]','#2B63AE'],['Płuca, angina','[2]','#2F8450'],['DKA','[5]','#2F8450'],['Wilms, NB','[10]','#C23B2A'],['Chłoniak NHL B','[11]','#C23B2A'],['IBD, jersinioza','[7][3]','#2B63AE'],['PUD, H. pylori','[6]','#2B63AE'],['Celiakia, alergie','[3][8]','#2B63AE'],['Sferocytoza','[13]','#B8730F'],['Sepsa, wstrząs','[5][2]','#2F8450']];
+ const N=[['HUS','[3][12][15]','#2B63AE'],['IgAV','[12][4]','#245B7A'],['ZUM','[14]','#2B63AE'],['Płuca, angina','[2]','#2F8450'],['DKA','[5]','#2F8450'],['Wilms, NB','[10]','#C23B2A'],['Chłoniak NHL B','[11]','#C23B2A'],['IBD, jersinioza','[7][3]','#2B63AE'],['PUD, H. pylori','[6]','#2B63AE'],['Celiakia, alergie','[3][8]','#2B63AE'],['Sferocytoza','[13]','#B8730F'],['Sepsa, wstrząs','[5][2]','#2F8450']];
  let s='';const cx=340,cy=240,rx=255,ry=190;$('#crossSvg').setAttribute('viewBox','0 0 680 480');
  N.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/N.length,x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);
   s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#B5C0C3" stroke-width="2"/>`;});

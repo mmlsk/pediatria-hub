@@ -1409,7 +1409,9 @@ function renderActiveOsceStation(station) {
 
   // Podpięcie zdarzeń
   const handleZoneSelect = (zoneId) => {
-    const refocusHotspot = document.activeElement?.classList?.contains('osce-hotspot');
+    const activeEl = document.activeElement;
+    const refocusHotspot = activeEl?.classList?.contains('osce-hotspot');
+    const refocusSvgZone = activeEl?.classList?.contains('osce-anatomy-region');
     OSCE_ACTIVE.selectedZone = zoneId;
     OSCE_ACTIVE.activeTab = 'maneuvers';
     const scrollY = window.scrollY;
@@ -1417,6 +1419,9 @@ function renderActiveOsceStation(station) {
     if (refocusHotspot) {
       const btn = $$('.osce-hotspot[data-zone]').find(b => b.dataset.zone === zoneId);
       if (btn) btn.focus({ preventScroll: true });
+    } else if (refocusSvgZone) {
+      const reg = $$('.osce-anatomy-region[data-zone-id]').find(r => r.dataset.zoneId === zoneId);
+      if (reg) reg.focus({ preventScroll: true });
     }
     if (window.innerWidth < 960) {
       const card = $('#osceManeuversCard');
@@ -1426,9 +1431,21 @@ function renderActiveOsceStation(station) {
     }
   };
 
-  // 1. Kliknięcie w hotspot na ciele
+  // 1. Kliknięcie w hotspot na ciele + obsługa klawiatury dla stref SVG
   $$('.osce-hotspot[data-zone]').forEach(h => {
     h.onclick = () => handleZoneSelect(h.dataset.zone);
+    h.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoneSelect(h.dataset.zone); } };
+  });
+  const zoneMap = new Map((station.zones || []).map(z => [z.id, z]));
+  $$('.osce-anatomy-region[data-zone-id]').forEach(el => {
+    const zId = el.dataset.zoneId;
+    const zObj = zoneMap.get(zId);
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-pressed', String(OSCE_ACTIVE.selectedZone === zId));
+    if (zObj) el.setAttribute('aria-label', zObj.name);
+    el.onclick = () => handleZoneSelect(zId);
+    el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoneSelect(zId); } };
   });
 
   // 2. Kliknięcie w chipsy wyboru strefy
