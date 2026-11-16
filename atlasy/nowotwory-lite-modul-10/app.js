@@ -363,7 +363,7 @@ $('#dcards').innerHTML=D.map(d=>`<details class="dc" data-c="${d.c}"><summary><s
  <div class="row"><b>Objawy</b>${d.o}</div><div class="row"><b>Badanie</b>${d.b}</div><div class="row"><b>Diagnostyka</b>${d.dx}</div><div class="row"><b>Leczenie</b>${d.tx}</div>
  <div class="pearl">💎 ${d.p}</div><div class="trap">⚠️ ${d.x}</div></div></details>`).join('');
 $('#dcards').insertAdjacentHTML('afterbegin','');
-document.head.insertAdjacentHTML('beforeend','<style>details.dc[data-c=a]{border-left-color:var(--amber)}</style>');
+document.head.insertAdjacentHTML('beforeend','<style>details.dc[data-c=a]{border-color:rgba(229,154,36,.45)}</style>');
 
 /* ---------- Różnicowanie ---------- */
 $('#diffTable').innerHTML=`<tr><th></th><th style="color:${C.red}">Guz Wilmsa</th><th style="color:${C.blue}">Neuroblastoma</th><th style="color:${C.amber}">Hepatoblastoma</th><th>Chłoniak Burkitta [11]</th><th>HUS [3][12][15]</th><th>Wgłobienie [1]</th></tr>`+[

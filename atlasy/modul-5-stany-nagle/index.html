@@ -11,6 +11,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <title>[5] Stany nagłe u dzieci – atlas do zaliczenia z pediatrii</title>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
@@ -82,7 +83,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <div class="kpi v"><b>≥2 s</b><span>CRT powyżej 2 s = zaburzona perfuzja; hipotensja to objaw późny</span></div>
   </div>
   <div class="card">
-    <h4>Najczęstsze podtematy w puli (liczba zadań · liczba pul)</h4>
+    <h2>Najczęstsze podtematy w puli (liczba zadań · liczba pul)</h2>
     <p class="small" style="margin-bottom:.6rem">Moje zestawienie z pul V roku; liczby orientacyjne.</p>
     <div class="bars" id="barsFreq"></div>
   </div>
@@ -133,7 +134,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="grid2">
     <figure class="fig"><svg viewBox="0 0 560 360" id="normSvg" role="img" aria-label="Zakresy prawidłowe tętna i częstości oddechów według wieku"></svg><figcaption>Zakresy prawidłowe: tętno (czerwony) i częstość oddechów (niebieski) wg wieku.</figcaption></figure>
     <div class="card calc">
-      <h4>Kalkulator: norma i próg hipotensji dla wieku</h4>
+      <h3>Kalkulator: norma i próg hipotensji dla wieku</h3>
       <div class="in"><label>Wiek (lata): <output id="ageOut">4</output><input type="range" id="age" min="0" max="17" value="4"></label></div>
       <div class="tw"><table id="normOut"></table></div>
       <p class="small">Progi hipotensji: poniżej 70 mmHg (1 mies.–1 r.ż.), poniżej 70 + 2×wiek (1–10 lat), poniżej 90 mmHg (11–17 lat). Diureza prawidłowa: ≥1 ml/kg/h (niemowlęta ≥2 ml/kg/h).</p>
@@ -156,7 +157,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <p class="lead">Stridor wdechowy to przeszkoda w drogach górnych, świsty wydechowe w dolnych. Objawy alarmowe wg seminarium: stękanie, rozszerzanie skrzydełek nosa, „cicha klatka”.</p>
   <div class="grid2">
     <div class="card"><div class="flow" id="respTree"></div></div>
-    <div class="card"><h4>Niedrożność ciałem obcym: algorytm</h4><div class="flow" id="fbTree" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Niedrożność ciałem obcym: algorytm</h3><div class="flow" id="fbTree" style="margin-top:.7rem"></div></div>
   </div>
   <h3 style="margin:2rem 0 .6rem">Porównanie najczęstszych stanów</h3>
   <div class="tw"><table class="vs" id="respTable"></table></div>
@@ -203,7 +204,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Anafilaksja</h2>
   <p class="lead">Rozpoznanie: ostry początek ze zmianami skórnymi lub śluzówkowymi i objawami oddechowymi albo hipotensją, albo ≥2 układy po kontakcie z alergenem. Pierwszy lek: adrenalina i.m.</p>
   <div class="grid2">
-    <div class="card"><h4>Algorytm</h4><div class="flow" id="anaFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Algorytm</h3><div class="flow" id="anaFlow" style="margin-top:.7rem"></div></div>
     <div class="stack">
       <div class="card"><h4>🍦 Przypadek 2 · 6-latek z astmą i alergią pokarmową</h4>
         <p class="small">Anafilaksja po lodach. Wg seminarium zakładu: adrenalina i.m. 1 mg/ml w dawce 0,01 mg/kg (0,1 ml na 10 kg), maks. 0,5 mg, udo przednio-boczne, powtarzanie co 5–10 min. Dodatkowo: klemastyna 0,05 mg/kg (maks. 2 mg), hydrokortyzon 5 mg/kg (maks. 300 mg) lub deksametazon, bolus 10–20 ml/kg, salbutamol 0,1–0,15 mg/kg przy skurczu oskrzeli. Obserwacja 4–24 h; zaopatrzenie w autowstrzykiwacz (0,15 / 0,3 / 0,5 mg).</p></div>
@@ -254,7 +255,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="eyebrow">Część I · Resuscytacja</div>
   <h2>Zatrzymanie krążenia u dziecka</h2>
   <div class="grid2">
-    <div class="card"><h4>Sekwencja PBLS wg ERC 2025</h4><div class="flow" id="pblsFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Sekwencja PBLS wg ERC 2025</h3><div class="flow" id="pblsFlow" style="margin-top:.7rem"></div></div>
     <div class="stack">
       <div class="card"><h4>Odwracalne przyczyny: 4H i 4T</h4>
         <div class="fourh" style="margin-top:.6rem"><ul><li><b>H</b> Hipoksja</li><li><b>H</b> Hipowolemia</li><li><b>H</b> Hipo-/hiperkaliemia, zaburzenia metaboliczne</li><li><b>H</b> Hipo-/hipertermia</li></ul>
@@ -270,7 +271,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <div class="eyebrow">Część J · Neurochirurgia w stanach nagłych</div>
   <h2>Wzrost ciśnienia śródczaszkowego (ICP)</h2>
   <div class="grid3">
-    <div class="card" style="border-top:5px solid var(--red)"><h4>Triada Cushinga</h4><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0"><span class="sev r">↑ ciśnienie tętnicze</span><span class="sev a">↓ tętno</span><span class="sev b">nieregularny oddech</span></div><p class="small">Późny objaw zagrażającego wgłobienia.</p></div>
+    <div class="card" style="border-top:5px solid var(--red)"><h3>Triada Cushinga</h3><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0"><span class="sev r">↑ ciśnienie tętnicze</span><span class="sev a">↓ tętno</span><span class="sev b">nieregularny oddech</span></div><p class="small">Późny objaw zagrażającego wgłobienia.</p></div>
     <div class="card" style="border-top:5px solid var(--blue)">
       <svg viewBox="0 0 220 110" aria-label="Łóżko z głową uniesioną do 30 stopni"><line x1="10" y1="90" x2="210" y2="90" stroke="#9AA7AD" stroke-width="3"/><line x1="70" y1="90" x2="160" y2="52" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><line x1="70" y1="90" x2="10" y2="90" stroke="#2B63AE" stroke-width="6" stroke-linecap="round"/><circle cx="170" cy="46" r="14" fill="#E1ECF9" stroke="#2B63AE" stroke-width="3"/><path d="M95 90 A25 25 0 0 1 93 78" stroke="#C23B2A" stroke-width="3" fill="none"/><text x="108" y="82" font-size="13" font-weight="800" fill="#C23B2A">30°</text></svg>
       <h4>Postępowanie</h4><p class="small">Głowa uniesiona do 30°, linia środkowa, tlen, unikanie hipotensji. Mannitol 0,25–0,5 g/kg (wykład zakładu). LP przeciwwskazana.</p></div>
@@ -284,7 +285,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Zadania testowe z puli i omówienia</h2>
   <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2014, F 2015 i 2020, S1–S7, eksport z platformy). Część zadań jest autorska lub ma uzupełnione opcje (oznaczone). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze.</p>
   <div class="card" style="margin-bottom:1.2rem">
-    <h4>Zestaw zadań według tematu</h4>
+    <h3>Zestaw zadań według tematu</h3>
     <div class="bars" id="barsPool" style="margin-top:.6rem"></div>
   </div>
   <div class="qtools">

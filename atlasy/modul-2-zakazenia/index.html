@@ -11,6 +11,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <title>[2] Zakażenia u dzieci – atlas do zaliczenia z pediatrii</title>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
@@ -71,7 +72,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <div class="kpi v"><b>5</b><span>obszarów: drogi oddechowe, wysypki, neuroinfekcje, sepsa, gorączka wg wieku</span></div>
   </div>
   <div class="card">
-    <h4>Rozkład zadań w atlasie wg tematu</h4>
+    <h2>Rozkład zadań w atlasie wg tematu</h2>
     <p class="small" style="margin-bottom:.6rem">Moje zestawienie zadań włączonych do atlasu, nie oficjalny blueprint zaliczenia ani pełne liczenie pul.</p>
     <div class="bars" id="barsFreq"></div>
   </div>
@@ -107,7 +108,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Przeziębienie, angina, ucho</h2>
   <p class="lead">Wg wykładu zakładu 80–90% zakażeń górnych dróg oddechowych jest wirusowych. Zadanie lekarza: nie przeoczyć anginy GAS ani powikłań, a jednocześnie nie leczyć wirusa antybiotykiem.</p>
   <div class="grid2">
-    <div class="card"><h4>Kalkulator McIsaaca (selekcja do testu, nie do antybiotyku)</h4>
+    <div class="card"><h3>Kalkulator McIsaaca (selekcja do testu, nie do antybiotyku)</h3>
       <p class="small">Kryteria Centora z modyfikacją wiekową. Wynik nie zastępuje wymazu ani strep-testu: wg puli antybiotyk po potwierdzeniu GAS.</p>
       <div class="mcis" id="mcis" style="margin-top:.6rem"></div>
       <div class="mcres" id="mcres" style="margin-top:.8rem"></div>
@@ -135,7 +136,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <p class="lead">Pierwsze pytanie: czy duszność jest wdechowa (górne drogi) czy wydechowa (dolne)? Drugie: ile godzin lub dni trwa? Trzecie: ile ma dziecko lat?</p>
   <div class="tw"><table id="respTable" class="rtable"></table></div>
   <div class="grid2" style="margin-top:1rem">
-    <div class="card"><h4>Krup: algorytm</h4><div class="flow" id="croupFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Krup: algorytm</h3><div class="flow" id="croupFlow" style="margin-top:.7rem"></div></div>
     <div class="card"><h4>Zapalenie oskrzelików: kiedy hospitalizować (NICE NG9)</h4><div class="flow" id="bronchFlow" style="margin-top:.7rem"></div></div>
   </div>
   <div class="grid2" style="margin-top:1rem">
@@ -153,7 +154,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Wysypki: od czego zacząć</h2>
   <p class="lead">Najpierw odpowiedz: czy wysypka zanika przy ucisku? Czy dziecko źle wygląda? Potem dopiero wiek, prodrom i charakter wykwitu.</p>
   <div class="grid2">
-    <div class="card"><h4>Schemat decyzji</h4><div class="flow" id="rashFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Schemat decyzji</h3><div class="flow" id="rashFlow" style="margin-top:.7rem"></div></div>
     <figure class="fig wide scroll"><svg class="min" viewBox="0 0 700 340" id="rashSvg" role="img" aria-label="Oś czasu gorączki i wysypki w odrze, różyczce, rumieniu nagłym, płonicy i rumieniu zakaźnym"></svg><figcaption>Schemat poglądowy (orientacyjne dni choroby): czerwony pasek = gorączka, fiolet = wysypka. Odra: wysypka w szczycie gorączki; rumień nagły: po jej ustąpieniu.</figcaption></figure>
   </div>
   <div class="dcards" id="rashCards" style="margin-top:1.2rem"></div>
@@ -171,7 +172,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <p class="lead">Wirusowe zapalenie opon jest częste i łagodne. Bakteryjne jest rzadsze i zagraża życiu. Nigdy nie czekamy z antybiotykiem na punkcję, jeśli dziecko jest niestabilne.</p>
   <div class="grid2">
     <figure class="fig"><svg viewBox="0 0 460 330" id="csfSvg" role="img" aria-label="Porównanie płynu mózgowo-rdzeniowego: prawidłowy, wirusowy, bakteryjny"></svg><figcaption>Profil PMR (Moodle #140): wirusowe 10–500 komórek, limfocyty, płyn przejrzysty lub opalizujący; bakteryjne 100–10 000, granulocyty, mętny.</figcaption></figure>
-    <div class="card"><h4>Postępowanie przy podejrzeniu bakteryjnego ZOMR</h4><div class="flow" id="menFlow" style="margin-top:.7rem"></div></div>
+    <div class="card"><h3>Postępowanie przy podejrzeniu bakteryjnego ZOMR</h3><div class="flow" id="menFlow" style="margin-top:.7rem"></div></div>
   </div>
   <div class="grid3" style="margin-top:1rem">
     <div class="tcard r"><h4>🍼 Noworodek</h4><p class="small"><b>Czynniki:</b> GBS, bakterie Gram-ujemne (E. coli), Listeria.<br><b>Objawy:</b> niespecyficzne: bezdechy, zaburzenia temperatury, apatia, drgawki, wypukłe ciemiączko.<br><b>Leczenie wg wykładu:</b> ampicylina + aminoglikozyd lub cefotaksym.</p></div>
@@ -195,7 +196,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
     <div class="tw"><table id="sirsTable" class="rtable"></table></div>
   </div>
   <div class="grid2" style="margin-top:1rem">
-    <div class="card"><h4>Postępowanie we wstrząsie septycznym</h4><div class="steps" id="sepSteps" style="margin-top:.6rem"></div></div>
+    <div class="card"><h3>Postępowanie we wstrząsie septycznym</h3><div class="steps" id="sepSteps" style="margin-top:.6rem"></div></div>
     <div class="stack">
       <div class="callout blue"><b class="k">Kalkulator Phoenix</b>Pełny kalkulator Phoenix Sepsis Score (z progami MAP wg wieku) jest w module [5]. <a class="xlink" href="../modul-5-stany-nagle/index.html#wstrzas">Otwórz kalkulator w module [5] →</a></div>
       <div class="callout red"><b class="k">🚩 Meningokoki</b>Gorączka + wybroczyny + zła perfuzja: antybiotyk natychmiast (NICE: ceftriakson lub benzylpenicylina, także poza szpitalem, gdy transport jest opóźniony). Nie czekaj na PMR.</div>
@@ -231,7 +232,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Zadania testowe z puli i omówienia</h2>
   <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2014, F 2015 i 2020, S1–S7, pule 5 roku, eksport z platformy). Część zadań jest autorska lub ma uzupełnione opcje (oznaczone). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze.</p>
   <div class="card" style="margin-bottom:1.2rem">
-    <h4>Zestaw zadań według tematu</h4>
+    <h3>Zestaw zadań według tematu</h3>
     <div class="bars" id="barsPool" style="margin-top:.6rem"></div>
   </div>
   <div class="qtools">

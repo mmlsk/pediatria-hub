@@ -1,11 +1,12 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v29';
+const CACHE_NAME = 'pediatria-hub-v32';
 
 const PRECACHE_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './css/hub.css',
+  './atlasy/atlas-base.css',
   './atlasy/atlas-mobile.css',
   './js/meta.js',
   './js/questions.js',
@@ -66,7 +67,12 @@ const PRECACHE_ASSETS = [
   // Moduł 10: Nowotwory lite
   './atlasy/nowotwory-lite-modul-10/index.html',
   './atlasy/nowotwory-lite-modul-10/app.js',
-  './atlasy/nowotwory-lite-modul-10/style.css'
+  './atlasy/nowotwory-lite-modul-10/style.css',
+
+  // Ryciny pytań zakładowych
+  './img/zaklad/q0002-ccb-nifedypina-moa.jpg',
+  './img/zaklad/q0435-gks-mcns.jpg',
+  './img/zaklad/q0790-zum-niemowleta.jpg'
 ];
 
 self.addEventListener('install', event => {

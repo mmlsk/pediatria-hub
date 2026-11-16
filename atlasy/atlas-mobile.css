@@ -213,6 +213,10 @@ button.btn:not(:disabled):active,
   animation: atlasExpIn .22s cubic-bezier(.16, 1, .3, 1) both;
 }
 @media (prefers-reduced-motion: reduce) {
+  @keyframes atlasExpIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
   .opt:not(:disabled):active,
   button.btn:not(:disabled):active,
   .tabs button:active,
@@ -221,10 +225,55 @@ button.btn:not(:disabled):active,
   .q .reveal:active {
     transform: none;
   }
-  .opt.ok,
+  .opt.ok {
+    animation: none;
+  }
   .q .disc.on,
   .q .why.on,
   .modal.open .box {
-    animation: none;
+    animation: atlasExpIn .18s ease both;
   }
+  .opt,
+  button.btn,
+  .tabs button,
+  .filters button,
+  .q .acts button,
+  .q .reveal,
+  .tgl button {
+    transition: opacity .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease !important;
+  }
+}
+
+/* Zachowanie proporcji kart po naprawie hierarchii nagłówków i przywrócenie focus-ringów w SVG */
+.hero .card h2,
+.mc h2 {
+  font-family: var(--font-body, var(--f-body));
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: .35rem;
+}
+.tcard h3,
+.mgrid h3 {
+  font-size: 1.05rem;
+  margin-bottom: .3rem;
+}
+.agecol h3 {
+  padding: .55rem .8rem;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+.map svg .reg:focus:not(:focus-visible),
+.body-map svg .pt:focus:not(:focus-visible),
+.tri g.v:focus:not(:focus-visible) {
+  outline: none;
+}
+.map svg .reg:focus-visible,
+.body-map svg .pt:focus-visible,
+.tri g.v:focus-visible,
+svg [role="button"]:focus-visible {
+  outline: 3px solid var(--teal-d, #075760);
+  outline-offset: 2px;
+  stroke: var(--ink);
+  stroke-width: 2.5px;
 }

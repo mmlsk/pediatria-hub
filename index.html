@@ -60,7 +60,7 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
 <footer class="ft" id="ft"></footer>
 <dialog class="pal" id="pal" aria-label="Szukaj w hubie">
   <div class="pal-head">
-    <input id="palIn" type="search" placeholder="Szukaj modułu, sekcji atlasu lub pytania…" autocomplete="off" aria-label="Szukaj">
+    <input id="palIn" type="search" role="combobox" aria-autocomplete="list" aria-controls="palList" aria-expanded="true" placeholder="Szukaj modułu, sekcji atlasu lub pytania…" autocomplete="off" aria-label="Szukaj">
     <button type="button" class="pal-close" id="palClose" aria-label="Zamknij wyszukiwarkę">✕</button>
   </div>
   <ul id="palList" role="listbox"></ul>
@@ -104,10 +104,10 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';if(t==='dark'||(
   </div>
 </aside>
 
-<script src="js/meta.js"></script>
-<script src="js/questions.js"></script>
-<script src="js/questions_zaklad.js"></script>
-<script src="js/logic.js"></script>
-<script src="js/app.js"></script>
+<script defer src="js/meta.js"></script>
+<script defer src="js/questions.js"></script>
+<script defer src="js/questions_zaklad.js"></script>
+<script defer src="js/logic.js"></script>
+<script defer src="js/app.js"></script>
 </body>
 </html>

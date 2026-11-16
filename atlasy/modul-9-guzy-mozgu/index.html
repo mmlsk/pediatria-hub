@@ -11,6 +11,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <title>[9] Guzy mózgu u dzieci – atlas do zaliczenia z pediatrii</title>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="../atlas-base.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../atlas-mobile.css">
 </head>
@@ -79,7 +80,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       </svg>
     <div class="herolist">
       <div><b style="color:#2B63AE">1 Półkule 24%</b> astrocytoma, wyściółczak, GBM</div>
-      <div><b style="color:#B8730F">2 Okolica siodłowa 16%</b> czaszkogardlak 9, gruczolak 3</div>
+      <div><b style="color:#8F5808">2 Okolica siodłowa 16%</b> czaszkogardlak 9, gruczolak 3</div>
       <div><b style="color:#C23B2A">3 Móżdżek 45%</b> rdzeniak 25, astrocytoma 18</div>
       <div><b style="color:#C23B2A">4 Pień mózgu 15%</b> astrocytoma, wyściółczak, GBM</div>
       <div><b style="color:#6E4CB0">5 Rdzeń kręgowy 12%</b> Th 60%, L/S 30%</div>
@@ -104,7 +105,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 
   <div class="grid2">
     <div class="card">
-      <h4>Lokalizacja wg wykładu (% wszystkich guzów mózgu)</h4>
+      <h3>Lokalizacja wg wykładu (% wszystkich guzów mózgu)</h3>
       <p class="small" style="margin-bottom:.6rem">Wartości orientacyjne z wykładu, nie sumują się do 100%. Rdzeń kręgowy podano osobno (12%).</p>
       <div class="bars" id="barsLoc"></div>
     </div>
@@ -202,7 +203,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <text x="636" y="200" font-weight="800" fill="#2B63AE" font-size="14">4 MRI całego rdzenia</text>
         <text x="636" y="222">najlepiej przed operacją</text><text x="636" y="240">(artefakty krwi po zabiegu)</text><text x="636" y="258">guzy zarodkowe i rozsiewające się</text>
         <rect x="320" y="176" width="260" height="104" rx="12" fill="#FCEFD6" stroke="#B8730F" stroke-width="2"/>
-        <text x="336" y="200" font-weight="800" fill="#B8730F" font-size="14">5 Markery AFP i β-hCG</text>
+        <text x="336" y="200" font-weight="800" fill="#8F5808" font-size="14">5 Markery AFP i β-hCG</text>
         <text x="336" y="222">surowica i PMR</text><text x="336" y="240">zawsze przy guzie siodłowo-</text><text x="336" y="258">nadsiodłowym i szyszynkowym</text>
         <rect x="20" y="176" width="260" height="104" rx="12" fill="#DDF1F2" stroke="#0C7A85" stroke-width="2"/>
         <text x="36" y="200" font-weight="800" fill="#075760" font-size="14">6 Operacja i histologia</text>
@@ -229,7 +230,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </figure>
 
   <div class="grid2" style="margin-top:1.4rem">
-    <div class="card"><h4>🧪 Badania wg wykładu zakładu</h4>
+    <div class="card"><h3>🧪 Badania wg wykładu zakładu</h3>
       <ul class="tight small">
         <li><b>TK:</b> typ guza (torbielowaty, lity, krwotoczny), lepiej po kontraście</li>
         <li><b>MRI (preferowany):</b> rozległość masy, tkanki naciekane, tylny dół, wiele płaszczyzn, brak promieniowania, mniej artefaktów kostnych, zmiany w rdzeniu (zastąpił mielografię)</li>
@@ -273,7 +274,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <figcaption>Drogi rozsiewu: komory, przestrzeń podpajęczynówkowa, kanał kręgowy. Rzadko kości i szpik.</figcaption>
     </figure>
     <div class="stack">
-      <div class="card"><h4>Rozsiew po PMR (RTH całego OUN, MRI rdzenia, cytologia)</h4>
+      <div class="card"><h3>Rozsiew po PMR (RTH całego OUN, MRI rdzenia, cytologia)</h3>
         <p><span class="pill r">rdzeniak / PNET</span><span class="pill r">wyściółczak anaplastyczny (także kości)</span><span class="pill r">pineoblastoma</span><span class="pill a">guzy zarodkowe (uzupełnienie)</span></p></div>
       <div class="card"><h4>Zwykle bez rozsiewu</h4>
         <p><span class="pill g">astrocytoma pilocytarny</span><span class="pill g">astrocytoma móżdżku (niski stopień)</span><span class="pill g">czaszkogardlak</span><span class="pill g">oponiak</span></p>
@@ -322,7 +323,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <figcaption>Przedział, w którym leży guz, wyznacza pierwszy objaw.</figcaption>
     </figure>
     <div class="stack">
-      <div class="card"><h4>🧷 Objawy (wykład zakładu)</h4>
+      <div class="card"><h3>🧷 Objawy (wykład zakładu)</h3>
         <ul class="tight small">
           <li>Ból pleców <b>nasilający się w pozycji leżącej i przy próbie Valsalvy, ustępujący w pozycji siedzącej</b></li>
           <li>Skolioza, opór przy skłonach, zaburzenia chodu</li>
@@ -364,7 +365,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
         <text x="496" y="172" font-weight="800" fill="#6E4CB0" font-size="14">Dziecko &lt; 3 lat</text>
         <text x="496" y="194">• resekcja + CTH</text><text x="496" y="212">• RTH całego OUN pomijana</text><text x="496" y="230">  lub odraczana (neurotoks.)</text><text x="496" y="248">• CTH wysokodawkowa</text><text x="496" y="266">  z autoprzeszczepem</text><text x="496" y="284">  (wybrane protokoły)</text>
         <rect x="710" y="148" width="170" height="150" rx="12" fill="#FCEFD6" stroke="#B8730F" stroke-width="2"/>
-        <text x="726" y="172" font-weight="800" fill="#B8730F" font-size="14">Inne</text>
+        <text x="726" y="172" font-weight="800" fill="#8F5808" font-size="14">Inne</text>
         <text x="726" y="194">• guzy zarodkowe:</text><text x="726" y="212">  CTH + RTH,</text><text x="726" y="228">  EFS 3-l. ~80%</text><text x="726" y="250">• DMG (guz pnia):</text><text x="726" y="266">  biopsja ± RTH,</text><text x="726" y="282">  rokowanie bardzo złe</text>
       </g>
       <g stroke="#075760" stroke-width="2.2" fill="none" marker-end="url(#ar4)">
@@ -381,7 +382,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   </figure>
 
   <div class="grid2" style="margin-top:1.4rem">
-    <div class="card"><h4>Zakres resekcji wg wykładu</h4>
+    <div class="card"><h3>Zakres resekcji wg wykładu</h3>
       <div class="tw" style="margin-top:.5rem"><table id="resTable"></table></div></div>
     <div class="card"><h4>Wyniki leczenia wg wykładu</h4><p class="small" style="margin-bottom:.6rem">Różne punkty końcowe (przeżycie całkowite, EFS), więc nie porównuj słupków bezpośrednio.</p><div class="bars" id="barsOut"></div></div>
   </div>
@@ -399,7 +400,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Zadania testowe z puli i omówienia</h2>
   <p class="lead">Zadania pochodzą z plików zakładu (grupy A17, C, D 2019/20, S1–S4, S7 2025/26, skrypt Kiedrasia, eksport z platformy, pytania V roku). Wybierz odpowiedź, aby sprawdzić; omówienie rozwija się po wyborze. Badge pokazuje pewność klucza.</p>
   <div class="card" style="margin-bottom:1.2rem">
-    <h4>Zestaw zadań według tematu</h4>
+    <h3>Zestaw zadań według tematu</h3>
     <p class="small" style="margin-bottom:.6rem">Liczba zadań w tej stronie w danym obszarze (pytania powtarzają się w wielu grupach i latach puli).</p>
     <div class="bars" id="barsPool"></div>
   </div>

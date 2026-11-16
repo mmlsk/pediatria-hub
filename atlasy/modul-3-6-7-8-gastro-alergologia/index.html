@@ -11,7 +11,8 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 <title>[6] [3] [7] [8] Gastroenterologia i alergologia dziecięca – atlas z zadaniami testowymi</title>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet"></noscript>
-<link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../atlas-mobile.css">
+<link rel="icon" href="data:,"><link rel="stylesheet" href="../atlas-base.css">
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../atlas-mobile.css">
 </head>
 <body>
 <nav class="nav" aria-label="Nawigacja"><div class="wrap">
@@ -89,13 +90,13 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 </div>
 <div class="wrap">
   <div class="modcards">
-    <a class="mc m6" href="#m6"><b class="n">[6]</b><h3>Choroba wrzodowa</h3><p>Wrzód pierwotny i wtórny, H. pylori, wskazania do gastroskopii, GERD jako tło.</p><div class="cnt" data-cnt="6"></div></a>
-    <a class="mc m3" href="#m3"><b class="n">[3]</b><h3>Biegunki</h3><p>Odwodnienie, ORS, patomechanizmy, biegunka przewlekła, celiakia, Marsh.</p><div class="cnt" data-cnt="3"></div></a>
-    <a class="mc m7" href="#m7"><b class="n">[7]</b><h3>Nieswoiste zapalenia jelit</h3><p>Crohn kontra WZJG, objawy pozajelitowe, wzrastanie, diagnostyka wg Porto.</p><div class="cnt" data-cnt="7"></div></a>
-    <a class="mc m8" href="#m8"><b class="n">[8]</b><h3>Alergie pokarmowe</h3><p>IgE kontra nie-IgE, FPIAP, FPIES, algorytm diagnostyczny, anafilaksja.</p><div class="cnt" data-cnt="8"></div></a>
+    <a class="mc m6" href="#m6"><b class="n">[6]</b><h2>Choroba wrzodowa</h2><p>Wrzód pierwotny i wtórny, H. pylori, wskazania do gastroskopii, GERD jako tło.</p><div class="cnt" data-cnt="6"></div></a>
+    <a class="mc m3" href="#m3"><b class="n">[3]</b><h2>Biegunki</h2><p>Odwodnienie, ORS, patomechanizmy, biegunka przewlekła, celiakia, Marsh.</p><div class="cnt" data-cnt="3"></div></a>
+    <a class="mc m7" href="#m7"><b class="n">[7]</b><h2>Nieswoiste zapalenia jelit</h2><p>Crohn kontra WZJG, objawy pozajelitowe, wzrastanie, diagnostyka wg Porto.</p><div class="cnt" data-cnt="7"></div></a>
+    <a class="mc m8" href="#m8"><b class="n">[8]</b><h2>Alergie pokarmowe</h2><p>IgE kontra nie-IgE, FPIAP, FPIES, algorytm diagnostyczny, anafilaksja.</p><div class="cnt" data-cnt="8"></div></a>
   </div>
   <div class="card" style="margin-top:1.4rem">
-    <h4>Jak często temat wraca w plikach źródłowych</h4>
+    <h2>Jak często temat wraca w plikach źródłowych</h2>
     <p class="small" style="margin-bottom:.6rem">Liczba plików (z 56 unikalnych, po usunięciu kopii), w których temat pojawia się w pytaniach, omówieniach lub notatkach. To miara obecności tematu, a nie liczba powtórzeń jednego pytania.</p>
     <div class="bars" id="bars"></div>
   </div>
@@ -145,7 +146,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       </figure>
       <div class="stack">
         <div class="card">
-          <h4>Pierwotny kontra wtórny (wykład zakładu)</h4>
+          <h3>Pierwotny kontra wtórny (wykład zakładu)</h3>
           <div class="tw" style="margin-top:.5rem"><table>
             <tr><th></th><th>Pierwotny</th><th>Wtórny</th></tr>
             <tr><td><b>Lokalizacja</b></td><td>dwunastnica</td><td>żołądek</td></tr>
@@ -295,7 +296,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 
   <div class="panel" id="m3a">
     <div class="cols2">
-      <div class="card"><h4>🗣️ Wywiad</h4><ul class="chk" style="margin-top:.6rem">
+      <div class="card"><h3>🗣️ Wywiad</h3><ul class="chk" style="margin-top:.6rem">
         <li>Czas trwania, liczba, objętość i charakter stolców (wodniste, tłuszczowe, krew, śluz)</li>
         <li>Wymioty, gorączka, ból brzucha; diureza i pragnienie</li>
         <li>Kontakt z chorymi, żłobek, podróż, woda, surowe mięso i jaja</li>
@@ -501,7 +502,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
 
   <div class="panel" id="m7b" hidden>
     <div class="cols2">
-      <div class="card"><h4>🔥 Objawy wg wieku</h4>
+      <div class="card"><h3>🔥 Objawy wg wieku</h3>
         <ul class="tight small" style="margin-top:.4rem">
           <li><b>Poniżej 6 lat (VEO-IBD):</b> ciężka postać, zajęcie okrężnicy, rozważ podłoże genetyczne i niedobór odporności [13b]</li>
           <li><b>6–12 lat:</b> ból, biegunka, zahamowanie wzrastania, niedokrwistość; Crohn może przebiegać bez biegunki</li>
@@ -611,7 +612,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
       <tr><td><b>Nastolatek</b></td><td>orzeszki, orzechy, skorupiaki; pyłkowo-pokarmowa</td><td>zespół alergii jamy ustnej, anafilaksja (ćwiczenia, alkohol), EoE</td></tr>
     </table></div>
     <div class="grid2">
-      <div class="card"><h4>🍽️ Postacie żołądkowo-jelitowe</h4><ul class="tight small" style="margin-top:.4rem">
+      <div class="card"><h3>🍽️ Postacie żołądkowo-jelitowe</h3><ul class="tight small" style="margin-top:.4rem">
         <li><b>Zespół alergii jamy ustnej:</b> swędzenie ust po surowych owocach, reakcja krzyżowa z pyłkami</li>
         <li><b>Natychmiastowa alergia przewodu pokarmowego:</b> wymioty i ból w ciągu minut do 2 godzin</li>
         <li><b>FPIAP:</b> krew i śluz, prawidłowe przyrosty</li>
@@ -770,7 +771,7 @@ window.addEventListener('message',e=>{if(e.data&&e.data.type==='SET_THEME'){if(e
   <h2>Źródła i ograniczenia</h2>
   <div class="grid2">
     <div>
-      <h4>Pliki zakładu i pule</h4>
+      <h3>Pliki zakładu i pule</h3>
       <ul class="tight small src-list" style="margin-top:.4rem">
         <li>Wykłady dr Mokrzyckiej i sylabus, Klinika Pediatrii, Hemato-Onkologii i Gastroenterologii Dziecięcej PUM (seminaria TK03, TK06, TK07, TK08).</li>
         <li>Pule: gr.F 2020, 19-A, 19-F, 2021–22, 2023–24, Baza S4 2026/27, 2025/26 s1–s4, Zaliczenie z pediatrii, 5 rok 1–5, D 2019/20 i inne (56 unikalnych plików).</li>

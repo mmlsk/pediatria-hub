@@ -68,7 +68,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ---------- krótkie nazwy ---------- */
 const SHORT = { '1': 'Ból brzucha', '2': 'Zakażenia', '3': 'Biegunki', '4': 'KZN', '5': 'Stany nagłe', '6': 'Wrzodowa', '7': 'IBD', '8': 'Alergie', '9': 'Guzy mózgu', '10': 'Nowotwory lite', '11': 'Krwiotwórcze', '12': 'Skazy', '13a': 'Anemie', '13b': 'Odporność', '14': 'ZUM', '15': 'AKI i PChN', '0': 'Ogólna' };
 const ASHORT = { brzuch: 'Ból brzucha', zakazenia: 'Zakażenia', gastro: 'Gastro i alergie', nefro: 'Nefrologia', nagle: 'Stany nagłe', guzy: 'Guzy mózgu', lite: 'Nowotwory lite', onko11: 'Krwiotwórcze i chłonne', hemato: 'Skazy · anemie · PID', ogolne: 'Pediatria ogólna' };
-const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', '#F17D6E'], gastro: ['var(--amber)', '#D9A441'], nefro: ['var(--blue)', '#5E92D6'], nagle: ['var(--red)', '#E27B6B'], guzy: ['var(--violet)', '#4D7C97'], lite: ['var(--violet)', '#2D6A7E'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'], ogolne: ['var(--blue)', 'var(--teal)'] };
+const GA = { brzuch: ['var(--red)', 'var(--amber)'], zakazenia: ['var(--red)', 'var(--red-d)'], gastro: ['var(--amber)', 'var(--amber-d)'], nefro: ['var(--blue)', 'var(--blue-d)'], nagle: ['var(--red)', 'var(--violet)'], guzy: ['var(--violet)', 'var(--blue)'], lite: ['var(--violet)', 'var(--teal-d)'], onko11: ['var(--violet)', 'var(--red)'], hemato: ['var(--violet)', 'var(--teal)'], ogolne: ['var(--blue)', 'var(--teal)'] };
 const gOf = id => (modById[id] && GROUPS[modById[id].g]) ? GROUPS[modById[id].g] : GROUPS.A;
 
 /* ---------- magazyn postępu ---------- */
@@ -126,7 +126,7 @@ function applyTheme(t, persist = true) {
     delete document.documentElement.dataset.theme;
   }
   const tc = $('meta[name="theme-color"]');
-  if (tc) tc.content = eff === 'dark' ? '#090C0E' : '#F5F6F2';
+  if (tc) tc.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (eff === 'dark' ? '#090C0E' : '#F5F6F2');
   updateThemeUI();
   syncIframeTheme(eff);
 }
@@ -187,7 +187,7 @@ function getBank(q) {
 
 function getQNorm(q) {
   if (!q._n) {
-    q._n = norm([q.stem, (q.opts || []).join(' '), q.topic || '', (q.mods || []).join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
+    q._n = norm([q.id || '', q.stem, (q.opts || []).join(' '), q.topic || '', (q.mods || []).join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
   }
   return q._n;
 }
@@ -329,7 +329,7 @@ function renderGraph(host, o = {}) {
   const arcs = Object.keys(GROUPS).map(g => {
     const ms = MODS.filter(m => m.g === g); const a0 = pos[ms[0].id].a, a1 = pos[ms[ms.length - 1].id].a;
     const x0 = cx + R * Math.cos(a0), y0 = cy + R * Math.sin(a0), x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
-    return `<path d="M${x0} ${y0} A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1} ${y1}" fill="none" stroke="${GROUPS[g].hex}" stroke-width="30" stroke-linecap="round" opacity=".13"/>`;
+    return `<path d="M${x0} ${y0} A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1} ${y1}" fill="none" stroke="${GROUPS[g].color}" stroke-width="30" stroke-linecap="round" opacity=".13"/>`;
   }).join('');
 
   const edges = EDGES.filter(e => e.w > 0 || e.traps.length).map(e => {
@@ -374,7 +374,7 @@ function renderGraph(host, o = {}) {
     const p = pos[m.id], c = Math.cos(p.a), anchor = c > .25 ? 'start' : c < -.25 ? 'end' : 'middle';
     const lx = cx + (R + 34) * Math.cos(p.a), ly = cy + (R + 34) * Math.sin(p.a) + (Math.abs(c) <= .25 ? (Math.sin(p.a) > 0 ? 10 : -4) : 0);
     return `<g class="node${m.at ? '' : ' miss'}" data-m="${m.id}" tabindex="0" role="button" aria-label="Moduł ${m.id}: ${esc(m.n)}${m.at ? '' : ', brak atlasu'}">
-      <circle class="c" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="20" fill="${GROUPS[m.g].hex}" stroke="${GROUPS[m.g].hex}" stroke-width="2"/>
+      <circle class="c" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="20" fill="${GROUPS[m.g].color}" stroke="${GROUPS[m.g].color}" stroke-width="2"/>
       <text class="n" x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}">${m.id}</text>
       ${o.labels === false ? '' : `<text class="l" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${esc(SHORT[m.id])}</text>`}
       <title>[${m.id}] ${esc(m.n)}${m.at ? '' : ' (brak atlasu)'}</title></g>`;
@@ -490,16 +490,23 @@ function explain(q) {
   } else if (q.akt) {
     h += `<div class="dual"><div class="dbox a"><h4>🩺 Aktualna wiedza kliniczna</h4>${rich(q.akt)}</div></div>`;
   }
-  if (q.why) h += `<div class="why"><h4>Omówienie</h4>${/<p>/i.test(q.why) ? rich(q.why) : '<p>' + rich(q.why) + '</p>'}</div>`;
+  if (q.why || (q.fig && q.fig.src)) {
+    const whyBody = q.why ? (/<p>/i.test(q.why) ? rich(q.why) : '<p>' + rich(q.why) + '</p>') : '';
+    const figSrc = q.fig && q.fig.src && !/^\s*javascript:/i.test(q.fig.src) ? q.fig.src : '';
+    const figHtml = figSrc ? `<figure class="q-fig"><a href="${esc(figSrc)}" target="_blank" rel="noopener noreferrer" title="Otwórz infografikę w pełnym rozmiarze"><img src="${esc(figSrc)}" alt="${esc(q.fig.alt || '')}" loading="lazy"></a>${q.fig.cap ? `<figcaption>${esc(q.fig.cap)}</figcaption>` : ''}</figure>` : '';
+    h += `<div class="why"><h4>Omówienie</h4>${whyBody}${figHtml}</div>`;
+  }
   if (q.tip) h += `<div class="tip"><h4>Jak to zapamiętać</h4>${rich(q.tip)}</div>`;
   
-  if (q.src || q.isGlued) {
+  if (q.src || q.isGlued || q.id) {
+    const originFallback = q.isCustom ? 'Własne pytanie' : (q.bank === 'modulowa' ? 'Baza modułowa' : 'Baza zakładowa');
     h += `<details class="q-source-details">
-      <summary><span class="muted" style="font-size:.76rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem">
-        📜 Pochodzenie pytania (${q.reps ? q.reps + 'x' : '1x'}) <span style="opacity:.6;font-size:.68rem">▾</span>
+      <summary><span class="muted" style="font-size:.76rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+        📜 Pochodzenie pytania (${q.reps ? q.reps + 'x' : '1x'})${q.id ? ` <code class="q-id-badge" title="Unikatowy identyfikator zadania">${esc(q.id)}</code>` : ''} <span style="opacity:.6;font-size:.68rem">▾</span>
       </span></summary>
       <div class="q-source-box">
-        <strong>Źródła w puli:</strong> ${esc(q.src || 'Baza zakładowa')}
+        ${q.id ? `<div class="q-id-row"><strong>ID zadania:</strong> <code class="q-id-badge">${esc(q.id)}</code> <button type="button" class="q-id-copy" data-copy-id="${esc(q.id)}" title="Kopiuj ID zadania">Kopiuj ID</button></div>` : ''}
+        <strong>Źródła w puli:</strong> ${esc(q.src || originFallback)}
         ${q.isGlued ? '<div style="color:var(--amber);margin-top:.35rem;font-weight:700">⚠️ Uwaga: Pytanie sklejone z wieloczęściowego skanu OCR testu historycznego.</div>' : ''}
         ${q.adapt ? '<div class="muted" style="margin-top:.25rem">Opcje odpowiedzi uzupełnione lub zrekonstruowane.</div>' : ''}
       </div>
@@ -576,7 +583,7 @@ function gradeQcCard(det, q, selSet, record) {
   if (exp) {
     const note = !hasKey && selSet ? '<p class="srcline">Pytanie bez oficjalnego klucza — porównaj wybór z omówieniem poniżej.</p>' : '';
     const selfRow = (!q.opts || !q.opts.length || q.type === 'open')
-      ? '<div class="acts" style="margin-top:.5rem"><span class="muted" style="font-weight:700">Twoja samoocena:</span><button type="button" class="btn pri sm" data-qself="1" style="background:var(--green);border-color:var(--green);color:#fff">Znam ✓</button><button type="button" class="btn sec sm" data-qself="0" style="border-color:var(--red);color:var(--red)">Do powtórki ✗</button></div>'
+      ? '<div class="acts" style="margin-top:.5rem"><span class="muted" style="font-weight:700">Twoja samoocena:</span><button type="button" class="btn pri sm" data-qself="1" style="background:var(--green);border-color:var(--green);color:var(--on-accent)">Znam ✓</button><button type="button" class="btn sec sm" data-qself="0" style="border-color:var(--red);color:var(--red)">Do powtórki ✗</button></div>'
       : '';
     exp.innerHTML = note + explain(q) + selfRow;
   }
@@ -597,6 +604,17 @@ function delegateBm(root, onMutate) {
     if (q) body.innerHTML = qCardBody(q, !!det.closest('[data-quiz="1"]'));
   }, true);
   root.addEventListener('click', e => {
+    const copyIdBtn = e.target.closest('[data-copy-id]');
+    if (copyIdBtn) {
+      e.preventDefault();
+      const id = copyIdBtn.dataset.copyId;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(id).then(() => toast('Skopiowano ID: ' + id)).catch(() => toast('ID zadania: ' + id));
+      } else {
+        toast('ID zadania: ' + id);
+      }
+      return;
+    }
     const b = e.target.closest('[data-bm]');
     if (b) {
       e.preventDefault(); const id = b.dataset.bm;
@@ -1100,13 +1118,13 @@ function viewConnections(parts, params) {
         <p class="lead" style="margin-bottom:1rem">Pojęcia i jednostki chorobowe wymagające łączenia wiedzy z różnych atlasów kursu.</p>
         <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))" id="atlasBridgeGrid">
           ${(SEMANTIC_GAPS || []).map(g => `
-            <div class="card" style="padding:1rem;cursor:pointer" data-mod="${g.from}">
-              <div class="pillrow" style="margin-bottom:.4rem">
+            <button type="button" class="card bridge-card-btn" data-mod="${g.from}">
+              <span class="pillrow" style="margin-bottom:.4rem">
                 ${g.mods.map(m => `<span class="chip m" style="color:${gOf(m).color}">[${m}] ${esc(SHORT[m])}</span>`).join('')}
-              </div>
-              <h4 style="font-size:1rem;margin-bottom:.3rem">${esc(g.title)}</h4>
-              <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</p>
-            </div>
+              </span>
+              <strong style="display:block;font-size:1rem;margin-bottom:.3rem">${esc(g.title)}</strong>
+              <span class="muted" style="display:block;font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</span>
+            </button>
           `).join('')}
         </div>
       </div>`;
@@ -1121,7 +1139,7 @@ function viewConnections(parts, params) {
         <h3>Mapa Atlasów i Wikilinków</h3>
         <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł z koła powiązań. Panel pokaże odniesienia wychodzące (Wikilinks), odniesienia przychodzące (Backlinks) oraz sekcje atlasu z możliwością natychmiastowego przejścia do treści.</p>
         <div class="legend" style="margin:0">
-          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
+          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].color}"></i>${GROUPS[k].short}</span>`).join('')}
           <span><i class="dot" style="background:var(--red)"></i>pułapka kliniczna</span>
           <span><i class="dot" style="background:var(--teal)"></i>różnicowanie / most</span>
           <span><i class="dot" style="border:2px dashed var(--muted);background:var(--surface)"></i>brak atlasu</span>
@@ -1141,7 +1159,7 @@ function viewConnections(parts, params) {
 
       panel.innerHTML = `<div class="card">
         <div class="pillrow">
-          <span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span>
+          <span class="chip m" style="background:${gOf(id).color};color:var(--on-accent);border:0">[${id}]</span>
           <span class="chip">${GROUPS[m.g].short}</span>
         </div>
         <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3>
@@ -1225,9 +1243,9 @@ function viewConnections(parts, params) {
 
       panel.innerHTML = `<div class="card">
         <div class="pillrow">
-          <span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}] ${esc(SHORT[e.a])}</span>
+          <span class="chip m" style="background:${gOf(e.a).color};color:var(--on-accent);border:0">[${e.a}] ${esc(SHORT[e.a])}</span>
           <span aria-hidden="true">↔</span>
-          <span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}] ${esc(SHORT[e.b])}</span>
+          <span class="chip m" style="background:${gOf(e.b).color};color:var(--on-accent);border:0">[${e.b}] ${esc(SHORT[e.b])}</span>
         </div>
         <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
         <p class="muted" style="font-size:.88rem;margin-bottom:.8rem">Most semantyczny i powiązania między atlasami.</p>
@@ -1380,7 +1398,7 @@ function viewConnections(parts, params) {
         <h3>Jak czytać mapę pytań</h3>
         <p class="muted" style="margin:.4rem 0 .8rem">Wybierz moduł albo krawędź. Panel pokaże powiązane tematy, pułapki oraz statystyki Twoich odpowiedzi ze styku tych modułów.</p>
         <div class="legend" style="margin:0">
-          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].hex}"></i>${GROUPS[k].short}</span>`).join('')}
+          ${Object.keys(GROUPS).map(k => `<span><i class="dot" style="background:${GROUPS[k].color}"></i>${GROUPS[k].short}</span>`).join('')}
           <span><i class="dot" style="background:var(--teal)"></i>pułapka kliniczna</span>
           <span><i class="dot" style="border:2px dashed var(--muted);background:var(--surface)"></i>brak atlasu</span>
         </div>
@@ -1394,7 +1412,7 @@ function viewConnections(parts, params) {
       const conn = EDGES.filter(e => e.a === id || e.b === id).map(e => ({ o: e.a === id ? e.b : e.a, e })).sort((x, y) => y.e.w - x.e.w);
       panel.innerHTML = `<div class="card">
         <div class="pillrow">
-          <span class="chip m" style="background:${gOf(id).color};color:#fff;border:0">[${id}]</span>
+          <span class="chip m" style="background:${gOf(id).color};color:var(--on-accent);border:0">[${id}]</span>
           <span class="chip">${GROUPS[m.g].short}</span>
         </div>
         <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(m.n)}</h3>
@@ -1438,9 +1456,9 @@ function viewConnections(parts, params) {
 
       panel.innerHTML = `<div class="card">
         <div class="pillrow">
-          <span class="chip m" style="background:${gOf(e.a).color};color:#fff;border:0">[${e.a}]</span>
+          <span class="chip m" style="background:${gOf(e.a).color};color:var(--on-accent);border:0">[${e.a}]</span>
           <span aria-hidden="true">↔</span>
-          <span class="chip m" style="background:${gOf(e.b).color};color:#fff;border:0">[${e.b}]</span>
+          <span class="chip m" style="background:${gOf(e.b).color};color:var(--on-accent);border:0">[${e.b}]</span>
         </div>
         <h3 style="margin:.5rem 0;font-size:1.15rem">${esc(SHORT[e.a])} ↔ ${esc(SHORT[e.b])}</h3>
         <p><b>${e.w}</b> ${e.w === 1 ? 'zadanie łączy' : 'zadań łączy'} oba moduły.</p>
@@ -1520,12 +1538,12 @@ function viewConnections(parts, params) {
 
             const st = edgeStats(r, c);
             let cellBg = `rgba(12,122,133,${(.14 + .86 * w / mx).toFixed(2)})`;
-            let cellColor = w / mx > .5 ? '#fff' : 'var(--ink-2)';
+            let cellColor = w / mx > .5 ? 'var(--on-accent)' : 'var(--ink-2)';
 
             if (st.att > 0) {
-              if (st.status === 'ok') { cellBg = 'rgba(16, 185, 129, 0.4)'; cellColor = 'var(--ink)'; }
-              else if (st.status === 'bad') { cellBg = 'rgba(239, 68, 68, 0.4)'; cellColor = 'var(--ink)'; }
-              else { cellBg = 'rgba(245, 158, 11, 0.4)'; cellColor = 'var(--ink)'; }
+              if (st.status === 'ok') { cellBg = 'var(--green-l)'; cellColor = 'var(--ink)'; }
+              else if (st.status === 'bad') { cellBg = 'var(--red-l)'; cellColor = 'var(--ink)'; }
+              else { cellBg = 'var(--amber-l)'; cellColor = 'var(--ink)'; }
             }
 
             return `<td data-e="${e ? e.a + '|' + e.b : ''}" style="background:${cellBg};color:${cellColor};cursor:pointer" title="[${r}] ↔ [${c}]: ${w} pytań${st.att > 0 ? ` (Wynik: ${Math.round(st.rate * 100)}%)` : ''}">${w}</td>`;
@@ -1574,7 +1592,7 @@ function viewConnections(parts, params) {
 /* ---------- KNOWLEDGE GRAPH (Graf wiedzy & Luki semantyczne) ---------- */
 const KG_DATA = (function () {
   const nodes = [
-    // --- KLASTER A: Stany nagłe & zakażenia (gr: 'A', hex: '#C23B2A') ---
+    // --- KLASTER A: Stany nagłe & zakażenia (gr: 'A', var(--red)) ---
     { id: 'm1',  type: 'mod',  mid: '1',   n: 'Ból brzucha',               g: 'A', x: 410, y: 155 },
     { id: 'm2',  type: 'mod',  mid: '2',   n: 'Zakażenia u dzieci',        g: 'A', x: 195, y: 150 },
     { id: 'm5',  type: 'mod',  mid: '5',   n: 'Stany nagłe',               g: 'A', x: 300, y: 225 },
@@ -1587,7 +1605,7 @@ const KG_DATA = (function () {
     { id: 'b_pmr',    type: 'diag',n: 'Badanie PMR (punkcja)',        g: 'A', x: 92,  y: 92,  icon: '🔬' },
     { id: 'b_gazo',   type: 'diag',n: 'Gazometria krwi',              g: 'A', x: 430, y: 250, icon: '🧪' },
 
-    // --- KLASTER B: Gastroenterologia & alergie (gr: 'B', hex: '#B8730F') ---
+    // --- KLASTER B: Gastroenterologia & alergie (gr: 'B', var(--amber)) ---
     { id: 'm3',  type: 'mod',  mid: '3',   n: 'Biegunki i odwodnienie',    g: 'B', x: 615, y: 125 },
     { id: 'm6',  type: 'mod',  mid: '6',   n: 'Choroba wrzodowa',          g: 'B', x: 750, y: 98 },
     { id: 'm7',  type: 'mod',  mid: '7',   n: 'IBD (ChLC / WZJG)',         g: 'B', x: 810, y: 185 },
@@ -1597,7 +1615,7 @@ const KG_DATA = (function () {
     { id: 'd_celiak', type: 'dis', n: 'Celiakia i enteropatia',       g: 'B', x: 745, y: 265, icon: '🌾' },
     { id: 'b_usg',    type: 'diag',n: 'USG jamy brzusznej',           g: 'B', x: 515, y: 205, icon: '📡' },
 
-    // --- KLASTER C: Nefrologia (gr: 'C', hex: '#2B63AE') ---
+    // --- KLASTER C: Nefrologia (gr: 'C', var(--blue)) ---
     { id: 'm4',  type: 'mod',  mid: '4',   n: 'Kłębuszkowe ZN (KZN)',      g: 'C', x: 650, y: 440 },
     { id: 'm14', type: 'mod',  mid: '14',  n: 'ZUM u dzieci',              g: 'C', x: 800, y: 450 },
     { id: 'm15', type: 'mod',  mid: '15',  n: 'AKI i PChN',                g: 'C', x: 675, y: 580 },
@@ -1605,7 +1623,7 @@ const KG_DATA = (function () {
     { id: 'd_hus',    type: 'dis', n: 'Zespół HUS (STEC)',            g: 'C', x: 540, y: 595, icon: '⚠️' },
     { id: 'b_mocz',   type: 'diag',n: 'Badanie moczu i osad',         g: 'C', x: 790, y: 545, icon: '🧪' },
 
-    // --- KLASTER D: Onkologia, hemato, odporność (gr: 'D', hex: '#245B7A') ---
+    // --- KLASTER D: Onkologia, hemato, odporność (gr: 'D', var(--violet)) ---
     { id: 'm9',   type: 'mod', mid: '9',   n: 'Guzy mózgu',                g: 'D', x: 165, y: 432 },
     { id: 'm10',  type: 'mod', mid: '10',  n: 'Nowotwory lite',            g: 'D', x: 300, y: 438 },
     { id: 'm11',  type: 'mod', mid: '11',  n: 'Nowotwory krwiotwórcze',    g: 'D', x: 155, y: 525 },
@@ -1680,17 +1698,17 @@ function viewKnowledgeGraph(parts, params) {
     <p class="lead">Kliknij dowolną kartę, aby podświetlić most wiedzy na grafie i otworzyć dedykowaną analizę patomechanizmu oraz pułapki egzaminacyjnej.</p>
     <div class="agrid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))" id="kgGapsGrid">
       ${(SEMANTIC_GAPS || []).map((g, idx) => `
-        <div class="kg-gap-card-box" data-gap="${g.id}">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <button type="button" class="kg-gap-card-box" data-gap="${g.id}">
+          <span style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
             <span class="kg-gap-badge">Most #${idx + 1}</span>
-            <div class="pillrow" style="margin:0">
+            <span class="pillrow" style="margin:0">
               ${g.mods.map(m => `<span class="chip m" style="color:${gOf(m).color};font-size:.72rem">[${m}]</span>`).join('')}
-            </div>
-          </div>
-          <h4 style="font-size:1.02rem;margin-bottom:.35rem">${esc(g.title)}</h4>
-          <p class="muted" style="font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</p>
-          <div style="margin-top:.7rem;font-size:.8rem;color:var(--teal);font-weight:700">Pokaż na grafie & szczegóły →</div>
-        </div>
+            </span>
+          </span>
+          <strong style="display:block;font-size:1.02rem;margin-bottom:.35rem">${esc(g.title)}</strong>
+          <span class="muted" style="display:block;font-size:.84rem;line-height:1.4">${esc(g.clinicalReason.slice(0, 130))}…</span>
+          <span style="display:block;margin-top:.7rem;font-size:.8rem;color:var(--teal-d);font-weight:700">Pokaż na grafie & szczegóły →</span>
+        </button>
       `).join('')}
     </div>
   </div></section>`;
@@ -1750,13 +1768,13 @@ function viewKnowledgeGraph(parts, params) {
 
       if (n.type === 'mod') {
         return `<g class="kg-node" data-nid="${n.id}" data-type="mod" data-mid="${n.mid}" tabindex="0" role="button" aria-label="Moduł ${n.mid}: ${esc(n.n)}" style="${displayStyle}">
-          <circle cx="${n.x}" cy="${n.y}" r="22" fill="${grp.hex}" stroke="${grp.hex}" stroke-width="2.5" />
-          <text x="${n.x}" y="${n.y + 1}" font-size="12px" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.mid}</text>
+          <circle cx="${n.x}" cy="${n.y}" r="22" fill="${grp.color}" stroke="${grp.color}" stroke-width="2.5" />
+          <text x="${n.x}" y="${n.y + 1}" font-size="12px" font-weight="800" fill="var(--on-accent)" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.mid}</text>
           <text x="${n.x}" y="${n.y + 36}" font-size="11.5px" font-weight="700" fill="var(--ink-2)" text-anchor="middle" pointer-events="none">${esc(SHORT[n.mid] || n.n)}</text>
         </g>`;
       } else if (n.type === 'dis') {
         return `<g class="kg-node" data-nid="${n.id}" data-type="dis" tabindex="0" role="button" aria-label="Choroba: ${esc(n.n)}" style="${displayStyle}">
-          <rect x="${n.x - 22}" y="${n.y - 18}" width="44" height="36" rx="10" fill="var(--surface)" stroke="${grp.hex}" stroke-width="2.2" />
+          <rect x="${n.x - 22}" y="${n.y - 18}" width="44" height="36" rx="10" fill="var(--surface)" stroke="${grp.color}" stroke-width="2.2" />
           <text x="${n.x}" y="${n.y + 1}" font-size="16px" text-anchor="middle" dominant-baseline="central" pointer-events="none">${n.icon || '🩺'}</text>
           <text x="${n.x}" y="${n.y + 32}" font-size="10.5px" font-weight="700" fill="var(--ink)" text-anchor="middle" pointer-events="none">${esc(n.n.length > 18 ? n.n.slice(0, 16) + '…' : n.n)}</text>
         </g>`;
@@ -1926,7 +1944,7 @@ function viewKnowledgeGraph(parts, params) {
 
     inspector.innerHTML = `<div class="card">
       <div class="pillrow">
-        <span class="chip" style="background:${grp.hex};color:#fff;border:0">${isMod ? 'Moduł [' + n.mid + ']' : (n.type === 'dis' ? 'Choroba' : 'Badanie')}</span>
+        <span class="chip" style="background:${grp.color};color:var(--on-accent);border:0">${isMod ? 'Moduł [' + n.mid + ']' : (n.type === 'dis' ? 'Choroba' : 'Badanie')}</span>
         <span class="chip">${grp.short}</span>
       </div>
       <h3 style="margin:.5rem 0 .2rem;font-size:1.3rem;font-family:var(--font-display)">${esc(n.n)}</h3>
@@ -2199,36 +2217,36 @@ function renderZakladTab(container) {
     <p class="muted" style="margin-bottom:1rem">Wybierz profil nauki dopasowany do Twojego etapu przygotowań do kolokwium lub egzaminu.</p>
 
     <div class="zd-modes-grid">
-      <div class="zd-mode-card hit" data-mode="hits">
-        <h3>🔥 Hity Zakładowe <span class="zd-count">${hitsCount} pytań</span></h3>
-        <p>Pytania powtórzone w co najmniej dwóch niezależnych rocznikach/zaliczeniach (2014–2026). Absolutny priorytet powtórkowy!</p>
-        <button class="btn pri sm hit">Trenuj Hity Zakładowe →</button>
-      </div>
+      <button type="button" class="zd-mode-card hit" data-mode="hits">
+        <span class="zd-mode-title">🔥 Hity Zakładowe <span class="zd-count">${hitsCount} pytań</span></span>
+        <span class="zd-mode-desc">Pytania powtórzone w co najmniej dwóch niezależnych rocznikach/zaliczeniach (2014–2026). Absolutny priorytet powtórkowy!</span>
+        <span class="btn pri sm hit" aria-hidden="true">Trenuj Hity Zakładowe →</span>
+      </button>
 
-      <div class="zd-mode-card gap" data-mode="gap">
-        <h3>⚠️ Pułapki i Rozbieżności <span class="zd-count">${gapCountLocal} pytań</span></h3>
-        <p>Zadania, w których klucz zakładowy różni się od współczesnych wytycznych. Dwutorowy panel: „Pod zaliczenie” vs „Klinicznie”.</p>
-        <button class="btn pri sm" style="background:var(--amber);border-color:var(--amber)">Ćwicz Rozbieżności →</button>
-      </div>
+      <button type="button" class="zd-mode-card gap" data-mode="gap">
+        <span class="zd-mode-title">⚠️ Pułapki i Rozbieżności <span class="zd-count">${gapCountLocal} pytań</span></span>
+        <span class="zd-mode-desc">Zadania, w których klucz zakładowy różni się od współczesnych wytycznych. Dwutorowy panel: „Pod zaliczenie” vs „Klinicznie”.</span>
+        <span class="btn pri sm" style="background:var(--amber-d);border-color:var(--amber-d)" aria-hidden="true">Ćwicz Rozbieżności →</span>
+      </button>
 
-      <div class="zd-mode-card marathon" data-mode="marathon">
-        <h3>⚡ Maraton Zakładowy <span class="zd-count">25 pytań</span></h3>
-        <p>Losowa sesja 25 pytań z całej puli zakładowej w trybie nauki – natychmiastowe wyjaśnienie merytoryczne i analiza dystraktorów.</p>
-        <button class="btn pri sm">Rozpocznij Maraton →</button>
-      </div>
+      <button type="button" class="zd-mode-card marathon" data-mode="marathon">
+        <span class="zd-mode-title">⚡ Maraton Zakładowy <span class="zd-count">25 pytań</span></span>
+        <span class="zd-mode-desc">Losowa sesja 25 pytań z całej puli zakładowej w trybie nauki – natychmiastowe wyjaśnienie merytoryczne i analiza dystraktorów.</span>
+        <span class="btn pri sm" aria-hidden="true">Rozpocznij Maraton →</span>
+      </button>
 
-      <div class="zd-mode-card flash" data-mode="flash">
-        <h3>🃏 Fiszki Kliniczne <span class="zd-count">${openCount} pytań</span></h3>
-        <p>Pytania otwarte i rekonstrukcyjne – wymusza aktywne przypominanie (retrieval practice) przed odsłonięciem klucza i omówienia.</p>
-        <button class="btn pri sm">Uruchom Fiszki →</button>
-      </div>
+      <button type="button" class="zd-mode-card flash" data-mode="flash">
+        <span class="zd-mode-title">🃏 Fiszki Kliniczne <span class="zd-count">${openCount} pytań</span></span>
+        <span class="zd-mode-desc">Pytania otwarte i rekonstrukcyjne – wymusza aktywne przypominanie (retrieval practice) przed odsłonięciem klucza i omówienia.</span>
+        <span class="btn pri sm" aria-hidden="true">Uruchom Fiszki →</span>
+      </button>
 
       ${wrong > 0 ? `
-      <div class="zd-mode-card wrong" data-mode="wrong">
-        <h3>❌ Koryguj Błędy <span class="zd-count" style="color:var(--red)">${wrong} do powtórki</span></h3>
-        <p>Sesja powtórkowa skupiona wyłącznie na zadaniach zakładowych, w których ostatnia odpowiedź była błędna.</p>
-        <button class="btn pri sm" style="background:var(--red);border-color:var(--red)">Powtórz błędy →</button>
-      </div>
+      <button type="button" class="zd-mode-card wrong" data-mode="wrong">
+        <span class="zd-mode-title">❌ Koryguj Błędy <span class="zd-count" style="color:var(--red)">${wrong} do powtórki</span></span>
+        <span class="zd-mode-desc">Sesja powtórkowa skupiona wyłącznie na zadaniach zakładowych, w których ostatnia odpowiedź była błędna.</span>
+        <span class="btn pri sm" style="background:var(--red);border-color:var(--red)" aria-hidden="true">Powtórz błędy →</span>
+      </button>
       ` : ''}
     </div>
 
@@ -2302,7 +2320,7 @@ function renderBrowseTab(container) {
   const stats = getQStats();
   container.innerHTML = `
     <div class="tool">
-      <input class="field" id="fq" type="search" inputmode="search" enterkeyhint="search" placeholder="Szukaj w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
+      <input class="field" id="fq" type="search" inputmode="search" enterkeyhint="search" placeholder="Szukaj po ID (np. q0042), w treści pytań, odpowiedziach lub omówieniach…" value="${esc(F.q)}" aria-label="Szukaj w pytaniach">
       <div class="frow"><span class="flab">Bank</span><div class="pillrow" id="fBank">${Object.keys(BANKS).map(b => `<button class="tgl" data-v="${b}" aria-pressed="${F.banks.has(b)}">${BANKS[b].icon} ${BANKS[b].short} (${stats.banks[b] || 0})</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Atlas</span><div class="pillrow" id="fAt">${ATLASES.map(a => `<button class="tgl" data-v="${a.id}" aria-pressed="${F.at.has(a.id)}">${a.tag} ${esc(ASHORT[a.id])}</button>`).join('')}</div></div>
       <div class="frow"><span class="flab">Moduł</span><div class="pillrow" id="fMod">${MODS.filter(m => stats.modsHit.has(m.id)).map(m => `<button class="tgl g" style="--gc:${gOf(m.id).color}" data-v="${m.id}" aria-pressed="${F.mods.has(m.id)}">[${m.id}]</button>`).join('')}<button class="tgl" id="fAll" aria-pressed="${F.all}" title="Wymagaj wszystkich wybranych modułów jednocześnie">wszystkie naraz</button></div></div>
@@ -2331,7 +2349,8 @@ function renderBrowseTab(container) {
   function filtered() {
     const rawQuery = (F.q || '').trim();
     const numMatch = rawQuery.match(/^#?q?(\d{1,4})$/i);
-    const targetQId = numMatch ? 'q' + numMatch[1].padStart(4, '0') : null;
+    const exactId = rawQuery.replace(/^#/, '');
+    const targetQId = numMatch ? 'q' + numMatch[1].padStart(4, '0') : (qById[exactId] ? exactId : (qById[exactId.toLowerCase()] ? exactId.toLowerCase() : null));
     lastTargetQId = targetQId;
     const toks = norm(F.q).split(/\s+/).filter(Boolean);
     const ms = F.mods.size ? [...F.mods] : null;
@@ -3344,21 +3363,21 @@ function renderExamSetup() {
 
     <!-- Kafelki szybkich presetów -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.8rem">
-      <div class="card" style="cursor:pointer;border:2px solid transparent" data-preset="quick">
-        <div style="font-size:1.4rem;margin-bottom:.3rem">⚡ Szybki test</div>
-        <b>20 pytań · 20 minut</b>
-        <p class="srcline" style="margin-top:.3rem">Krótka weryfikacja wiedzy z losowych modułów.</p>
-      </div>
-      <div class="card" style="cursor:pointer;border:2px solid var(--teal);background:var(--teal-xl)" data-preset="standard">
-        <div style="font-size:1.4rem;margin-bottom:.3rem">🎓 Egzamin standardowy</div>
-        <b>50 pytań · 50 minut</b>
-        <p class="srcline" style="margin-top:.3rem">Zrównoważony przekrój wszystkich 15 modułów.</p>
-      </div>
-      <div class="card" style="cursor:pointer;border:2px solid transparent" data-preset="full">
-        <div style="font-size:1.4rem;margin-bottom:.3rem">📚 Pełny maraton</div>
-        <b>100 pytań · 100 minut</b>
-        <p class="srcline" style="margin-top:.3rem">Maksymalny test wytrzymałości i wiedzy.</p>
-      </div>
+      <button type="button" class="card preset-card" data-preset="quick" aria-pressed="${EXAM_CONF.count === 20 && EXAM_CONF.timeMode === '1min'}">
+        <span style="display:block;font-size:1.4rem;margin-bottom:.3rem">⚡ Szybki test</span>
+        <strong style="display:block">20 pytań · 20 minut</strong>
+        <span class="srcline" style="display:block;margin-top:.3rem">Krótka weryfikacja wiedzy z losowych modułów.</span>
+      </button>
+      <button type="button" class="card preset-card" data-preset="standard" aria-pressed="${EXAM_CONF.count === 50 && EXAM_CONF.timeMode === '1min'}">
+        <span style="display:block;font-size:1.4rem;margin-bottom:.3rem">🎓 Egzamin standardowy</span>
+        <strong style="display:block">50 pytań · 50 minut</strong>
+        <span class="srcline" style="display:block;margin-top:.3rem">Zrównoważony przekrój wszystkich 15 modułów.</span>
+      </button>
+      <button type="button" class="card preset-card" data-preset="full" aria-pressed="${EXAM_CONF.count === 100 && EXAM_CONF.timeMode === '1min'}">
+        <span style="display:block;font-size:1.4rem;margin-bottom:.3rem">📚 Pełny maraton</span>
+        <strong style="display:block">100 pytań · 100 minut</strong>
+        <span class="srcline" style="display:block;margin-top:.3rem">Maksymalny test wytrzymałości i wiedzy.</span>
+      </button>
     </div>
 
     <!-- Konfiguracja zaawansowana -->
@@ -3436,6 +3455,11 @@ function renderExamSetup() {
     $('#exEstTime').textContent = timeText;
   };
 
+  const syncPresetCards = () => {
+    const active = EXAM_CONF.timeMode !== '1min' ? null : (EXAM_CONF.count === 20 ? 'quick' : EXAM_CONF.count === 50 ? 'standard' : EXAM_CONF.count === 100 ? 'full' : null);
+    $$('[data-preset]').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.preset === active)));
+  };
+
   // Presety
   $$('[data-preset]').forEach(card => {
     card.onclick = () => {
@@ -3445,6 +3469,7 @@ function renderExamSetup() {
       else if (p === 'full') { EXAM_CONF.count = 100; EXAM_CONF.timeMode = '1min'; }
       $$('#exN button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === EXAM_CONF.count));
       $$('#exTime button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === EXAM_CONF.timeMode));
+      syncPresetCards();
       updatePoolInfo();
     };
   });
@@ -3455,6 +3480,7 @@ function renderExamSetup() {
     if (!b) return;
     EXAM_CONF.count = +b.dataset.n;
     $$('#exN button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    syncPresetCards();
     updatePoolInfo();
   };
 
@@ -3464,6 +3490,7 @@ function renderExamSetup() {
     if (!b) return;
     EXAM_CONF.timeMode = b.dataset.t;
     $$('#exTime button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    syncPresetCards();
     updatePoolInfo();
   };
 
@@ -5202,7 +5229,7 @@ function renderEmergencyDrugTray(caseItem) {
     </div>
 
     <!-- Czerwone flagi / ostrzeżenia -->
-    <div style="background:rgba(194,59,42,0.08);border-left:4px solid var(--red);padding:.7rem .9rem;border-radius:0 6px 6px 0;font-size:.82rem;line-height:1.45;color:var(--ink)">
+    <div style="background:rgba(194,59,42,0.08);border:1px solid rgba(194,59,42,0.28);padding:.7rem .9rem;border-radius:8px;font-size:.82rem;line-height:1.45;color:var(--ink)">
       <b style="color:var(--red)">⚠️ CZERWONE FLAGI I PRZECIWWSKAZANIA:</b>
       <ul style="margin:.3rem 0 0 1.1rem;padding:0">
         ${cardData.redFlags.map(rf => `<li>${rf}</li>`).join('')}
@@ -5371,7 +5398,7 @@ function renderPatientCaseList() {
             return `<div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:3.5px solid var(--teal)">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.4rem">
-                  <span class="badge" style="background:var(--teal);color:#fff;font-weight:800;font-size:.72rem">STACJA ${station.number}</span>
+                  <span class="badge" style="background:var(--teal);color:var(--on-accent);font-weight:800;font-size:.72rem">STACJA ${station.number}</span>
                   <span style="font-size:.78rem;color:var(--ink-muted);font-weight:700">${station.patient.age} · ${station.patient.weight}</span>
                 </div>
                 <h4 style="font-size:1.08rem;margin-bottom:.35rem;font-family:var(--font-display)">
@@ -6677,7 +6704,7 @@ function renderOsceStationList() {
         <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;border-top:4px solid var(--teal)">
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
-              <span class="badge" style="background:var(--teal);color:#fff;font-weight:800">STACJA ${station.number}</span>
+              <span class="badge" style="background:var(--teal);color:var(--on-accent);font-weight:800">STACJA ${station.number}</span>
               <span style="font-size:.82rem;color:var(--ink-muted);font-weight:700">Wiek: ${station.patient.age} · ${station.patient.gender === 'm' ? 'Chłopiec' : 'Dziewczynka'}</span>
             </div>
             <h3 style="margin-top:0;margin-bottom:.4rem"><a href="#/pacjent/osce/${station.id}">${station.title}</a></h3>
@@ -6895,7 +6922,7 @@ function renderOsceScaleWidget(station) {
     </div>
 
     ${techFeedback ? `
-      <div style="margin-top:.6rem;padding:.55rem .8rem;border-radius:6px;background:${techFeedback.type === "gold" ? "rgba(217,119,6,0.1)" : "rgba(12,122,133,0.08)"};border-left:3px solid ${techFeedback.type === "gold" ? "var(--amber)" : "var(--teal)"};font-size:.82rem;line-height:1.4">
+      <div style="margin-top:.6rem;padding:.55rem .8rem;border-radius:8px;background:${techFeedback.type === "gold" ? "rgba(217,119,6,0.1)" : "rgba(12,122,133,0.08)"};border:1px solid ${techFeedback.type === "gold" ? "rgba(184,115,15,0.32)" : "rgba(12,122,133,0.28)"};font-size:.82rem;line-height:1.4">
         <b style="color:${techFeedback.type === "gold" ? "var(--amber)" : "var(--teal)"}">${techFeedback.badge}:</b> ${techFeedback.text}
       </div>
     ` : ""}
@@ -6956,7 +6983,7 @@ function renderActiveOsceStation(station) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:.8rem">
         <div>
           <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem">
-            <span class="badge" style="background:var(--teal);color:#fff;font-weight:800">STACJA ${station.number}</span>
+            <span class="badge" style="background:var(--teal);color:var(--on-accent);font-weight:800">STACJA ${station.number}</span>
             <h2 style="margin:0;font-size:1.3rem">${station.title}</h2>
           </div>
           <div style="font-size:.88rem;color:var(--ink-muted)">
@@ -7021,7 +7048,7 @@ function renderActiveOsceStation(station) {
           <div style="flex:1">
             <h4 style="margin:0 0 .4rem 0;color:var(--red);font-size:1.05rem">ZAŁAMANIE STANU PACJENTA – POWIKŁANIE IATROGENNE!</h4>
             <p style="margin:0 0 .6rem 0;font-size:.9rem;line-height:1.45">${OSCE_ACTIVE.complicationMessage}</p>
-            <button class="btn btn-sm" id="btnStabilizeOsce" style="background:var(--red);color:#fff;border-color:var(--red)">
+            <button class="btn btn-sm" id="btnStabilizeOsce" style="background:var(--red);color:var(--on-accent);border-color:var(--red)">
               🚑 Zastosuj natychmiastowe postępowanie ratunkowe i ustabilizuj pacjenta
             </button>
           </div>
@@ -7208,7 +7235,7 @@ function renderActiveOsceStation(station) {
           ` : `
             <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem">
               ${OSCE_ACTIVE.findings.slice(0, 5).map(f => `
-                <div style="font-size:.8rem;padding:.4rem .6rem;background:var(--surface);border-radius:6px;border-left:3px solid ${f.isFatal ? 'var(--red)' : 'var(--teal)'}">
+                <div style="font-size:.8rem;padding:.45rem .65rem;background:var(--surface);border-radius:8px;border:1px solid ${f.isFatal ? 'rgba(194,59,42,0.32)' : 'rgba(12,122,133,0.28)'}">
                   <div style="display:flex;justify-content:space-between;color:var(--ink-muted);font-size:.72rem;margin-bottom:.15rem">
                     <span><b>${f.zoneName}</b> › ${f.label}</span>
                     <span>${f.time}</span>
@@ -10397,7 +10424,7 @@ function viewDiagnostics(parts, params) {
 
               <!-- Wyjaśnienie i Złota Perła Egzaminacyjna po rozwiązaniu -->
               ${cProg.solved ? `
-                <div style="background:var(--surface);border-left:4px solid var(--green);padding:.9rem 1.1rem;border-radius:var(--r);font-size:.9rem;line-height:1.5;margin-top:.4rem">
+                <div style="background:var(--surface);border:1px solid rgba(47,132,80,0.35);padding:.9rem 1.1rem;border-radius:var(--r);font-size:.9rem;line-height:1.5;margin-top:.4rem">
                   <b style="color:var(--green)">✓ Uzasadnienie postępowania:</b>
                   <p class="srcline" style="margin-top:.3rem;color:var(--ink)">${esc(activeCase.clinicalQuestion.explanation)}</p>
                 </div>
@@ -10887,7 +10914,7 @@ function viewDiagnostics(parts, params) {
             </div>
 
             <!-- 3. Objaw patognomoniczny -->
-            <div class="rash-info-row" style="background:var(--surface-2);padding:.6rem .8rem;border-radius:8px;border-left:3px solid var(--teal)">
+            <div class="rash-info-row" style="background:var(--surface-2);padding:.6rem .8rem;border-radius:8px;border:1px solid rgba(12,122,133,0.24)">
               <span class="rash-info-label" style="color:var(--teal-d)">⭐ Objaw patognomoniczny:</span>
               <span style="font-weight:700">${esc(activeRash.pathognomonic)}</span>
             </div>
@@ -11613,7 +11640,7 @@ function renderSession() {
         body += explain(q);
         body += `<div class="acts" id="flashEvalRow" style="display:flex;gap:.8rem;align-items:center;background:var(--surface);padding:.9rem 1.1rem;border-radius:10px;border:1px solid var(--line);margin-top:1.2rem;flex-wrap:wrap">
           <span style="font-weight:700">Twoja samoocena:</span>
-          <button class="btn pri sm" id="flashYes" style="background:var(--green);border-color:var(--green);color:#fff;font-weight:700">Znam to ✓</button>
+          <button class="btn pri sm" id="flashYes" style="background:var(--green);border-color:var(--green);color:var(--on-accent);font-weight:700">Znam to ✓</button>
           <button class="btn sec sm" id="flashNo" style="border-color:var(--red);color:var(--red);font-weight:700">Muszę powtórzyć ✗</button>
           <span style="flex:1"></span>
           <button class="bm" data-bm="${q.id}" aria-pressed="${!!S.bm[q.id]}" aria-label="Zakładka"><svg width="16" height="16" viewBox="0 0 16 16" fill="${S.bm[q.id] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="M3.5 2h9v12L8 11 3.5 14z"/></svg></button>
@@ -11660,7 +11687,7 @@ function renderSession() {
   }
   if (q.type === 'open') {
     if (!done) { $('#reveal').onclick = () => { s.locked = true; renderSession(); }; }
-    else { $('#nextRow').innerHTML = `<span class="muted" style="font-weight:700">Czy znałeś odpowiedź?</span><button class="btn pri sm" id="yes" style="background:var(--green);border-color:var(--green);color:#fff">Tak ✓</button><button class="btn sec sm" id="no" style="border-color:var(--red);color:var(--red)">Nie ✗</button>`; $('#yes').onclick = () => { s.sel = new Set(); record(true); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; $('#no').onclick = () => { s.sel = new Set(); record(false); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; }
+    else { $('#nextRow').innerHTML = `<span class="muted" style="font-weight:700">Czy znałeś odpowiedź?</span><button class="btn pri sm" id="yes" style="background:var(--green);border-color:var(--green);color:var(--on-accent)">Tak ✓</button><button class="btn sec sm" id="no" style="border-color:var(--red);color:var(--red)">Nie ✗</button>`; $('#yes').onclick = () => { s.sel = new Set(); record(true); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; $('#no').onclick = () => { s.sel = new Set(); record(false); s.locked = false; s.i++; renderSession(); window.scrollTo(0, 0); }; }
     return;
   }
   const multi = q.keys.length > 1;
@@ -11864,7 +11891,11 @@ function palRender() {
   const toks = norm(palIn.value).split(/\s+/).filter(Boolean);
   palItems = (toks.length ? ALL.filter(i => toks.every(t => i.n.includes(t))) : ALL.slice(0, 22)).slice(0, 40);
   palCur = 0;
-  palList.innerHTML = palItems.length ? palItems.map((i, ix) => `<li><a href="${i.h}" class="${ix === 0 ? 'cur' : ''}" data-ix="${ix}"><span class="k">${i.k}</span><span class="t">${esc(i.t)}</span><span aria-hidden="true">↵</span></a></li>`).join('') : '<li class="empty">Brak wyników</li>';
+  palList.innerHTML = palItems.length
+    ? palItems.map((i, ix) => `<li role="none"><a id="pal-opt-${ix}" href="${i.h}" role="option" aria-selected="${ix === 0}" class="${ix === 0 ? 'cur' : ''}" data-ix="${ix}"><span class="k">${i.k}</span><span class="t">${esc(i.t)}</span><span aria-hidden="true">↵</span></a></li>`).join('')
+    : '<li class="empty" role="option" aria-disabled="true" aria-selected="false">Brak wyników</li>';
+  if (palItems.length) palIn.setAttribute('aria-activedescendant', 'pal-opt-0');
+  else palIn.removeAttribute('aria-activedescendant');
 }
 function palOpen() { if (!ALL) ALL = buildSearchIndex(); if (!pal.open) pal.showModal(); palIn.value = ''; palRender(); palIn.focus(); }
 $('#openPal').onclick = palOpen;
@@ -11872,8 +11903,14 @@ const palClose = $('#palClose');
 if (palClose) palClose.onclick = () => pal.close();
 palIn.addEventListener('input', palRender);
 palIn.addEventListener('keydown', e => {
-  const as = $$('a', palList); if (!as.length) return;
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); palCur = (palCur + (e.key === 'ArrowDown' ? 1 : -1) + as.length) % as.length; as.forEach((a, i) => a.classList.toggle('cur', i === palCur)); as[palCur].scrollIntoView({ block: 'nearest' }); }
+  const as = $$('a[role="option"]', palList); if (!as.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    palCur = (palCur + (e.key === 'ArrowDown' ? 1 : -1) + as.length) % as.length;
+    as.forEach((a, i) => { a.classList.toggle('cur', i === palCur); a.setAttribute('aria-selected', String(i === palCur)); });
+    palIn.setAttribute('aria-activedescendant', as[palCur].id);
+    as[palCur].scrollIntoView({ block: 'nearest' });
+  }
   if (e.key === 'Enter') { e.preventDefault(); location.hash = palItems[palCur].h; pal.close(); }
 });
 palList.addEventListener('click', e => { if (e.target.closest('a')) pal.close(); });
@@ -11922,7 +11959,7 @@ function initPWA() {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               toast(
-                `<span>Dostępna nowa wersja materiałów.</span> <button id="swReload" style="margin-left:.6rem;background:var(--teal);color:#fff;border:0;padding:.25rem .7rem;border-radius:999px;font-weight:700;cursor:pointer">Odśwież</button>`,
+                `<span>Dostępna nowa wersja materiałów.</span> <button id="swReload" style="margin-left:.6rem;background:var(--teal);color:var(--on-accent);border:0;padding:.25rem .7rem;border-radius:999px;font-weight:700;cursor:pointer">Odśwież</button>`,
                 { html: true, duration: 10000 }
               );
               const b = $('#swReload');
