@@ -3665,6 +3665,8 @@ button.bridge-card-btn:hover {
 .zd-mode-card.marathon { --zd-c: var(--teal); }
 .zd-mode-card.flash { --zd-c: var(--violet); }
 .zd-mode-card.wrong { --zd-c: var(--red); }
+.zd-mode-card.s4 { --zd-c: var(--blue); }
+.zd-mode-acts { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: auto; }
 .zd-mode-card h3,
 .zd-mode-card .zd-mode-title {
   font-family: var(--font-display);

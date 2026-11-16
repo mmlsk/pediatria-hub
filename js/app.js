@@ -224,7 +224,7 @@ function getBank(q) {
 
 function getQNorm(q) {
   if (!q._n) {
-    q._n = norm([q.id || '', q.stem, (q.opts || []).join(' '), q.topic || '', (q.mods || []).join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
+    q._n = norm([q.id || '', q.src || '', q.stem, (q.opts || []).join(' '), q.topic || '', (q.mods || []).join(' '), ASHORT[q.at] || '', BANKS[q.bank] ? BANKS[q.bank].n : ''].join(' '));
   }
   return q._n;
 }
@@ -2259,13 +2259,18 @@ function renderZakladTab(container) {
     return;
   }
 
-  let att = 0, ok = 0, wrong = 0, hitsCount = 0, gapCountLocal = 0, openCount = 0;
+  const s4Qs = [];
+  let att = 0, ok = 0, wrong = 0, hitsCount = 0, gapCountLocal = 0, openCount = 0, s4Ok = 0;
   const modCounts = Object.create(null);
   for (let i = 0; i < Q.length; i++) {
     const q = Q[i];
     if (q.bank !== 'zaklad') continue;
     const a = S.ans[q.id];
     if (a) { att++; if (a.last) ok++; else wrong++; }
+    if ((q.src || '').includes('Baza-S4-Pediatria-2026_27')) {
+      s4Qs.push(q);
+      if (a && a.last) s4Ok++;
+    }
     if (q.reps >= 2) hitsCount++;
     if (q.gap) gapCountLocal++;
     if (q.type === 'open') openCount++;
@@ -2326,6 +2331,17 @@ function renderZakladTab(container) {
     <p class="muted" style="margin-bottom:1rem">Wybierz profil nauki dopasowany do Twojego etapu przygotowań do kolokwium lub egzaminu.</p>
 
     <div class="zd-modes-grid">
+      ${s4Qs.length ? `
+      <div class="zd-mode-card s4">
+        <span class="zd-mode-title">📘 Baza S4 Pediatria 2026_27 <span class="zd-count">${s4Qs.length} pytań</span></span>
+        <span class="zd-mode-desc">Komplet zadań pochodzących bezpośrednio z pliku <code>Baza S4 Pediatria 2026_27</code> (opanowane: ${s4Ok}/${s4Qs.length}).</span>
+        <div class="zd-mode-acts">
+          <button type="button" class="btn pri sm" style="background:var(--blue);border-color:var(--blue)" data-mode="s4">Trenuj zestaw →</button>
+          <button type="button" class="btn sec sm" data-browse-src="Baza-S4-Pediatria-2026_27">Przeglądaj (${s4Qs.length})</button>
+        </div>
+      </div>
+      ` : ''}
+
       <button type="button" class="zd-mode-card hit" data-mode="hits">
         <span class="zd-mode-title">🔥 Hity Zakładowe <span class="zd-count">${hitsCount} pytań</span></span>
         <span class="zd-mode-desc">Pytania powtórzone w co najmniej dwóch niezależnych rocznikach/zaliczeniach (2014–2026). Absolutny priorytet powtórkowy!</span>
@@ -2409,6 +2425,13 @@ function renderZakladTab(container) {
   container.querySelectorAll('[data-mode]').forEach(card => {
     card.onclick = () => {
       const mode = card.dataset.mode;
+      if (mode === 's4') {
+        C.mode = 'learn';
+        pendingRetryIds = s4Qs.map(q => q.id);
+        SESSION = null;
+        location.hash = '#/trening';
+        return;
+      }
       C.at = new Set(); C.mods = new Set(); C.conf = new Set();
       C.banks = new Set(['zaklad']);
       C.hitsOnly = mode === 'hits';
@@ -2421,6 +2444,18 @@ function renderZakladTab(container) {
       SESSION = null;
       pendingAutoTrain = true;
       location.hash = '#/trening';
+    };
+  });
+  container.querySelectorAll('[data-browse-src]').forEach(btn => {
+    btn.onclick = () => {
+      F.tab = 'browse';
+      F.q = btn.dataset.browseSrc;
+      F.at.clear(); F.mods.clear(); F.banks = new Set(['zaklad']);
+      F.conf.clear(); F.gap = false; F.bm = false; F.wrong = false;
+      F.hit = false; F.hasKey = false; F.hasWhy = false;
+      F.limit = 50;
+      $$('#qTabs .qtab').forEach(x => x.classList.toggle('on', x.dataset.t === 'browse'));
+      renderTabContent();
     };
   });
 }
