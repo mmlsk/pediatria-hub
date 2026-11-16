@@ -1,6 +1,6 @@
 /* Style specyficzne dla nowotwory-lite-modul-10 (baza w ../atlas-base.css) */
 /* ===== moduł 10 – dodatki ===== */
-.tag.red{background:var(--red)}
+.tag.red{background:var(--red);color:var(--ink-inv)}
 .stat{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.2rem}
 .stat .card{text-align:left}
 .stat b{display:block;font-family:var(--font-display);font-size:2rem;line-height:1.1;color:var(--teal-d)}
@@ -18,16 +18,12 @@
 .nodo{border:2px solid var(--red);background:var(--red-l);border-radius:var(--r);padding:1rem 1.2rem;display:flex;gap:1rem;align-items:flex-start}
 .nodo .ic{font-size:2.2rem;line-height:1}
 .nodo b{font-family:var(--font-display);font-size:1.15rem;color:var(--red)}
-.chk{list-style:none;display:grid;gap:.4rem}
-.chk li{display:flex;gap:.55rem;align-items:flex-start}
-.chk li::before{content:'';flex:0 0 18px;height:18px;margin-top:.2rem;border:2px solid var(--teal);border-radius:5px}
-.chk.no li::before{content:'✕';border-color:var(--red);color:var(--red);font-size:.7rem;font-weight:800;text-align:center;line-height:14px}
 .age-svg text{font-family:var(--font-body)}
 .tw table.sm{font-size:.86rem}
 .tw table.sm td,.tw table.sm th{padding:.45rem .6rem}
-.mk{display:inline-block;font-size:.72rem;font-weight:700;padding:0 .4rem;border-radius:5px;background:#EEF2F0;color:var(--ink-2)}
+.mk{display:inline-block;font-size:.72rem;font-weight:700;padding:0 .4rem;border-radius:5px;background:var(--surface-2);color:var(--ink-2)}
 .q .multi .opt.sel{border-color:var(--teal);background:var(--teal-l)}
-.q .acts button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.q .acts button.primary{background:var(--teal);border-color:var(--teal);color:var(--on-accent)}
 .q .freq{font-size:.75rem;color:var(--muted)}
 .hd{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .6rem}
 .edge{stroke:#B5C0C3;stroke-width:1.6;fill:none}

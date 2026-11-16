@@ -1,10 +1,5 @@
 /* Style specyficzne dla modul-9-guzy-mozgu (baza w ../atlas-base.css) */
 /* ===== moduł 9 – dodatki ===== */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.2rem 0}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--shadow)}
-.kpi b{display:block;font-family:var(--font-display);font-size:2rem;line-height:1;color:var(--teal-d)}
-.kpi span{font-size:.86rem;color:var(--ink-2)}
-.kpi.r b{color:var(--red)}.kpi.a b{color:var(--amber)}.kpi.v b{color:var(--violet)}
 .bar i.r{background:linear-gradient(90deg,var(--red),#E58A7D)}
 .bar i.b{background:linear-gradient(90deg,var(--blue),#7FA6DB)}
 .bar i.a{background:linear-gradient(90deg,var(--amber),#E3B76A)}
@@ -16,30 +11,20 @@
 .fig svg text{font-family:'Satoshi',system-ui,sans-serif}
 .agegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
 .agecol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.agecol h4{padding:.55rem .8rem;color:#fff;font-family:var(--font-display);font-size:1rem}
+.agecol h4{padding:.55rem .8rem;color:var(--ink-inv);font-family:var(--font-display);font-size:1rem}
 .agecol ul{padding:.7rem .9rem .9rem 1.8rem;font-size:.9rem}
 .agecol li{margin:.25rem 0}
 .agecol.a1 h4{background:var(--violet)}.agecol.a2 h4{background:var(--blue)}.agecol.a3 h4{background:var(--red)}.agecol.a4 h4{background:var(--amber)}
 .herolist{display:grid;grid-template-columns:1fr 1fr;gap:.3rem .9rem;font-size:.84rem;margin-top:.6rem;color:var(--ink-2)}.herolist b{color:var(--ink)}
 @media (max-width:560px){.herolist{grid-template-columns:1fr}}
-.pill{display:inline-block;font-size:.76rem;font-weight:700;padding:.08rem .5rem;border-radius:999px;margin:.1rem .15rem .1rem 0}
-.pill.r{background:var(--red-l);color:var(--red)}.pill.g{background:var(--green-l);color:var(--green)}.pill.b{background:var(--blue-l);color:var(--blue)}.pill.a{background:var(--amber-l);color:var(--amber)}.pill.v{background:var(--violet-l);color:var(--violet)}
-.tcard{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--teal);border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--shadow);font-size:.93rem}
-.tcard.r{border-top-color:var(--red)}.tcard.b{border-top-color:var(--blue)}.tcard.a{border-top-color:var(--amber)}.tcard.v{border-top-color:var(--violet)}.tcard.g{border-top-color:var(--green)}
-.tcard h4{font-family:var(--font-display);font-size:1.1rem;margin-bottom:.3rem}
-.tcard ul{padding-left:1.1rem}.tcard li{margin:.18rem 0}
-.tcard .em{font-size:1.3rem}
 .pw{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.4rem}
 .pw div{padding:.45rem .6rem;border-radius:8px;font-size:.88rem}
 .pw .a{background:var(--amber-l);border:1px solid rgba(229,154,36,.35)}.pw .b{background:var(--blue-l);border:1px solid rgba(78,143,230,.35)}
 .pw b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
 .qtools{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:1rem}
 .qtools .sp{flex:1}
-.btn{font:inherit;font-size:.88rem;font-weight:700;padding:.45rem .95rem;border-radius:999px;border:1px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer}
-.btn.o{background:#fff;color:var(--teal-d)}
-.tbadge{font-size:.72rem;font-weight:700;padding:.05rem .45rem;border-radius:6px;background:#E8ECEE;color:var(--ink-2)}
 .legend2{display:flex;flex-wrap:wrap;gap:.4rem 1rem;font-size:.84rem;color:var(--ink-2);margin-top:.5rem}
 .legend2 span::before{content:'';display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:.35rem;vertical-align:-1px;background:var(--c)}
 .scroll-x{overflow-x:auto}
-@media (max-width:900px){.kpis,.agegrid,.pw{grid-template-columns:1fr 1fr}.bar{grid-template-columns:120px 1fr 62px}}
-@media (max-width:560px){.kpis,.agegrid,.pw{grid-template-columns:1fr}.fig.wide svg{min-width:820px}#csfSvg,#spSvg{min-width:520px!important}#crossSvg{min-width:680px!important}.fig.wide{overflow-x:auto}}
+@media (max-width:900px){.agegrid,.pw{grid-template-columns:1fr 1fr}.bar{grid-template-columns:120px 1fr 62px}}
+@media (max-width:560px){.agegrid,.pw{grid-template-columns:1fr}.fig.wide svg{min-width:820px}#csfSvg,#spSvg{min-width:520px!important}#crossSvg{min-width:680px!important}.fig.wide{overflow-x:auto}}

@@ -259,7 +259,7 @@ button.btn:not(:disabled):active,
 }
 .agecol h3 {
   padding: .55rem .8rem;
-  color: #fff;
+  color: var(--ink-inv, #fff);
   font-family: var(--font-display);
   font-size: 1rem;
 }

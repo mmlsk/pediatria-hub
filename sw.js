@@ -1,5 +1,5 @@
 /* Service Worker dla Pediatria V Hub */
-const CACHE_NAME = 'pediatria-hub-v32';
+const CACHE_NAME = 'pediatria-hub-v36';
 
 const PRECACHE_ASSETS = [
   './',
@@ -12,6 +12,10 @@ const PRECACHE_ASSETS = [
   './js/questions.js',
   './js/questions_zaklad.js',
   './js/logic.js',
+  './js/clinical-calc.js',
+  './js/clinical-patient.js',
+  './js/clinical-osce.js',
+  './js/clinical-diagnostics.js',
   './js/app.js',
   './icons/icon.svg',
   './icons/icon-192.png',
