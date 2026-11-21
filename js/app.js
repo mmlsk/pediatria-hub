@@ -255,6 +255,29 @@ let qById = Object.fromEntries(Q.map(q => [q.id, q]));
 let ALL = null;
 let _qStats = null;
 let onBmMutate = null;
+let _zakladPromise = null;
+
+function ensureZakladQuestions() {
+  if (window.HUB_ZAKLAD_Q) return Promise.resolve();
+  if (_zakladPromise) return _zakladPromise;
+  _zakladPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'js/questions_zaklad.js';
+    s.onload = () => {
+      Q = loadAllQuestions();
+      qById = Object.fromEntries(Q.map(q => [q.id, q]));
+      _qStats = null;
+      ALL = null;
+      resolve();
+    };
+    s.onerror = () => {
+      _zakladPromise = null;
+      reject(new Error('Nie udało się wczytać puli zakładowej.'));
+    };
+    document.head.appendChild(s);
+  });
+  return _zakladPromise;
+}
 
 function getQStats() {
   if (_qStats) return _qStats;
@@ -515,7 +538,7 @@ function renderGraph(host, o = {}) {
 }
 
 /* ---------- komponenty ---------- */
-function confChip(c) { const k = CONF[c] || CONF.inf; return `<span class="chip" style="background:${k.l};border-color:transparent;color:${k.c}" title="${esc(k.d)}"><i class="dot" style="background:${k.c}"></i>${esc(k.n)}</span>`; }
+function confChip(c) { const k = CONF[c] || CONF.inf; return `<span class="chip" style="background:${k.l};border-color:transparent;color:${k.tc || k.c}" title="${esc(k.d)}"><i class="dot" style="background:${k.c}"></i>${esc(k.n)}</span>`; }
 function modChips(q) { return (q.mods || []).map(m => `<span class="chip m" style="${modById[m] ? 'color:' + gOf(m).color : ''}">[${esc(m)}]</span>`).join(''); }
 function explain(q) {
   let h = '';
@@ -739,7 +762,25 @@ function closeNavDropdowns() {
   });
 }
 
+function closeMobileMenu() {
+  const toggle = $('#navToggle');
+  const menu = $('#menu');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  if (menu) menu.classList.remove('open');
+}
+
 function initNavMenus() {
+  const toggle = $('#navToggle');
+  const menu = $('#menu');
+  if (toggle && menu) {
+    toggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = !menu.classList.contains('open');
+      closeNavDropdowns();
+      menu.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  }
   $$('.nav-dd-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -753,12 +794,21 @@ function initNavMenus() {
       }
     });
   });
-  document.addEventListener('click', e => { if (!e.target.closest('.nav-dd')) closeNavDropdowns(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNavDropdowns(); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.nav-dd')) closeNavDropdowns();
+    if (!e.target.closest('.bar')) closeMobileMenu();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeNavDropdowns();
+      closeMobileMenu();
+    }
+  });
 }
 
 function route() {
   closeNavDropdowns();
+  closeMobileMenu();
   onBmMutate = null;
   const { parts, params } = parseHash(); const name = parts[0] || 'start';
   if (name !== 'egzamin' && EXAM_SESSION && EXAM_SESSION.timer) {
@@ -780,6 +830,17 @@ function route() {
   current = { name, id: parts[1] || null };
   main.classList.remove('view'); void main.offsetWidth; main.classList.add('view');
   if (!v) { location.hash = '#/'; return; }
+  if ((name === 'pytania' || name === 'trening' || name === 'egzamin') && !window.HUB_ZAKLAD_Q) {
+    main.innerHTML = '<section class="blk"><div class="wrap"><p class="muted">Wczytywanie bazy pytań zakładowych…</p></div></section>';
+    renderFooter();
+    ensureZakladQuestions().catch(() => {}).then(() => {
+      if ((parseHash().parts[0] || 'start') !== name) return;
+      v(parts, params);
+      renderFooter();
+      window.scrollTo(0, 0);
+    });
+    return;
+  }
   v(parts, params);
   renderFooter();
   if (name !== 'atlas') window.scrollTo(0, 0);
@@ -843,7 +904,7 @@ function viewStart() {
   <section class="blk" id="dwa"><div class="wrap">
     <div class="eyebrow">Zasada hubu</div><h2>Pod zaliczenie czy aktualnie klinicznie?</h2>
     <p class="lead">Klucz zakładowej puli bywa nieaktualny. Tam, gdzie źródła się rozchodzą, atlasy pokazują oba stanowiska osobno, tak aby było widać, co zaznaczyć na teście, a co robić przy łóżku pacjenta.</p>
-    <div class="dcase">${sample.map(q => `<div class="card"><div class="q">${esc(q.stem)}</div><div class="tags" style="display:flex;gap:.3rem;margin:.5rem 0 .8rem">${modChips(q)}${confChip(q.conf)}</div><div class="dual"><div class="dbox z"><h4>Pod zaliczenie</h4>${rich(q.zal)}</div><div class="dbox a"><h4>Aktualnie klinicznie</h4>${rich(q.akt)}</div></div></div>`).join('')}</div>
+    <div class="dcase">${sample.map(q => `<div class="card"><div class="q">${esc(q.stem)}</div><div class="tags" style="display:flex;gap:.3rem;margin:.5rem 0 .8rem">${modChips(q)}${confChip(q.conf)}</div><div class="dual"><div class="dbox z"><h3>Pod zaliczenie</h3>${rich(q.zal)}</div><div class="dbox a"><h3>Aktualnie klinicznie</h3>${rich(q.akt)}</div></div></div>`).join('')}</div>
     <p style="margin-top:1rem"><a class="btn sec" href="#/pytania?gap=1">Zobacz wszystkie ${gapCount} rozbieżności →</a></p>
   </div></section>
 

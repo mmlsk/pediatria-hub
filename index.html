@@ -13,7 +13,8 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet" crossorigin="anonymous">
 <link rel="stylesheet" href="css/hub.css">
 <script>
 try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';const bg={dark:'#090C0E',navy:'#111522',moss:'#0F1A15',espresso:'#211B1A',ochre:'#1A1715',purple:'#17151C',ocean:'#0A1924'};const eff=bg[t]?t:(t==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'');if(eff){document.documentElement.dataset.theme=eff;const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=bg[eff];}}catch(e){}
@@ -53,6 +54,7 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';const bg={dark:'
     <a class="srch btn-calc" href="#/kalkulator" aria-label="Kalkulator dawek pediatrycznych" title="Kalkulator dawek i PALS"><span class="ico" aria-hidden="true">🧮</span><span class="lbl">Dawki</span></a>
     <button class="srch btn-theme" id="btnTheme" aria-label="Zmień motyw" title="Motyw: Auto (systemowy)"><span class="ico" id="themeIcon" aria-hidden="true">🖥️</span><span class="lbl" id="themeLabel">Auto</span></button>
     <button class="srch" id="openPal" aria-label="Szukaj w całym hubie"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="m13 13 4 4"/></svg><span class="lbl">Szukaj</span><kbd>Ctrl K</kbd></button>
+    <button type="button" class="srch nav-toggle" id="navToggle" aria-expanded="false" aria-controls="menu" aria-label="Otwórz menu nawigacji"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg><span class="lbl">Menu</span></button>
   </div>
 </header>
 <main id="view" tabindex="-1"></main>
@@ -105,7 +107,6 @@ try{const t=localStorage.getItem('pediatria_hub_theme')||'auto';const bg={dark:'
 
 <script defer src="js/meta.js"></script>
 <script defer src="js/questions.js"></script>
-<script defer src="js/questions_zaklad.js"></script>
 <script defer src="js/logic.js"></script>
 <script defer src="js/clinical-calc.js"></script>
 <script defer src="js/clinical-patient.js"></script>
